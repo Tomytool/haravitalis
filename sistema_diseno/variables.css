@@ -1,0 +1,111 @@
+/* ==========================================================================
+   Hara Vitalis - System Design CSS Variables & Font Definitions
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Local Font Definitions (@font-face)
+   -------------------------------------------------------------------------- */
+@font-face {
+  font-family: 'Great Vibes';
+  src: url('./fonts/GreatVibes-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Montserrat';
+  src: url('./fonts/Montserrat-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* --------------------------------------------------------------------------
+   2. Design Tokens (:root)
+   -------------------------------------------------------------------------- */
+:root {
+  /* Typography Families */
+  --font-brand: 'Great Vibes', cursive;
+  --font-heading: 'Montserrat', sans-serif;
+  --font-body: 'Montserrat', sans-serif;
+
+  /* Typography Fluid Scale (clamp) */
+  --font-size-brand: clamp(2.5rem, 6vw, 4.25rem);
+  --font-size-h1: clamp(2.25rem, 5vw, 3.75rem);
+  --font-size-h2: clamp(1.75rem, 3.5vw, 2.5rem);
+  --font-size-h3: clamp(1.25rem, 2vw, 1.5rem);
+  --font-size-body-lg: 1.125rem;
+  --font-size-body: 1rem;
+  --font-size-sm: 0.875rem;
+
+  /* Brand Colors */
+  --color-primary: #253B59;
+  --color-primary-dark: #1C2E47;
+  --color-primary-light: #3E587D;
+  --color-secondary: #CED0F2;
+  --color-secondary-hover: #B5B8EC;
+  --color-accent: #4E9F8E;
+  --color-accent-hover: #3B7E70;
+
+  /* Backgrounds & Surfaces */
+  --color-bg-page: #F7F8FC;
+  --color-bg-card: #FFFFFF;
+  --color-bg-subtle: #EDF0F7;
+  --color-bg-footer: #172436;
+
+  /* Text Colors */
+  --color-text-main: #111827;
+  --color-text-muted: #475569;
+  --color-text-on-dark: #F8FAFC;
+  --color-text-accent: #253B59;
+
+  /* Elevation & Shadows */
+  --shadow-sm: 0 2px 4px rgba(37, 59, 89, 0.04);
+  --shadow-md: 0 8px 24px rgba(37, 59, 89, 0.08);
+  --shadow-lg: 0 16px 32px rgba(37, 59, 89, 0.12);
+  --shadow-glass: 0 8px 32px 0 rgba(37, 59, 89, 0.1);
+
+  /* Radius & Glassmorphism */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-pill: 9999px;
+
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: 1px solid rgba(206, 208, 242, 0.4);
+}
+
+/* --------------------------------------------------------------------------
+   3. Base Global Utility Helpers
+   -------------------------------------------------------------------------- */
+.brand-title {
+  font-family: var(--font-brand);
+  font-size: var(--font-size-brand);
+  color: var(--color-primary);
+  line-height: 1.1;
+}
+
+.heading-h1 {
+  font-family: var(--font-heading);
+  font-size: var(--font-size-h1);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--color-text-main);
+}
+
+.heading-h2 {
+  font-family: var(--font-heading);
+  font-size: var(--font-size-h2);
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--color-text-main);
+}
+
+.body-text {
+  font-family: var(--font-body);
+  font-size: var(--font-size-body);
+  line-height: 1.5;
+  color: var(--color-text-main);
+}

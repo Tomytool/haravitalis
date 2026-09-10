@@ -1,8 +1,8 @@
 {
-  "name": "huravitalis",
-  "homepage": "https://Tomytool.github.io/huravitalis",
+  "name": "haravitalis",
+  "homepage": "https://Tomytool.github.io/haravitalis",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,8 +13,11 @@
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "firebase": "^12.18.0",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
     "@babel/core": "^7.29.7",
