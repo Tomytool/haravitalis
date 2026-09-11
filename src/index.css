@@ -501,10 +501,12 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .booking-grid {
-  display: grid;
-  grid-template-columns: 1fr 340px;
+  display: flex;
+  flex-direction: column;
   gap: 2.5rem;
-  align-items: start;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
 }
 
 /* Main Booking Content Left */
@@ -748,6 +750,269 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+}
+
+/* ==========================================================================
+   SIDEBAR RESERVATIONS CARD SYSTEM DESIGN (@card & @ui-ux-pro-max)
+   ========================================================================== */
+
+.reservations-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(206, 208, 242, 0.6);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem 1.5rem;
+  box-shadow: var(--shadow-glass);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  transition: box-shadow var(--transition-normal);
+}
+
+.reservations-card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.sidebar-header-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.sidebar-title {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.sidebar-subtitle {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Selector Desplegable de Reservas (Dropdown Filter) */
+.res-filter-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.res-filter-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.res-select-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.res-filter-select {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: #FFFFFF;
+  border: 1.5px solid rgba(206, 208, 242, 0.8);
+  border-radius: var(--radius-md);
+  padding: 0.65rem 2.25rem 0.65rem 1rem;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(37, 59, 89, 0.05);
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast);
+}
+
+.res-filter-select:hover {
+  border-color: var(--color-primary);
+  background-color: #FAFAFE;
+}
+
+.res-filter-select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(37, 59, 89, 0.12);
+}
+
+.res-filter-select option {
+  background-color: #FFFFFF;
+  color: var(--color-text-primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.5rem;
+}
+
+.res-select-arrow {
+  position: absolute;
+  right: 1rem;
+  pointer-events: none;
+  font-size: 0.65rem;
+  color: var(--color-primary);
+  transition: transform var(--transition-fast);
+}
+
+/* Lista de Reservas */
+.my-reservations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Tarjeta Individual de Reserva */
+.my-reservation-item {
+  background: #FFFFFF;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  padding: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+
+.my-reservation-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: rgba(206, 208, 242, 0.8);
+}
+
+.my-reservation-item.caducada {
+  background-color: #F8FAFC;
+  opacity: 0.85;
+}
+
+.res-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.res-service {
+  font-size: 0.925rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.res-badge-status {
+  font-size: 0.725rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+.res-badge-status.pendiente {
+  background-color: #DCFCE7;
+  color: #15803D;
+  border: 1px solid rgba(21, 128, 61, 0.2);
+}
+
+.res-badge-status.caducada {
+  background-color: #FEF3C7;
+  color: #B45309;
+  border: 1px solid rgba(180, 83, 9, 0.2);
+}
+
+.res-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.825rem;
+  color: var(--color-text-secondary);
+}
+
+.res-meta-row svg {
+  color: var(--color-primary-light);
+  flex-shrink: 0;
+}
+
+/* Botón anular reserva en sidebar */
+.btn-anular-sidebar {
+  margin-top: 0.4rem;
+  width: 100%;
+  background-color: #FEF2F2;
+  color: #DC2626;
+  border: 1px solid #FCA5A5;
+  border-radius: var(--radius-sm);
+  padding: 0.45rem 0.75rem;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.btn-anular-sidebar:hover:not(:disabled) {
+  background-color: #FEE2E2;
+  border-color: #EF4444;
+  transform: translateY(-1px);
+}
+
+.btn-anular-sidebar:disabled {
+  background-color: #F1F5F9;
+  color: #94A3B8;
+  border-color: #E2E8F0;
+  cursor: not-allowed;
+}
+
+.res-expired-footer {
+  font-size: 0.775rem;
+  color: #94A3B8;
+  font-weight: 600;
+  text-align: center;
+  margin-top: 0.2rem;
+  padding: 0.3rem;
+  background-color: #F1F5F9;
+  border-radius: var(--radius-sm);
+}
+
+/* Empty State en Reservas Card */
+.empty-reservations-box {
+  padding: 2rem 1.25rem;
+  text-align: center;
+  background-color: #FFFFFF;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--color-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.empty-res-icon {
+  font-size: 2rem;
+}
+
+.empty-res-text {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  margin: 0;
 }
 
 .upcoming-card {
@@ -3438,6 +3703,162 @@ h1, h2, h3, h4, h5, h6 {
     grid-template-columns: 1fr 1fr 1fr;
   }
 }
+
+/* ==========================================================================
+   Botones de Reserva & Badges - Sistema de Diseño "Hara Vitalis"
+   ========================================================================== */
+
+.btn-booking-primary {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.875rem;
+  background-color: var(--color-primary);
+  color: #FFFFFF;
+  border-radius: var(--radius-pill);
+  padding: 0.75rem 1.5rem;
+  border: none;
+  cursor: pointer;
+  box-shadow: var(--shadow-btn);
+  transition: var(--transition-normal);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  line-height: 1.25;
+}
+
+.btn-booking-primary:hover:not(:disabled) {
+  background-color: var(--color-primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(37, 59, 89, 0.35);
+}
+
+.btn-booking-primary:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-booking-terapia {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.875rem;
+  background-color: #15803D;
+  color: #FFFFFF;
+  border-radius: var(--radius-pill);
+  padding: 0.75rem 1.5rem;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(21, 128, 61, 0.25);
+  transition: var(--transition-normal);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  line-height: 1.25;
+}
+
+.btn-booking-terapia:hover:not(:disabled) {
+  background-color: #166534;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(21, 128, 61, 0.35);
+}
+
+.btn-booking-terapia:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-booking-disabled {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.875rem;
+  background-color: #E2E8F0;
+  color: #94A3B8;
+  border-radius: var(--radius-pill);
+  padding: 0.75rem 1.5rem;
+  border: none;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  line-height: 1.25;
+  transition: none;
+}
+
+.badge-reservado-clase {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.65rem 1.25rem;
+  background-color: #E0F2FE;
+  color: #0369A1;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.85rem;
+  border: 1px solid #BAE6FD;
+}
+
+.badge-reservado-terapia {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.65rem 1.25rem;
+  background-color: #DCFCE7;
+  color: #15803D;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.85rem;
+  border: 1px solid #BBF7D0;
+}
+
+.btn-anular-card-active {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.8rem;
+  background-color: #FEF2F2;
+  color: #991B1B;
+  border: 1px solid #FCA5A5;
+  border-radius: var(--radius-pill);
+  padding: 0.55rem 1.1rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: var(--transition-normal);
+  line-height: 1.25;
+}
+
+.btn-anular-card-active:hover:not(:disabled) {
+  background-color: #FEE2E2;
+  color: #7F1D1D;
+  border-color: #F87171;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(239, 68, 68, 0.15);
+}
+
+.btn-anular-card-disabled {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.8rem;
+  background-color: #F8FAFC;
+  color: #94A3B8;
+  border: 1px solid #E2E8F0;
+  border-radius: var(--radius-pill);
+  padding: 0.55rem 1.1rem;
+  cursor: not-allowed;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  line-height: 1.25;
+  opacity: 0.85;
+}
+
+
 
 
 

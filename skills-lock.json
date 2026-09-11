@@ -1,6 +1,24 @@
 {
   "version": 1,
   "skills": {
+    "card": {
+      "source": "kostja94/marketing-skills",
+      "sourceType": "github",
+      "skillPath": "skills/components/layout/card/SKILL.md",
+      "computedHash": "50690ef34d6d4f334756f749fcf2f5e4b949d1b58f57ddd57e890b8a4963b7a2"
+    },
+    "crud-generator": {
+      "source": "thapaliyabikendra/ai-artifacts",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/abp-crud-implementation/SKILL.md",
+      "computedHash": "82511be41be30b3aca0efd75f6f1965a9435ee309b94510ffe0973cc11f7bc95"
+    },
+    "crud-tester": {
+      "source": "softwaretestingtrends/snagly",
+      "sourceType": "github",
+      "skillPath": "skills/crud-tester/SKILL.md",
+      "computedHash": "08fbf7ac16527dd2ac999676f4e8afda936407df46ce17d5686f5428b22d487c"
+    },
     "database-schema-designer": {
       "source": "softaworks/agent-toolkit",
       "sourceType": "github",
@@ -31,11 +49,23 @@
       "skillPath": "plugins/javascript-typescript/skills/modern-javascript-patterns/SKILL.md",
       "computedHash": "0d820adbeaa73ee1f6b1e075fb3ef1698d5d68ad59cb30fc935c857025e9b24f"
     },
+    "nestjs-drizzle-crud-generator": {
+      "source": "giuseppe-trisciuoglio/developer-kit",
+      "sourceType": "github",
+      "skillPath": "plugins/developer-kit-typescript/skills/nestjs-drizzle-crud-generator/SKILL.md",
+      "computedHash": "79fccda5e3d3ed9db3c9257c9189b8710b7441eeb16357e62eb1469e3c797151"
+    },
     "react-doctor": {
       "source": "millionco/react-doctor",
       "sourceType": "github",
       "skillPath": "skills/react-doctor/SKILL.md",
       "computedHash": "78ab00efd20eee4f65d9ca55141ab3d8ba64767f6481ea2fc8d55953c1bfd243"
+    },
+    "spring-boot-crud-patterns": {
+      "source": "giuseppe-trisciuoglio/developer-kit",
+      "sourceType": "github",
+      "skillPath": "plugins/developer-kit-java/skills/spring-boot-crud-patterns/SKILL.md",
+      "computedHash": "121abfe5b499eaaf39b6340a5f9364652f1ada91b518edbe349011ace3dce916"
     },
     "ui-ux-pro-max": {
       "source": "nextlevelbuilder/ui-ux-pro-max-skill",

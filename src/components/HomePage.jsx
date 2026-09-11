@@ -4,7 +4,6 @@ import imagenStudio from "/pilates-studio.jpg";
 export default function HomePage({
   onNavigateToAuth,
   onNavigateToBooking,
-  onNavigateToHorarios,
   currentUser,
 }) {
   const [categoriaPlanes, setCategoriaPlanes] = useState("todos");
@@ -17,11 +16,6 @@ export default function HomePage({
       // Navega directamente a la página individual de registro
       onNavigateToAuth(true);
     }
-  };
-
-  const handleVerHorarios = (e) => {
-    e.preventDefault();
-    onNavigateToHorarios();
   };
 
   const planes = [
@@ -182,10 +176,10 @@ export default function HomePage({
               </button>
 
               <button
-                onClick={handleVerHorarios}
+                onClick={handleBookingClick}
                 className="btn-hero-secondary"
               >
-                Ver Horarios
+                Conoce las Sesiones
               </button>
             </div>
           </div>

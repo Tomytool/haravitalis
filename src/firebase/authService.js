@@ -24,7 +24,7 @@ export async function iniciarSesion(email, password) {
 
   if (userSnapshot.exists()) {
     const data = userSnapshot.data();
-    return { uid: user.uid, clases_pactadas: data.clases_pactadas ?? 0, ...data };
+    return { uid: user.uid, clases_pactadas: data.clases_pactadas ?? 0, sesion_terapia: data.sesion_terapia ?? 0, ...data };
   } else {
     // Si no existiera perfil, crear uno básico
     const nuevoPerfil = {
@@ -34,11 +34,13 @@ export async function iniciarSesion(email, password) {
       rol: "cliente",
       estado_cuenta: "activo",
       clases_pactadas: 0,
+      sesion_terapia: 0,
       fecha_creacion: serverTimestamp()
     };
     await setDoc(userDocRef, nuevoPerfil);
     return { uid: user.uid, ...nuevoPerfil };
   }
+
 }
 
 /**
@@ -105,6 +107,7 @@ export async function registrarUsuario({ email, password, nombre, telefono, rol 
     rol: rol,
     estado_cuenta: "activo",
     clases_pactadas: 0,
+    sesion_terapia: 0,
     fecha_creacion: serverTimestamp()
   };
 
@@ -136,7 +139,7 @@ export function suscribirEstadoAuth(onChange) {
       unsubscribeDoc = onSnapshot(userDocRef, (userSnapshot) => {
         if (userSnapshot.exists()) {
           const data = userSnapshot.data();
-          onChange({ uid: user.uid, clases_pactadas: data.clases_pactadas ?? 0, ...data });
+          onChange({ uid: user.uid, clases_pactadas: data.clases_pactadas ?? 0, sesion_terapia: data.sesion_terapia ?? 0, ...data });
         } else {
           onChange({
             uid: user.uid,
@@ -144,17 +147,19 @@ export function suscribirEstadoAuth(onChange) {
             nombre: user.displayName || user.email.split("@")[0],
             rol: "cliente",
             estado_cuenta: "activo",
-            clases_pactadas: 0
+            clases_pactadas: 0,
+            sesion_terapia: 0
           });
         }
       }, (error) => {
         console.error("Error al escuchar perfil de usuario:", error);
-        onChange({ uid: user.uid, email: user.email, clases_pactadas: 0 });
+        onChange({ uid: user.uid, email: user.email, clases_pactadas: 0, sesion_terapia: 0 });
       });
     } else {
       onChange(null);
     }
   });
+
 
   return () => {
     if (unsubscribeDoc) unsubscribeDoc();

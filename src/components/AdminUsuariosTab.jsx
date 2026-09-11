@@ -7,6 +7,7 @@ import {
   suscribirTodasLasInscripcionesAdmin,
   cancelarInscripcionAdmin,
   modificarClasesPactadasAdmin,
+  modificarSesionesTerapiaAdmin,
 } from "../firebase/usuariosService";
 
 export default function AdminUsuariosTab() {
@@ -35,6 +36,7 @@ export default function AdminUsuariosTab() {
     rol: "cliente",
     estado_cuenta: "activo",
     clases_pactadas: 0,
+    sesion_terapia: 0,
   });
 
   const [guardando, setGuardando] = useState(false);
@@ -45,7 +47,11 @@ export default function AdminUsuariosTab() {
 
   // Bloqueo de scroll en el body al abrir cualquier modal
   useEffect(() => {
-    if (isFormModalOpen || usuarioClasesSeleccionado !== null || confirmDeleteUser !== null) {
+    if (
+      isFormModalOpen ||
+      usuarioClasesSeleccionado !== null ||
+      confirmDeleteUser !== null
+    ) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
@@ -105,6 +111,7 @@ export default function AdminUsuariosTab() {
       rol: "cliente",
       estado_cuenta: "activo",
       clases_pactadas: 4,
+      sesion_terapia: 0,
     });
     setIsFormModalOpen(true);
   };
@@ -119,6 +126,7 @@ export default function AdminUsuariosTab() {
       rol: usr.rol || "cliente",
       estado_cuenta: usr.estado_cuenta || "activo",
       clases_pactadas: usr.clases_pactadas ?? 0,
+      sesion_terapia: usr.sesion_terapia ?? 0,
     });
     setIsFormModalOpen(true);
   };
@@ -128,13 +136,24 @@ export default function AdminUsuariosTab() {
     try {
       await modificarClasesPactadasAdmin(usuarioId, delta);
       mostrarNotificacion(
-        delta > 0
-          ? "¡Clase pactada añadida al usuario!"
-          : "Clase pactada descontada.",
+        `Clases pactadas actualizadas correctamente (${delta > 0 ? "+1" : "-1"}).`,
       );
-    } catch (error) {
-      console.error("Error al modificar clases pactadas:", error);
-      mostrarNotificacion("Error al actualizar clases pactadas.", true);
+    } catch (err) {
+      console.error("Error al modificar clases pactadas:", err);
+      mostrarNotificacion("Error al modificar clases pactadas.", true);
+    }
+  };
+
+  // Modificación rápida de sesiones de terapia (+1 / -1)
+  const handleModificarSesionesTerapia = async (usuarioId, delta) => {
+    try {
+      await modificarSesionesTerapiaAdmin(usuarioId, delta);
+      mostrarNotificacion(
+        `Sesiones de terapia actualizadas correctamente (${delta > 0 ? "+1" : "-1"}).`,
+      );
+    } catch (err) {
+      console.error("Error al modificar sesiones de terapia:", err);
+      mostrarNotificacion("Error al modificar sesiones de terapia.", true);
     }
   };
 
@@ -325,7 +344,7 @@ export default function AdminUsuariosTab() {
             display: "flex",
             alignItems: "center",
             gap: "0.5rem",
-            transition: "all 0.2s ease",
+            transition: "background-color 0.2s ease, box-shadow 0.2s ease",
           }}
         >
           <span>👤➕</span> Nuevo Usuario
@@ -458,6 +477,7 @@ export default function AdminUsuariosTab() {
           <input
             type="text"
             placeholder="🔍 Buscar por nombre, email o teléfono..."
+            aria-label="Buscar usuarios por nombre, email o teléfono"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
             style={{
@@ -474,12 +494,15 @@ export default function AdminUsuariosTab() {
 
         {/* Filtro Rol */}
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <span
+          <label
+            htmlFor="admin-usuarios-filtro-rol"
             style={{ fontSize: "0.85rem", color: "#64748B", fontWeight: "600" }}
           >
             Rol:
-          </span>
+          </label>
           <select
+            id="admin-usuarios-filtro-rol"
+            aria-label="Filtrar por rol"
             value={filtroRol}
             onChange={(e) => setFiltroRol(e.target.value)}
             style={{
@@ -501,12 +524,15 @@ export default function AdminUsuariosTab() {
 
         {/* Filtro Estado */}
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <span
+          <label
+            htmlFor="admin-usuarios-filtro-estado"
             style={{ fontSize: "0.85rem", color: "#64748B", fontWeight: "600" }}
           >
             Estado:
-          </span>
+          </label>
           <select
+            id="admin-usuarios-filtro-estado"
+            aria-label="Filtrar por estado"
             value={filtroEstado}
             onChange={(e) => setFiltroEstado(e.target.value)}
             style={{
@@ -574,6 +600,7 @@ export default function AdminUsuariosTab() {
                     <th style={{ padding: "1rem" }}>Rol</th>
                     <th style={{ padding: "1rem" }}>Estado Cuenta</th>
                     <th style={{ padding: "1rem" }}>Clases Pactadas</th>
+                    <th style={{ padding: "1rem" }}>Sesiones Terapia</th>
                     <th style={{ padding: "1rem" }}>Reservas Activas</th>
                     <th style={{ padding: "1rem", textAlign: "right" }}>
                       Acciones
@@ -584,7 +611,8 @@ export default function AdminUsuariosTab() {
                   {usuariosFiltrados.map((usr) => {
                     const userInscripciones = inscripciones.filter(
                       (ins) =>
-                        ins.usuario_id === usr.id && ins.estado === "confirmada",
+                        ins.usuario_id === usr.id &&
+                        ins.estado === "confirmada",
                     );
 
                     const iniciales = (usr.nombre || "U")
@@ -607,6 +635,7 @@ export default function AdminUsuariosTab() {
                         : { bg: "#F1F5F9", text: "#475569" };
 
                     const clasesPactadasNum = usr.clases_pactadas ?? 0;
+                    const sesionTerapiaNum = usr.sesion_terapia ?? 0;
 
                     return (
                       <tr
@@ -716,6 +745,34 @@ export default function AdminUsuariosTab() {
                           </div>
                         </td>
 
+                        {/* Columna Sesiones Terapia con ajustadores rápidos +- */}
+                        <td style={{ padding: "1rem" }}>
+                          <div
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "0.4rem",
+                              backgroundColor: "#F8FAFC",
+                              padding: "0.25rem 0.5rem",
+                              borderRadius: "10px",
+                              border: "1px solid #E2E8F0",
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontWeight: "800",
+                                fontSize: "0.95rem",
+                                color:
+                                  sesionTerapiaNum > 0 ? "#0284C7" : "#B91C1C",
+                                minWidth: "24px",
+                                textAlign: "center",
+                              }}
+                            >
+                              {sesionTerapiaNum}
+                            </span>
+                          </div>
+                        </td>
+
                         <td style={{ padding: "1rem" }}>
                           <button
                             onClick={() => setUsuarioClasesSeleccionado(usr)}
@@ -814,7 +871,13 @@ export default function AdminUsuariosTab() {
                 return (
                   <div key={usr.id} className="admin-data-card">
                     <div className="admin-card-header">
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.75rem",
+                        }}
+                      >
                         <div
                           style={{
                             width: "42px",
@@ -827,18 +890,27 @@ export default function AdminUsuariosTab() {
                             alignItems: "center",
                             justifyContent: "center",
                             fontSize: "0.95rem",
-                            flexShrink: 0
+                            flexShrink: 0,
                           }}
                         >
                           {iniciales}
                         </div>
                         <div>
                           <div className="admin-card-title">{usr.nombre}</div>
-                          <div className="admin-card-subtitle">📧 {usr.email}</div>
+                          <div className="admin-card-subtitle">
+                            📧 {usr.email}
+                          </div>
                         </div>
                       </div>
 
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', alignItems: 'flex-end' }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "0.25rem",
+                          alignItems: "flex-end",
+                        }}
+                      >
                         <span
                           style={{
                             display: "inline-block",
@@ -873,18 +945,30 @@ export default function AdminUsuariosTab() {
                     <div className="admin-card-body">
                       <div className="admin-card-row">
                         <span style={{ color: "#64748B" }}>📞 Teléfono:</span>
-                        <span style={{ fontWeight: "600" }}>{usr.telefono || "Sin teléfono"}</span>
+                        <span style={{ fontWeight: "600" }}>
+                          {usr.telefono || "Sin teléfono"}
+                        </span>
                       </div>
 
                       <div className="admin-card-row">
-                        <span style={{ color: "#64748B" }}>📋 Clases Pactadas:</span>
-                        <span style={{ fontWeight: "800", color: clasesPactadasNum > 0 ? "#15803D" : "#B91C1C" }}>
+                        <span style={{ color: "#64748B" }}>
+                          📋 Clases Pactadas:
+                        </span>
+                        <span
+                          style={{
+                            fontWeight: "800",
+                            color:
+                              clasesPactadasNum > 0 ? "#15803D" : "#B91C1C",
+                          }}
+                        >
                           {clasesPactadasNum} clase(s)
                         </span>
                       </div>
 
                       <div className="admin-card-row">
-                        <span style={{ color: "#64748B" }}>🎟️ Reservas Activas:</span>
+                        <span style={{ color: "#64748B" }}>
+                          🎟️ Reservas Activas:
+                        </span>
                         <button
                           type="button"
                           onClick={() => setUsuarioClasesSeleccionado(usr)}
@@ -896,7 +980,7 @@ export default function AdminUsuariosTab() {
                             padding: "0.3rem 0.75rem",
                             fontSize: "0.8rem",
                             fontWeight: "700",
-                            cursor: "pointer"
+                            cursor: "pointer",
                           }}
                         >
                           Ver {userInscripciones.length} clase(s)
@@ -988,7 +1072,7 @@ export default function AdminUsuariosTab() {
                   fontSize: "1.5rem",
                   cursor: "pointer",
                   color: "#64748B",
-                  padding: "0.25rem"
+                  padding: "0.25rem",
                 }}
               >
                 ✕
@@ -1143,6 +1227,42 @@ export default function AdminUsuariosTab() {
 
                 <div>
                   <label
+                    htmlFor="user-form-terapia"
+                    style={{
+                      display: "block",
+                      fontWeight: "600",
+                      fontSize: "0.85rem",
+                      color: "#253B59",
+                      marginBottom: "0.35rem",
+                    }}
+                  >
+                    Sesiones de Terapia
+                  </label>
+                  <input
+                    id="user-form-terapia"
+                    type="number"
+                    min="0"
+                    value={formData.sesion_terapia}
+                    onChange={(e) => {
+                      const val = e.target.value ? Math.max(0, parseInt(e.target.value, 10) || 0) : 0;
+                      setFormData((prev) => ({
+                        ...prev,
+                        sesion_terapia: val,
+                      }));
+                    }}
+                    placeholder="0"
+                    style={{
+                      width: "100%",
+                      padding: "0.75rem",
+                      borderRadius: "10px",
+                      border: "1px solid #CBD5E1",
+                      backgroundColor: "#FFFFFF",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
                     htmlFor="user-form-rol"
                     style={{
                       display: "block",
@@ -1230,7 +1350,7 @@ export default function AdminUsuariosTab() {
                     border: "none",
                     fontWeight: "600",
                     cursor: "pointer",
-                    minHeight: "44px"
+                    minHeight: "44px",
                   }}
                 >
                   Cancelar
@@ -1247,7 +1367,7 @@ export default function AdminUsuariosTab() {
                     fontWeight: "600",
                     cursor: "pointer",
                     boxShadow: "0 4px 14px rgba(37, 59, 89, 0.25)",
-                    minHeight: "44px"
+                    minHeight: "44px",
                   }}
                 >
                   {guardando
@@ -1292,7 +1412,13 @@ export default function AdminUsuariosTab() {
                 >
                   🎟️ Clases Reservadas
                 </h2>
-                <div style={{ fontSize: "0.875rem", color: "#64748B", marginTop: "0.15rem" }}>
+                <div
+                  style={{
+                    fontSize: "0.875rem",
+                    color: "#64748B",
+                    marginTop: "0.15rem",
+                  }}
+                >
                   Usuario: <strong>{usuarioClasesSeleccionado.nombre}</strong> (
                   {usuarioClasesSeleccionado.email})
                 </div>
@@ -1306,7 +1432,7 @@ export default function AdminUsuariosTab() {
                   fontSize: "1.5rem",
                   cursor: "pointer",
                   color: "#64748B",
-                  padding: "0.25rem"
+                  padding: "0.25rem",
                 }}
                 aria-label="Cerrar modal de reservas"
               >
@@ -1402,7 +1528,7 @@ export default function AdminUsuariosTab() {
                           fontWeight: "600",
                           fontSize: "0.85rem",
                           cursor: "pointer",
-                          minHeight: "42px"
+                          minHeight: "42px",
                         }}
                       >
                         Cancelar Reserva
@@ -1460,7 +1586,7 @@ export default function AdminUsuariosTab() {
                   borderRadius: "9999px",
                   fontWeight: "600",
                   cursor: "pointer",
-                  minHeight: "44px"
+                  minHeight: "44px",
                 }}
               >
                 Cancelar
@@ -1475,7 +1601,7 @@ export default function AdminUsuariosTab() {
                   borderRadius: "9999px",
                   fontWeight: "600",
                   cursor: "pointer",
-                  minHeight: "44px"
+                  minHeight: "44px",
                 }}
               >
                 Sí, Eliminar

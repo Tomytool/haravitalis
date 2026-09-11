@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { Timestamp, doc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { suscribirClasesPorFecha } from "../firebase/clasesService";
+import { suscribirTerapiasActivas } from "../firebase/terapiasService";
 import {
   reservarClase,
+  reservarTerapia,
   suscribirMisInscripciones,
   cancelarReservaCliente,
 } from "../firebase/inscripcionesService";
@@ -13,8 +15,18 @@ import imagenpilates from "/pilates-studio-wide.jpg";
 function generarProximosDias() {
   const diasNombres = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
   const mesesNombres = [
-    "Ene", "Feb", "Mar", "Abr", "May", "Jun",
-    "Jul", "Ago", "Sep", "Oct", "Nov", "Dic",
+    "Ene",
+    "Feb",
+    "Mar",
+    "Abr",
+    "May",
+    "Jun",
+    "Jul",
+    "Ago",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dic",
   ];
   const hoy = new Date();
   const listaDias = [];
@@ -47,9 +59,14 @@ function generarProximosDias() {
 export default function BookingPage({ currentUser }) {
   // Generar próximos 14 días a partir de hoy
   const [diasDisponibles] = useState(generarProximosDias);
-  const [selectedDayObj, setSelectedDayObj] = useState(() => diasDisponibles[0] || null);
+  const [selectedDayObj, setSelectedDayObj] = useState(
+    () => diasDisponibles[0] || null,
+  );
   const [clasesDelDia, setClasesDelDia] = useState([]);
+  const [terapiasDisponibles, setTerapiasDisponibles] = useState([]);
   const [misInscripciones, setMisInscripciones] = useState([]);
+  const [tabFiltroReservas, setTabFiltroReservas] = useState("pendientes"); // "pendientes" | "caducadas" | "todas"
+  const [tabActivaReserva, setTabActivaReserva] = useState("todas"); // "todas" | "clases" | "terapias"
   const [notification, setNotification] = useState({
     message: "",
     error: false,
@@ -57,12 +74,15 @@ export default function BookingPage({ currentUser }) {
   const [loadingReservaId, setLoadingReservaId] = useState(null);
   const [cancellingReservaId, setCancellingReservaId] = useState(null);
 
-  // Estado reactivo en tiempo real para el saldo de clases pactadas
+  // Estado reactivo en tiempo real para el saldo de clases pactadas y terapias
   const [saldoClases, setSaldoClases] = useState(
     currentUser?.clases_pactadas ?? 0,
   );
+  const [saldoTerapias, setSaldoTerapias] = useState(
+    currentUser?.sesion_terapia ?? 0,
+  );
 
-  // Escuchar el documento de usuario en tiempo real para actualizar saldo sin retrasos
+  // Escuchar el documento de usuario en tiempo real para actualizar saldos sin retrasos
   useEffect(() => {
     if (!currentUser?.uid) return;
 
@@ -73,10 +93,11 @@ export default function BookingPage({ currentUser }) {
         if (snapshot.exists()) {
           const data = snapshot.data();
           setSaldoClases(data.clases_pactadas ?? 0);
+          setSaldoTerapias(data.sesion_terapia ?? 0);
         }
       },
       (err) => {
-        console.error("Error al escuchar saldo de clases:", err);
+        console.error("Error al escuchar saldo de usuario:", err);
       },
     );
 
@@ -107,7 +128,15 @@ export default function BookingPage({ currentUser }) {
     return () => unsubscribe();
   }, [selectedDayObj]);
 
-  // Escuchar las inscripciones ("Mis Próximas Clases") del usuario actual
+  // Escuchar terapias en tiempo real desde Firestore
+  useEffect(() => {
+    const unsubscribe = suscribirTerapiasActivas((terapias) => {
+      setTerapiasDisponibles(terapias);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Escuchar las inscripciones ("Mis Próximas Clases / Terapias") del usuario actual
   useEffect(() => {
     if (!currentUser?.uid) return;
 
@@ -121,7 +150,8 @@ export default function BookingPage({ currentUser }) {
     return () => unsubscribe();
   }, [currentUser]);
 
-  const handleReservar = async (clase) => {
+  // Manejar reserva de Clases de Pilates Reformer
+  const handleReservarClase = async (clase) => {
     if (!currentUser?.uid) {
       setNotification({
         message: "Debes iniciar sesión para reservar.",
@@ -133,13 +163,13 @@ export default function BookingPage({ currentUser }) {
     if (saldoClases <= 0) {
       setNotification({
         message:
-          "Has consumido tus clases pactadas. Contacta a administración.",
+          "Has consumido tus clases pactadas (Saldo 0). Contacta al administrador para cargar más clases a tu cuenta.",
         error: true,
       });
       return;
     }
 
-    // Optimistic UI update: Descontar instantáneamente en pantalla (0ms)
+    // Optimistic UI
     setSaldoClases((prev) => Math.max(0, prev - 1));
     setLoadingReservaId(clase.id);
     setNotification({ message: "", error: false });
@@ -152,15 +182,14 @@ export default function BookingPage({ currentUser }) {
       });
 
       setNotification({
-        message: `¡Clase de ${clase.tipo_servicio} reservada con éxito!`,
+        message: `¡${clase.tipo_servicio} reservada con éxito!`,
         error: false,
       });
     } catch (error) {
       console.error("Error al reservar clase:", error);
-      // Revertir estado optimista si ocurrió un error
       setSaldoClases((prev) => prev + 1);
       setNotification({
-        message: error.message || "No se pudo realizar la reserva.",
+        message: error.message || "No se pudo realizar la reserva de la clase.",
         error: true,
       });
     } finally {
@@ -169,11 +198,113 @@ export default function BookingPage({ currentUser }) {
     }
   };
 
+  // Manejar reserva de Terapias Integrativas (Usa saldo sesion_terapia)
+  const handleReservarTerapia = async (terapia) => {
+    if (!currentUser?.uid) {
+      setNotification({
+        message: "Debes iniciar sesión para reservar.",
+        error: true,
+      });
+      return;
+    }
+
+    if (saldoTerapias <= 0) {
+      setNotification({
+        message:
+          "No posees sesiones de terapia asignadas (Saldo 0). Contacta al administrador para cargar horas de terapia a tu cuenta.",
+        error: true,
+      });
+      return;
+    }
+
+    // Optimistic UI
+    setSaldoTerapias((prev) => Math.max(0, prev - 1));
+    setLoadingReservaId(terapia.id);
+    setNotification({ message: "", error: false });
+
+    try {
+      await reservarTerapia({
+        terapiaId: terapia.id,
+        usuarioId: currentUser.uid,
+        nombreUsuario: currentUser.nombre || currentUser.email,
+      });
+
+      setNotification({
+        message: `¡Sesión de ${terapia.titulo || "Terapia"} reservada con éxito!`,
+        error: false,
+      });
+    } catch (error) {
+      console.error("Error al reservar terapia:", error);
+      setSaldoTerapias((prev) => prev + 1);
+      setNotification({
+        message:
+          error.message || "No se pudo realizar la reserva de la terapia.",
+        error: true,
+      });
+    } finally {
+      setLoadingReservaId(null);
+      setTimeout(() => setNotification({ message: "", error: false }), 4500);
+    }
+  };
+
+  const handleAnularReservaDirecta = async (item, esTerapia = false) => {
+    if (!currentUser?.uid) return;
+
+    const inscripcionId = esTerapia
+      ? `terapia_${item.id}_${currentUser.uid}`
+      : `${item.id}_${currentUser.uid}`;
+
+    setCancellingReservaId(item.id);
+    setNotification({ message: "", error: false });
+
+    // Actualización optimista del saldo en UI
+    if (esTerapia) {
+      setSaldoTerapias((prev) => prev + 1);
+    } else {
+      setSaldoClases((prev) => prev + 1);
+    }
+
+    try {
+      await cancelarReservaCliente({
+        inscripcionId,
+        claseId: item.id,
+        usuarioId: currentUser.uid,
+      });
+
+      setNotification({
+        message: `Reserva anulada con éxito. Se ha devuelto 1 ${esTerapia ? "sesión de terapia" : "clase pactada"} a tu saldo personal.`,
+        error: false,
+      });
+    } catch (error) {
+      console.error("Error al anular reserva desde la tarjeta:", error);
+      // Revertir optimismo si falla
+      if (esTerapia) {
+        setSaldoTerapias((prev) => Math.max(0, prev - 1));
+      } else {
+        setSaldoClases((prev) => Math.max(0, prev - 1));
+      }
+      setNotification({
+        message: error.message || "No se pudo anular la reserva.",
+        error: true,
+      });
+    } finally {
+      setCancellingReservaId(null);
+      setTimeout(() => setNotification({ message: "", error: false }), 4500);
+    }
+  };
+
   const handleAnularReserva = async (reserva) => {
     if (!currentUser?.uid) return;
 
-    // Optimistic UI update: Reintegrar instantáneamente en pantalla (0ms)
-    setSaldoClases((prev) => prev + 1);
+    const esTerapia = (reserva.tipo_servicio || "")
+      .toLowerCase()
+      .includes("terapia");
+
+    if (esTerapia) {
+      setSaldoTerapias((prev) => prev + 1);
+    } else {
+      setSaldoClases((prev) => prev + 1);
+    }
     setCancellingReservaId(reserva.id);
     setNotification({ message: "", error: false });
 
@@ -185,20 +316,23 @@ export default function BookingPage({ currentUser }) {
       });
 
       setNotification({
-        message: "Reserva anulada con éxito y clase devuelta a tu saldo.",
+        message: "Reserva anulada con éxito y saldo restituido.",
         error: false,
       });
     } catch (error) {
       console.error("Error al anular reserva:", error);
-      // Revertir estado optimista si la regla de 15 horas bloqueó la anulación
-      setSaldoClases((prev) => Math.max(0, prev - 1));
+      if (esTerapia) {
+        setSaldoTerapias((prev) => Math.max(0, prev - 1));
+      } else {
+        setSaldoClases((prev) => Math.max(0, prev - 1));
+      }
       setNotification({
         message: error.message || "No se pudo anular la reserva.",
         error: true,
       });
     } finally {
       setCancellingReservaId(null);
-      setTimeout(() => setNotification({ message: "", error: false }), 5000);
+      setTimeout(() => setNotification({ message: "", error: false }), 4500);
     }
   };
 
@@ -237,6 +371,56 @@ export default function BookingPage({ currentUser }) {
       ? currentUser.email.split("@")[0]
       : "Alumno";
 
+  const terapiasDelDia = terapiasDisponibles.filter((terapia) => {
+    if (terapia.estado === "inactiva") return false;
+
+    const fechaInicioObj = terapia.fecha_inicio?.toDate
+      ? terapia.fecha_inicio.toDate()
+      : terapia.fecha_inicio
+        ? new Date(terapia.fecha_inicio)
+        : null;
+
+    if (!selectedDayObj?.fechaObj) return true;
+
+    // Si no cuenta con timestamp de fecha específico, se muestra disponible para el día seleccionado
+    if (!fechaInicioObj || isNaN(fechaInicioObj.getTime())) {
+      return true;
+    }
+
+    const inicioDia = new Date(selectedDayObj.fechaObj);
+    inicioDia.setHours(0, 0, 0, 0);
+
+    const finDia = new Date(selectedDayObj.fechaObj);
+    finDia.setHours(23, 59, 59, 999);
+
+    return fechaInicioObj >= inicioDia && fechaInicioObj <= finDia;
+  });
+
+  const ahora = new Date();
+
+  const reservasPendientes = misInscripciones.filter((res) => {
+    if (!res.fecha_clase) return true;
+    const fechaObj = res.fecha_clase?.toDate
+      ? res.fecha_clase.toDate()
+      : new Date(res.fecha_clase);
+    return fechaObj >= ahora;
+  });
+
+  const reservasCaducadas = misInscripciones.filter((res) => {
+    if (!res.fecha_clase) return false;
+    const fechaObj = res.fecha_clase?.toDate
+      ? res.fecha_clase.toDate()
+      : new Date(res.fecha_clase);
+    return fechaObj < ahora;
+  });
+
+  const reservasAMostrar =
+    tabFiltroReservas === "pendientes"
+      ? reservasPendientes
+      : tabFiltroReservas === "caducadas"
+      ? reservasCaducadas
+      : misInscripciones;
+
   return (
     <div className="booking-page-container">
       {/* Toast Notification */}
@@ -271,32 +455,62 @@ export default function BookingPage({ currentUser }) {
       <div className="booking-header">
         <h1 className="booking-title">Reserva tu sesión</h1>
         <h2 className="booking-username">{nombreMostrar}</h2>
+
+        {/* Resumen de Saldos Disponibles (Clases & Terapias) */}
         <div
           style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "0.5rem",
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "center",
+            gap: "0.75rem",
             marginTop: "0.5rem",
-            padding: "0.4rem 1.2rem",
-            backgroundColor:
-              saldoClases > 0 ? "rgba(206, 208, 242, 0.4)" : "#FEE2E2",
-            borderRadius: "9999px",
-            color: saldoClases > 0 ? "#253B59" : "#991B1B",
-            fontWeight: "700",
-            fontSize: "0.9rem",
-            transition: "all 0.3s ease",
           }}
         >
-          💳 Clases Pactadas Disponibles: {saldoClases}
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              padding: "0.5rem 1.25rem",
+              backgroundColor:
+                saldoClases > 0 ? "rgba(206, 208, 242, 0.5)" : "#FEE2E2",
+              borderRadius: "9999px",
+              color: saldoClases > 0 ? "#253B59" : "#991B1B",
+              fontWeight: "700",
+              fontSize: "0.9rem",
+              transition: "background-color 0.3s ease, color 0.3s ease",
+            }}
+          >
+            💳 Clases Pilates Pactadas: <strong>{saldoClases}</strong>
+          </div>
+
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              padding: "0.5rem 1.25rem",
+              backgroundColor:
+                saldoTerapias > 0 ? "rgba(220, 252, 231, 0.9)" : "#FEE2E2",
+              borderRadius: "9999px",
+              color: saldoTerapias > 0 ? "#15803D" : "#991B1B",
+              fontWeight: "700",
+              fontSize: "0.9rem",
+              transition: "background-color 0.3s ease, color 0.3s ease",
+            }}
+          >
+            🌿 Sesiones Terapia Disponibles: <strong>{saldoTerapias}</strong>
+          </div>
         </div>
+
         <p className="booking-subtitle" style={{ marginTop: "0.75rem" }}>
-          Selecciona el día y la clase que mejor se adapte a tu horario. Puedes
-          anular tu reserva hasta 15 horas antes de la clase.
+          Selecciona el día y agenda tu lugar en las Clases de Pilates Reformer
+          o en las Sesiones de Terapia Integrativa.
         </p>
       </div>
 
-      {/* Alerta de Cuenta Sin Clases Pactadas */}
-      {saldoClases <= 0 && (
+      {/* Banner de Aviso de Saldo si ambos están en 0 */}
+      {saldoClases <= 0 && saldoTerapias <= 0 && (
         <div
           style={{
             backgroundColor: "#FEF2F2",
@@ -320,7 +534,7 @@ export default function BookingPage({ currentUser }) {
                 fontWeight: "700",
               }}
             >
-              Reservas Inhabilitadas — 0 Clases Pactadas
+              Sin Saldos Disponibles para Reserva
             </h3>
             <p
               style={{
@@ -330,16 +544,81 @@ export default function BookingPage({ currentUser }) {
                 lineHeight: "1.5",
               }}
             >
-              Tu cuenta tiene <strong>0 clases pactadas</strong>. Para poder
-              realizar reservas de clases, el administrador debe asignarte el
-              número de clases correspondiente según el plan que adquieras.
-              Contacta a administración para activar tu plan.
+              Actualmente cuentas con <strong>0 clases pactadas</strong> y{" "}
+              <strong>0 sesiones de terapia</strong>. Contacta al administrador
+              para abonar clases de Pilates o cargar horas de terapia a tu
+              cuenta.
             </p>
           </div>
         </div>
       )}
 
-      {/* Grid Principal: Izquierda (Calendario + Clases) / Derecha (Sidebar) */}
+      {/* Selector de Pestañas de Agendamiento en la Pantalla de Clases */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          gap: "0.75rem",
+          marginBottom: "2rem",
+          flexWrap: "wrap",
+        }}
+      >
+        <button
+          onClick={() => setTabActivaReserva("todas")}
+          style={{
+            padding: "0.6rem 1.25rem",
+            borderRadius: "9999px",
+            border: "none",
+            backgroundColor:
+              tabActivaReserva === "todas" ? "#253B59" : "#E2E8F0",
+            color: tabActivaReserva === "todas" ? "#FFFFFF" : "#475569",
+            fontWeight: "700",
+            fontSize: "0.875rem",
+            cursor: "pointer",
+            transition: "background-color 0.2s ease, color 0.2s ease",
+          }}
+        >
+          🌟 Todas las Opciones
+        </button>
+
+        <button
+          onClick={() => setTabActivaReserva("clases")}
+          style={{
+            padding: "0.6rem 1.25rem",
+            borderRadius: "9999px",
+            border: "none",
+            backgroundColor:
+              tabActivaReserva === "clases" ? "#253B59" : "#E2E8F0",
+            color: tabActivaReserva === "clases" ? "#FFFFFF" : "#475569",
+            fontWeight: "700",
+            fontSize: "0.875rem",
+            cursor: "pointer",
+            transition: "background-color 0.2s ease, color 0.2s ease",
+          }}
+        >
+          🧘‍♀️ Clases Pilates Reformer
+        </button>
+
+        <button
+          onClick={() => setTabActivaReserva("terapias")}
+          style={{
+            padding: "0.6rem 1.25rem",
+            borderRadius: "9999px",
+            border: "none",
+            backgroundColor:
+              tabActivaReserva === "terapias" ? "#15803D" : "#E2E8F0",
+            color: tabActivaReserva === "terapias" ? "#FFFFFF" : "#475569",
+            fontWeight: "700",
+            fontSize: "0.875rem",
+            cursor: "pointer",
+            transition: "background-color 0.2s ease, color 0.2s ease",
+          }}
+        >
+          🌿 Sesiones Terapia Integrativa
+        </button>
+      </div>
+
+      {/* Grid Principal: Izquierda (Calendario + Clases & Terapias) / Derecha (Sidebar Próximas Reservas) */}
       <div className="booking-grid">
         <div className="booking-main">
           {/* Tarjeta de Calendario Horizontal */}
@@ -369,260 +648,414 @@ export default function BookingPage({ currentUser }) {
             </div>
           </div>
 
-          {/* Lista de Clases Disponibles en Firestore */}
-          <div>
-            <h3 className="classes-section-title">
-              Clases Disponibles - {selectedDayObj?.nombreCompleto || ""}
-            </h3>
+          {/* SECCIÓN 1: CLASES DE PILATES REFORMER */}
+          {(tabActivaReserva === "todas" || tabActivaReserva === "clases") && (
+            <div style={{ marginBottom: "3rem" }}>
+              <h3
+                className="classes-section-title"
+                style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+              >
+                <span>🧘‍♀️</span> Clases de Pilates Reformer -{" "}
+                {selectedDayObj?.nombreCompleto || ""}
+              </h3>
 
-            <div className="classes-list">
-              {clasesDelDia.length > 0 ? (
-                clasesDelDia.map((clase) => {
-                  const yaInscrito = clase.inscritos_ids?.includes(
-                    currentUser?.uid,
-                  );
-                  const sinCupos = clase.cupos_disponibles <= 0;
-                  const sinClasesPactadas = saldoClases <= 0;
-                  
-                  const ahora = new Date();
-                  const fechaInicioObj = clase.fecha_inicio?.toDate ? clase.fecha_inicio.toDate() : (clase.fecha_inicio ? new Date(clase.fecha_inicio) : null);
-                  const fechaFinObj = clase.fecha_fin?.toDate ? clase.fecha_fin.toDate() : (clase.fecha_fin ? new Date(clase.fecha_fin) : null);
-                  const estaCaducada = (fechaFinObj && fechaFinObj < ahora) || (fechaInicioObj && fechaInicioObj < ahora);
-                  const esInactiva = clase.estado === "inactiva" || estaCaducada;
+              <div className="classes-list">
+                {clasesDelDia.length > 0 ? (
+                  clasesDelDia.map((clase) => {
+                    const yaInscrito = clase.inscritos_ids?.includes(
+                      currentUser?.uid,
+                    );
+                    const sinCupos = clase.cupos_disponibles <= 0;
+                    const sinClasesPactadas = saldoClases <= 0;
 
-                  const horaInicioStr = formatearHora(clase.fecha_inicio);
-                  const horaFinStr = formatearHora(clase.fecha_fin);
+                    const ahora = new Date();
+                    const fechaInicioObj = clase.fecha_inicio?.toDate
+                      ? clase.fecha_inicio.toDate()
+                      : clase.fecha_inicio
+                        ? new Date(clase.fecha_inicio)
+                        : null;
+                    const fechaFinObj = clase.fecha_fin?.toDate
+                      ? clase.fecha_fin.toDate()
+                      : clase.fecha_fin
+                        ? new Date(clase.fecha_fin)
+                        : null;
+                    const estaCaducada =
+                      (fechaFinObj && fechaFinObj < ahora) ||
+                      (fechaInicioObj && fechaInicioObj < ahora);
+                    const esInactiva =
+                      clase.estado === "inactiva" || estaCaducada;
 
-                  return (
-                    <div key={clase.id} className="class-card">
-                      <div className="class-left-info">
-                        <div className="time-box">
-                          <span className="time-text">{horaInicioStr}</span>
-                          <span className="duration-text">
-                            {horaInicioStr} - {horaFinStr}
-                          </span>
-                        </div>
+                    const horasHastaInicio = fechaInicioObj
+                      ? (fechaInicioObj.getTime() - ahora.getTime()) /
+                        (1000 * 60 * 60)
+                      : 0;
+                    const sePuedeAnular = horasHastaInicio >= 15;
 
-                        <div className="class-details">
-                          <h4 className="class-name">{clase.tipo_servicio}</h4>
-                          <span className="class-instructor">
-                            <svg
-                              width="14"
-                              height="14"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-                              <circle cx="12" cy="7" r="4"></circle>
-                            </svg>
-                            {clase.instructor || "Instructor Studio"}
-                          </span>
+                    const horaInicioStr = formatearHora(clase.fecha_inicio);
+                    const horaFinStr = formatearHora(clase.fecha_fin);
 
-                          <div className="class-pills-row">
-                            <span className="badge-pill">Reformer</span>
-                            <span
-                              className={`badge-pill ${esInactiva ? "inactiva" : sinCupos ? "completo" : "plazas"}`}
-                            >
-                              {esInactiva
-                                ? "Inactiva / Caducada"
-                                : sinCupos
-                                ? "Completo"
-                                : `${clase.cupos_disponibles} plaza${clase.cupos_disponibles > 1 ? "s" : ""}`}
+                    return (
+                      <div key={clase.id} className="class-card">
+                        <div className="class-left-info">
+                          <div className="time-box">
+                            <span className="time-text">{horaInicioStr}</span>
+                            <span className="duration-text">
+                              {horaInicioStr} - {horaFinStr}
                             </span>
                           </div>
+
+                          <div className="class-details">
+                            <h4 className="class-name">
+                              {clase.tipo_servicio}
+                            </h4>
+                            <span className="class-instructor">
+                              👤 {clase.instructor || "Camila Soto"}
+                            </span>
+
+                            <div className="class-pills-row">
+                              <span className="badge-pill">Reformer</span>
+                              <span
+                                className={`badge-pill ${esInactiva ? "inactiva" : sinCupos ? "completo" : "plazas"}`}
+                              >
+                                {esInactiva
+                                  ? "Inactiva / Caducada"
+                                  : sinCupos
+                                    ? "Completo"
+                                    : `${clase.cupos_disponibles} plaza${clase.cupos_disponibles > 1 ? "s" : ""}`}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          {yaInscrito ? (
+                            <div
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "flex-end",
+                                gap: "0.5rem",
+                              }}
+                            >
+                              <span className="badge-reservado-clase">
+                                ✓ Reservado
+                              </span>
+                              <button
+                                onClick={() =>
+                                  handleAnularReservaDirecta(clase, false)
+                                }
+                                disabled={
+                                  !sePuedeAnular ||
+                                  cancellingReservaId === clase.id
+                                }
+                                className={
+                                  sePuedeAnular
+                                    ? "btn-anular-card-active"
+                                    : "btn-anular-card-disabled"
+                                }
+                                title={
+                                  sePuedeAnular
+                                    ? "Anular esta reserva y restituir la clase a tu saldo personal"
+                                    : "Solo puedes anular una reserva con al menos 15 horas de anticipación"
+                                }
+                              >
+                                <span>🗑️</span>
+                                {cancellingReservaId === clase.id
+                                  ? "Anulando..."
+                                  : sePuedeAnular
+                                    ? "Anular Reserva (-15h)"
+                                    : "No Anulable (<15h)"}
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => handleReservarClase(clase)}
+                              disabled={
+                                sinCupos ||
+                                sinClasesPactadas ||
+                                esInactiva ||
+                                loadingReservaId === clase.id
+                              }
+                              className={
+                                sinCupos || sinClasesPactadas || esInactiva
+                                  ? "btn-booking-disabled"
+                                  : "btn-booking-primary"
+                              }
+                            >
+                              {loadingReservaId === clase.id
+                                ? "Reservando..."
+                                : sinClasesPactadas
+                                  ? "Sin Clases"
+                                  : sinCupos
+                                    ? "Completo"
+                                    : esInactiva
+                                      ? "Inactiva"
+                                      : "Reservar Clase"}
+                            </button>
+                          )}
                         </div>
                       </div>
+                    );
+                  })
+                ) : (
+                  <div
+                    style={{
+                      padding: "2rem",
+                      backgroundColor: "#FFFFFF",
+                      borderRadius: "16px",
+                      border: "1px solid #E2E8F0",
+                      textAlign: "center",
+                      color: "#64748B",
+                    }}
+                  >
+                    <p style={{ margin: 0, fontSize: "0.95rem" }}>
+                      No hay clases de Pilates agendadas para el día{" "}
+                      <strong>{selectedDayObj?.nombreCompleto}</strong>.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
-                      <div>
-                        {yaInscrito ? (
-                          <span
+          {/* SECCIÓN 2: SESIONES DE TERAPIA INTEGRATIVA DISPONIBLES */}
+          {(tabActivaReserva === "todas" ||
+            tabActivaReserva === "terapias") && (
+            <div style={{ marginBottom: "2rem" }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "1rem",
+                  marginBottom: "1.25rem",
+                }}
+              >
+                <h3
+                  className="classes-section-title"
+                  style={{
+                    color: "#166534",
+                    margin: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                  }}
+                >
+                  <span>🌿</span> Sesiones de Terapia Integrativa -{" "}
+                  {selectedDayObj?.nombreCompleto || ""}
+                </h3>
+              </div>
+
+              <div className="classes-list">
+                {terapiasDelDia.length > 0 ? (
+                  terapiasDelDia.map((terapia) => {
+                    const yaInscrito = terapia.inscritos_ids?.includes(
+                      currentUser?.uid,
+                    );
+                    const sinCupos =
+                      Number(terapia.cupos_disponibles ?? 1) <= 0;
+                    const sinSaldoTerapia = saldoTerapias <= 0;
+
+                    const ahora = new Date();
+                    const fechaInicioObj = terapia.fecha_inicio?.toDate
+                      ? terapia.fecha_inicio.toDate()
+                      : terapia.fecha_inicio
+                        ? new Date(terapia.fecha_inicio)
+                        : null;
+                    const fechaFinObj = terapia.fecha_fin?.toDate
+                      ? terapia.fecha_fin.toDate()
+                      : terapia.fecha_fin
+                        ? new Date(terapia.fecha_fin)
+                        : null;
+                    const estaCaducada =
+                      (fechaFinObj && fechaFinObj < ahora) ||
+                      (fechaInicioObj && fechaInicioObj < ahora);
+                    const esInactiva =
+                      terapia.estado === "inactiva" || estaCaducada;
+
+                    const horasHastaInicio = fechaInicioObj
+                      ? (fechaInicioObj.getTime() - ahora.getTime()) /
+                        (1000 * 60 * 60)
+                      : 0;
+                    const sePuedeAnular = horasHastaInicio >= 15;
+
+                    const horaInicioStr = formatearHora(terapia.fecha_inicio);
+                    const horaFinStr = formatearHora(terapia.fecha_fin);
+
+                    return (
+                      <div
+                        key={terapia.id}
+                        className="class-card"
+                        style={{
+                          borderLeft: "5px solid #15803D",
+                          backgroundColor: "#FFFFFF",
+                        }}
+                      >
+                        <div className="class-left-info">
+                          <div
+                            className="time-box"
                             style={{
-                              display: "inline-block",
-                              padding: "0.65rem 1.2rem",
-                              backgroundColor: "#E0F2FE",
-                              color: "#0369A1",
-                              borderRadius: "8px",
-                              fontWeight: "600",
-                              fontSize: "0.85rem",
+                              backgroundColor: "#DCFCE7",
+                              color: "#15803D",
+                              border: "1px solid #BBF7D0",
                             }}
                           >
-                            ✓ Reservado
-                          </span>
-                        ) : esInactiva ? (
-                          <button className="btn-disabled" disabled title="No se permiten reservas en clases inactivas o caducadas">
-                            🔒 Clase Inactiva
-                          </button>
-                        ) : sinCupos ? (
-                          <button className="btn-disabled" disabled>
-                            Sin cupos
-                          </button>
-                        ) : sinClasesPactadas ? (
-                          <button
-                            className="btn-disabled"
-                            disabled
-                            title="No tienes clases pactadas asignadas por el administrador (0 disponibes)"
-                          >
-                            🔒 Sin clases pactadas
-                          </button>
-                        ) : (
-                          <button
-                            className="btn-reserve"
-                            disabled={loadingReservaId === clase.id}
-                            onClick={() => handleReservar(clase)}
-                          >
-                            {loadingReservaId === clase.id
-                              ? "Reservando..."
-                              : "Reservar"}
-                          </button>
-                        )}
+                            <span
+                              className="time-text"
+                              style={{ fontSize: "0.95rem" }}
+                            >
+                              {horaInicioStr !== "00:00" ? horaInicioStr : "🌿"}
+                            </span>
+                            <span
+                              className="duration-text"
+                              style={{ color: "#166534", fontWeight: "700" }}
+                            >
+                              {horaInicioStr !== "00:00" &&
+                              horaFinStr !== "00:00"
+                                ? `${horaInicioStr} - ${horaFinStr}`
+                                : terapia.duracion || "50 min"}
+                            </span>
+                          </div>
+
+                          <div className="class-details">
+                            <h4
+                              className="class-name"
+                              style={{ color: "#166534" }}
+                            >
+                              {terapia.titulo || "Terapia Integrativa"}
+                            </h4>
+                            <p
+                              style={{
+                                margin: "0.2rem 0 0.5rem 0",
+                                fontSize: "0.85rem",
+                                color: "#475569",
+                                lineHeight: "1.4",
+                              }}
+                            >
+                              {terapia.descripcion}
+                            </p>
+
+                            <div className="class-pills-row">
+                              <span
+                                style={{
+                                  backgroundColor: "#DCFCE7",
+                                  color: "#15803D",
+                                  padding: "0.25rem 0.65rem",
+                                  borderRadius: "9999px",
+                                  fontSize: "0.75rem",
+                                  fontWeight: "800",
+                                  textTransform: "uppercase",
+                                }}
+                              >
+                                {terapia.badge || "Atención 1 a 1"}
+                              </span>
+                              <span
+                                style={{
+                                  backgroundColor: "#F1F5F9",
+                                  color: "#475569",
+                                  padding: "0.25rem 0.65rem",
+                                  borderRadius: "9999px",
+                                  fontSize: "0.75rem",
+                                  fontWeight: "600",
+                                }}
+                              >
+                                🩺 {terapia.terapeuta || "Especialista MTC"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          {yaInscrito ? (
+                            <div
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "flex-end",
+                                gap: "0.5rem",
+                              }}
+                            >
+                              <span className="badge-reservado-terapia">
+                                ✓ Terapia Reservada
+                              </span>
+                              <button
+                                onClick={() =>
+                                  handleAnularReservaDirecta(terapia, true)
+                                }
+                                disabled={
+                                  !sePuedeAnular ||
+                                  cancellingReservaId === terapia.id
+                                }
+                                className={
+                                  sePuedeAnular
+                                    ? "btn-anular-card-active"
+                                    : "btn-anular-card-disabled"
+                                }
+                                title={
+                                  sePuedeAnular
+                                    ? "Anular esta reserva y restituir la sesión a tu saldo personal"
+                                    : "Solo puedes anular una reserva con al menos 15 horas de anticipación"
+                                }
+                              >
+                                <span>🗑️</span>
+                                {cancellingReservaId === terapia.id
+                                  ? "Anulando..."
+                                  : sePuedeAnular
+                                    ? "Anular Reserva (-15h)"
+                                    : "No Anulable (<15h)"}
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => handleReservarTerapia(terapia)}
+                              disabled={
+                                sinCupos ||
+                                sinSaldoTerapia ||
+                                esInactiva ||
+                                loadingReservaId === terapia.id
+                              }
+                              className={
+                                sinCupos || sinSaldoTerapia || esInactiva
+                                  ? "btn-booking-disabled"
+                                  : "btn-booking-terapia"
+                              }
+                            >
+                              {loadingReservaId === terapia.id
+                                ? "Reservando..."
+                                : sinSaldoTerapia
+                                  ? "Sin Horas Terapia"
+                                  : sinCupos
+                                    ? "Agotado"
+                                    : esInactiva
+                                      ? "Inactiva"
+                                      : "Reservar Hora de Terapia"}
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <div
-                  style={{
-                    padding: "2.5rem",
-                    backgroundColor: "#FFFFFF",
-                    borderRadius: "16px",
-                    textAlign: "center",
-                    color: "#64748B",
-                  }}
-                >
-                  No hay clases programadas para este día.
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Sidebar Derecho */}
-        <aside className="booking-sidebar">
-          {/* Tarjeta Azul Navy: Mis Próximas Clases en Firestore */}
-          <div className="upcoming-card">
-            <div className="upcoming-header">
-              <svg
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="16" y1="2" x2="16" y2="6"></line>
-                <line x1="8" y1="2" x2="8" y2="6"></line>
-                <line x1="3" y1="10" x2="21" y2="10"></line>
-              </svg>
-              <span>Mis Próximas Clases ({misInscripciones.length})</span>
-            </div>
-
-            <div className="upcoming-list">
-              {misInscripciones.length > 0 ? (
-                misInscripciones.map((res) => (
-                  <div key={res.id} className="upcoming-item">
-                    <div className="upcoming-item-top">
-                      <span className="upcoming-date-tag">
-                        {formatearFechaInscripcion(res.fecha_clase)}
-                      </span>
-                      <svg
-                        width="15"
-                        height="15"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="#CED0F2"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                      </svg>
-                    </div>
-
-                    <h5 className="upcoming-class-title">
-                      {res.tipo_servicio || "Pilates Reformer"}
-                    </h5>
-
-                    <div className="upcoming-time-row">
-                      <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polyline points="12 6 12 12 16 14"></polyline>
-                      </svg>
-                      <span>
-                        {formatearHora(res.fecha_clase)} hrs —{" "}
-                        {res.instructor || "Instructor Studio"}
-                      </span>
-                    </div>
-
-                    {/* Botón Anular Reserva del Cliente (Regla de 15 horas) */}
-                    <button
-                      onClick={() => handleAnularReserva(res)}
-                      disabled={cancellingReservaId === res.id}
-                      style={{
-                        marginTop: "0.75rem",
-                        width: "100%",
-                        backgroundColor: "rgba(239, 68, 68, 0.15)",
-                        color: "#F87171",
-                        border: "1px solid rgba(239, 68, 68, 0.4)",
-                        borderRadius: "8px",
-                        padding: "0.45rem 0.75rem",
-                        fontSize: "0.8rem",
-                        fontWeight: "700",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "0.35rem",
-                        transition: "all 0.2s ease",
-                      }}
-                    >
-                      <span>🗑️</span>
-                      {cancellingReservaId === res.id
-                        ? "Anulando..."
-                        : "Anular Reserva (-15h)"}
-                    </button>
+                    );
+                  })
+                ) : (
+                  <div
+                    style={{
+                      padding: "2rem",
+                      backgroundColor: "#FFFFFF",
+                      borderRadius: "16px",
+                      border: "1px solid #E2E8F0",
+                      textAlign: "center",
+                      color: "#64748B",
+                    }}
+                  >
+                    <p style={{ margin: 0, fontSize: "0.95rem" }}>
+                      No hay sesiones de terapia agendadas para el día{" "}
+                      <strong>{selectedDayObj?.nombreCompleto}</strong>.
+                    </p>
                   </div>
-                ))
-              ) : (
-                <div
-                  style={{
-                    color: "#94A3B8",
-                    fontSize: "0.85rem",
-                    textAlign: "center",
-                    padding: "1rem 0",
-                  }}
-                >
-                  Aún no tienes reservas activas.
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
-
-          {/* Tarjeta de Imagen Apaisada del Estudio */}
-          <div className="sidebar-image-card">
-            <img
-              src={imagenpilates}
-              alt="Estudio Reformer de Hara Vitalis"
-              className="sidebar-image"
-            />
-          </div>
-        </aside>
+          )}
+        </div>
       </div>
     </div>
   );

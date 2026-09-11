@@ -140,7 +140,7 @@ export default function LoginForm({ onLoginSuccess, initialRegisterMode = false 
             backgroundColor: !isRegisterMode ? '#FFFFFF' : 'transparent',
             color: !isRegisterMode ? '#253B59' : '#64748B',
             boxShadow: !isRegisterMode ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-            transition: 'all 0.2s ease'
+            transition: 'background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease'
           }}
         >
           Iniciar Sesión
@@ -159,7 +159,7 @@ export default function LoginForm({ onLoginSuccess, initialRegisterMode = false 
             backgroundColor: isRegisterMode ? '#FFFFFF' : 'transparent',
             color: isRegisterMode ? '#253B59' : '#64748B',
             boxShadow: isRegisterMode ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-            transition: 'all 0.2s ease'
+            transition: 'background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease'
           }}
         >
           Registrarse

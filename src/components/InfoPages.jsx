@@ -114,8 +114,8 @@ export function FaqPage({ onNavigateHome }) {
         <p className="page-lead">Respuestas rápidas a las consultas más habituales sobre nuestras clases de Reformer.</p>
 
         <div className="faq-list margin-top-lg">
-          {faqs.map((faq, idx) => (
-            <div key={`faq-${idx}`} className="faq-card">
+          {faqs.map((faq) => (
+            <div key={faq.q} className="faq-card">
               <h3 className="faq-question">❓ {faq.q}</h3>
               <p className="faq-answer">{faq.a}</p>
             </div>

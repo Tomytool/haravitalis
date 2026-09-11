@@ -1,20 +1,38 @@
+import { useState, useEffect } from "react";
 import imagenStudio from "/terapias_holisticas.png";
 import qrTerapias from "/qr_terapia.svg";
+import { suscribirTerapiasActivas } from "../firebase/terapiasService";
 
 export default function TerapiasPage({
   onNavigateToAuth,
   onNavigateToBooking,
   currentUser,
 }) {
+  const [terapiasFirestore, setTerapiasFirestore] = useState([]);
+
+  useEffect(() => {
+    const unsubscribe = suscribirTerapiasActivas((lista) => {
+      setTerapiasFirestore(lista);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const sesionesDisponiblesUser = currentUser ? (currentUser.sesion_terapia ?? 0) : 0;
+  const tieneSesionesTerapia = currentUser && sesionesDisponiblesUser > 0;
+
   const handleReservaClick = (nombreServicio) => {
-    if (currentUser) {
-      onNavigateToBooking(nombreServicio);
-    } else {
+    if (!currentUser) {
       onNavigateToAuth(true);
+      return;
     }
+    if (!tieneSesionesTerapia) {
+      alert("No posees sesiones de terapia asignadas disponibles. Por favor contacta al administrador para cargar horas de terapia a tu cuenta.");
+      return;
+    }
+    onNavigateToBooking(nombreServicio);
   };
 
-  const servicios = [
+  const serviciosEstaticos = [
     {
       id: 1,
       badge: "Terapia Principal",
@@ -58,6 +76,21 @@ export default function TerapiasPage({
       destacado: false,
     },
   ];
+
+  // Si existen terapias creadas por el admin en Firestore, las mostramos; sino, mostramos las estáticas iniciales
+  const listaServicios = terapiasFirestore.length > 0
+    ? terapiasFirestore.map((t) => ({
+        id: t.id,
+        badge: t.badge || "Terapia Integrativa",
+        duracion: t.duracion || "50 min",
+        titulo: t.titulo,
+        descripcion: t.descripcion,
+        bullets: t.bullets || ["Atención 100% personalizada", "Especialistas acreditados en MTC"],
+        precio: t.precio || "$25.000",
+        destacado: false,
+      }))
+    : serviciosEstaticos;
+
 
   return (
     <div className="page-wrapper page-terapias">
@@ -246,7 +279,7 @@ export default function TerapiasPage({
          ========================================================================= */}
       <section id="catalogo" className="terapias-catalogo-section">
         <div className="terapias-section-container">
-          <div className="catalogo-header-flex">
+          <div className="catalogo-header-flex" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div className="catalogo-header-text">
               <span className="badge-pill-subtle">CATÁLOGO DE SERVICIOS</span>
               <h2 className="section-title-h2">
@@ -258,11 +291,76 @@ export default function TerapiasPage({
                 estado físico y tus objetivos de bienestar.
               </p>
             </div>
+
+            {/* Banner Informativo del Usuario Autenticado */}
+            {currentUser ? (
+              <div
+                style={{
+                  backgroundColor: tieneSesionesTerapia ? "rgba(220, 252, 231, 0.9)" : "rgba(254, 243, 199, 0.9)",
+                  border: tieneSesionesTerapia ? "1px solid #86EFAC" : "1px solid #FDE68A",
+                  borderRadius: "16px",
+                  padding: "1rem 1.5rem",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "1rem",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.03)",
+                  margin: "1rem 0 2rem 0"
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                  <span style={{ fontSize: "1.5rem" }}>{tieneSesionesTerapia ? "🌿" : "⚠️"}</span>
+                  <div>
+                    <div style={{ fontWeight: "700", color: "#253B59", fontSize: "0.95rem" }}>
+                      Tus Horas / Sesiones de Terapia Disponibles
+                    </div>
+                    <div style={{ fontSize: "0.85rem", color: "#475569" }}>
+                      {tieneSesionesTerapia
+                        ? "Puedes agendar y reservar tus sesiones de terapia integrativa."
+                        : "No tienes sesiones cargadas. Solicita horas de terapia a la administración."}
+                    </div>
+                  </div>
+                </div>
+                <div
+                  style={{
+                    backgroundColor: "#253B59",
+                    color: "#FFFFFF",
+                    fontWeight: "800",
+                    fontSize: "1.25rem",
+                    padding: "0.5rem 1.25rem",
+                    borderRadius: "9999px",
+                    boxShadow: "0 2px 8px rgba(37, 59, 89, 0.2)"
+                  }}
+                >
+                  {sesionesDisponiblesUser} {sesionesDisponiblesUser === 1 ? "Sesión" : "Sesiones"}
+                </div>
+              </div>
+            ) : (
+              <div
+                style={{
+                  backgroundColor: "rgba(241, 245, 249, 0.9)",
+                  border: "1px solid #CBD5E1",
+                  borderRadius: "16px",
+                  padding: "1.25rem 1.5rem",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.75rem",
+                  margin: "1rem 0 2rem 0",
+                  color: "#475569"
+                }}
+              >
+                <span style={{ fontSize: "1.25rem" }}>🔒</span>
+                <div>
+                  <strong style={{ color: "#253B59" }}>Reservas exclusivas para usuarios registrados:</strong>{" "}
+                  Debes <button onClick={() => onNavigateToAuth(false)} style={{ background: "none", border: "none", color: "#1D4ED8", fontWeight: "700", textDecoration: "underline", cursor: "pointer" }}>iniciar sesión</button> o tener un plan con horas de terapia activas (`sesion_terapia &gt; 0`) para agendar sesiones.
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Cards Grid 3x2 */}
           <div className="catalogo-cards-grid">
-            {servicios.map((servicio) => (
+            {listaServicios.map((servicio) => (
               <div
                 key={servicio.id}
                 className={`servicio-card ${
@@ -272,11 +370,6 @@ export default function TerapiasPage({
                 <div className="card-top-bar">
                   <div className="card-badges">
                     <span className="badge-tag">{servicio.badge}</span>
-                    {servicio.badgeSecondary && (
-                      <span className="badge-tag-secondary">
-                        {servicio.badgeSecondary}
-                      </span>
-                    )}
                   </div>
                   <span className="card-duration">{servicio.duracion}</span>
                 </div>
@@ -295,35 +388,36 @@ export default function TerapiasPage({
 
                 <div className="servicio-card-footer">
                   <div className="price-block">
-                    <span className="price-label">
-                      {servicio.destacado
-                        ? "Sesión Doble"
-                        : "Precio por sesión"}
-                    </span>
+                    <span className="price-label">Precio por sesión</span>
                     <div className="price-values">
                       <span className="price-amount">{servicio.precio}</span>
-                      {servicio.precioOriginal && (
-                        <span className="price-original">
-                          antes {servicio.precioOriginal}
-                        </span>
-                      )}
                     </div>
                   </div>
 
                   <button
                     onClick={() => handleReservaClick(servicio.titulo)}
+                    disabled={currentUser && !tieneSesionesTerapia}
                     className={
                       servicio.destacado
                         ? "btn-servicio-featured"
                         : "btn-servicio-action"
                     }
+                    style={{
+                      opacity: (currentUser && !tieneSesionesTerapia) ? 0.5 : 1,
+                      cursor: (currentUser && !tieneSesionesTerapia) ? "not-allowed" : "pointer"
+                    }}
                   >
-                    {servicio.destacado ? "Adquirir Pack" : "Reservar Sesión"}
+                    {!currentUser
+                      ? "Inicia Sesión para Reservar"
+                      : !tieneSesionesTerapia
+                      ? "Sin Sesiones Disponibles"
+                      : "Reservar Sesión"}
                   </button>
                 </div>
               </div>
             ))}
           </div>
+
         </div>
       </section>
 

@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import Navbar from "./components/Navbar";
 import HomePage from "./components/HomePage";
 import QuienesSomosPage from "./components/QuienesSomosPage";
-import HorariosPage from "./components/HorariosPage";
 import TerapiasPage from "./components/TerapiasPage";
 import AuthPage from "./components/AuthPage";
 import BookingPage from "./components/BookingPage";
@@ -15,7 +14,7 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [authCargando, setAuthCargando] = useState(true);
   
-  // Vistas soportadas: "home" | "quienes-somos" | "horarios" | "terapia" | "login" | "register" | "reserva" | "admin" | "privacidad" | "terminos" | "contacto" | "faq"
+  // Vistas soportadas: "home" | "quienes-somos" | "terapia" | "login" | "register" | "reserva" | "admin" | "privacidad" | "terminos" | "contacto" | "faq"
   const [vistaActual, setVistaActual] = useState("home");
 
   useEffect(() => {
@@ -81,14 +80,6 @@ export default function App() {
             currentUser={currentUser}
           />
         );
-      case "horarios":
-        return (
-          <HorariosPage 
-            onNavigateToAuth={handleNavigateToAuth}
-            onNavigateToBooking={() => setVistaActual('reserva')}
-            currentUser={currentUser}
-          />
-        );
       case "terapia":
         return (
           <TerapiasPage 
@@ -128,7 +119,6 @@ export default function App() {
           <HomePage 
             onNavigateToAuth={handleNavigateToAuth} 
             onNavigateToBooking={() => setVistaActual('reserva')}
-            onNavigateToHorarios={() => setVistaActual('horarios')}
             currentUser={currentUser} 
           />
         );
@@ -148,7 +138,6 @@ export default function App() {
           <HomePage 
             onNavigateToAuth={handleNavigateToAuth} 
             onNavigateToBooking={() => setVistaActual('reserva')}
-            onNavigateToHorarios={() => setVistaActual('horarios')}
             currentUser={currentUser} 
           />
         );

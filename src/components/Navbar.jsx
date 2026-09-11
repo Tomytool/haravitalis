@@ -117,14 +117,6 @@ export default function Navbar({
           </button>
           <button
             type="button"
-            className={`nav-link ${vistaActual === "horarios" ? "active" : ""}`}
-            aria-current={vistaActual === "horarios" ? "page" : undefined}
-            onClick={() => handleNavView("horarios")}
-          >
-            Horarios
-          </button>
-          <button
-            type="button"
             className={`nav-link ${vistaActual === "terapia" ? "active" : ""}`}
             aria-current={vistaActual === "terapia" ? "page" : undefined}
             onClick={() => handleNavView("terapia")}

@@ -13,17 +13,24 @@ service cloud.firestore {
 
     // Colección: plantillas_horarios
     match /plantillas_horarios/{plantillaId} {
-      allow read, write: if isAuthenticated();
+      allow read: if true;
+      allow write: if isAuthenticated();
     }
 
     // Colección: clases
     match /clases/{claseId} {
-      allow read, write: if isAuthenticated();
+      allow read: if true;
+      allow write: if isAuthenticated();
     }
 
     // Colección: inscripciones
     match /inscripciones/{inscripcionId} {
-      allow read: if isAuthenticated();
+      allow read, write: if isAuthenticated();
+    }
+
+    // Colección: terapias (Nueva Sesión de Terapia)
+    match /terapias/{terapiaId} {
+      allow read: if true;
       allow write: if isAuthenticated();
     }
   }

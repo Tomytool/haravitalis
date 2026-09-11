@@ -61,6 +61,7 @@ export async function crearUsuarioAdmin(datosUsuario) {
     rol: datosUsuario.rol || "cliente",
     estado_cuenta: datosUsuario.estado_cuenta || "activo",
     clases_pactadas: Number(datosUsuario.clases_pactadas ?? 0),
+    sesion_terapia: Number(datosUsuario.sesion_terapia ?? 0),
     fecha_creacion: serverTimestamp()
   };
 
@@ -79,7 +80,8 @@ export async function actualizarUsuarioAdmin(usuarioId, datosUsuario) {
     telefono: datosUsuario.telefono ? datosUsuario.telefono.trim() : "",
     rol: datosUsuario.rol,
     estado_cuenta: datosUsuario.estado_cuenta,
-    clases_pactadas: Number(datosUsuario.clases_pactadas ?? 0)
+    clases_pactadas: Number(datosUsuario.clases_pactadas ?? 0),
+    sesion_terapia: Number(datosUsuario.sesion_terapia ?? 0)
   });
 }
 
@@ -98,6 +100,23 @@ export async function modificarClasesPactadasAdmin(usuarioId, delta) {
     transaction.set(userRef, { clases_pactadas: nuevoTotal }, { merge: true });
   });
 }
+
+/**
+ * Incrementa o decrementa directamente la cantidad de sesiones de terapia de un usuario.
+ */
+export async function modificarSesionesTerapiaAdmin(usuarioId, delta) {
+  const userRef = doc(db, "usuarios", usuarioId);
+  await runTransaction(db, async (transaction) => {
+    const userDoc = await transaction.get(userRef);
+    let actuales = 0;
+    if (userDoc.exists()) {
+      actuales = userDoc.data().sesion_terapia ?? 0;
+    }
+    const nuevoTotal = Math.max(0, actuales + delta);
+    transaction.set(userRef, { sesion_terapia: nuevoTotal }, { merge: true });
+  });
+}
+
 
 /**
  * Elimina un usuario de Firestore en cascada de forma infalible:

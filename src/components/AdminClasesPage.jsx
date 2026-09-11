@@ -6,9 +6,10 @@ import {
   eliminarClaseAdmin
 } from '../firebase/clasesService';
 import AdminUsuariosTab from './AdminUsuariosTab';
+import AdminTerapiasTab from './AdminTerapiasTab';
 
 export default function AdminClasesPage({ currentUser }) {
-  const [tabActiva, setTabActiva] = useState('clases'); // 'clases' | 'usuarios'
+  const [tabActiva, setTabActiva] = useState('clases'); // 'clases' | 'terapias' | 'usuarios'
   const [clases, setClases] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [busqueda, setBusqueda] = useState('');
@@ -148,44 +149,45 @@ export default function AdminClasesPage({ currentUser }) {
 
   const handleAgregarInscrito = () => {
     if (!inscritoInput.trim()) return;
-    const uid = inscritoInput.trim();
-    if (!formData.inscritos_ids.includes(uid)) {
-      setFormData({
-        ...formData,
-        inscritos_ids: [...formData.inscritos_ids, uid]
-      });
-    }
+    const nuevoId = inscritoInput.trim();
+    if (formData.inscritos_ids.includes(nuevoId)) return;
+
+    const nuevosInscritos = [...formData.inscritos_ids, nuevoId];
+    const nuevosCupos = Math.max(0, formData.cupo_maximo - nuevosInscritos.length);
+    setFormData({
+      ...formData,
+      inscritos_ids: nuevosInscritos,
+      cupos_disponibles: nuevosCupos
+    });
     setInscritoInput('');
   };
 
-  const handleRemoverInscrito = (uidRemover) => {
+  const handleRemoverInscrito = (idRemover) => {
+    const nuevosInscritos = formData.inscritos_ids.filter((id) => id !== idRemover);
+    const nuevosCupos = Math.max(0, formData.cupo_maximo - nuevosInscritos.length);
     setFormData({
       ...formData,
-      inscritos_ids: formData.inscritos_ids.filter((id) => id !== uidRemover)
+      inscritos_ids: nuevosInscritos,
+      cupos_disponibles: nuevosCupos
     });
   };
 
-  const handleSubmitForm = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setGuardando(true);
 
     try {
-      if (!formData.fecha_inicio || !formData.fecha_fin || !formData.visible_desde) {
-        throw new Error("Por favor completa todas las fechas y horarios de la clase.");
-      }
-
       if (claseEditando) {
         await actualizarClaseAdmin(claseEditando.id, formData);
-        setNotification({ message: '¡Clase actualizada con éxito!', error: false });
+        setNotification({ message: 'Clase actualizada exitosamente con los 9 campos.', error: false });
       } else {
         await crearClaseAdmin(formData);
-        setNotification({ message: '¡Nueva clase creada con éxito!', error: false });
+        setNotification({ message: 'Nueva clase creada en Firestore.', error: false });
       }
-
       setIsModalOpen(false);
     } catch (error) {
       console.error("Error al guardar clase:", error);
-      setNotification({ message: error.message || "Error al procesar la solicitud", error: true });
+      setNotification({ message: 'Error al guardar la clase en Firestore.', error: true });
     } finally {
       setGuardando(false);
       setTimeout(() => setNotification({ message: '', error: false }), 4000);
@@ -266,11 +268,33 @@ export default function AdminClasesPage({ currentUser }) {
             alignItems: 'center',
             gap: '0.5rem',
             boxShadow: tabActiva === 'clases' ? '0 4px 14px rgba(37, 59, 89, 0.25)' : 'none',
-            transition: 'all 0.2s ease',
+            transition: 'background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease',
             whiteSpace: 'nowrap'
           }}
         >
-          <span>🗓️</span> Gestión de Clases
+          <span>🗓️</span> Clases de Pilates
+        </button>
+
+        <button
+          onClick={() => setTabActiva('terapias')}
+          style={{
+            backgroundColor: tabActiva === 'terapias' ? '#253B59' : '#F1F5F9',
+            color: tabActiva === 'terapias' ? '#FFFFFF' : '#64748B',
+            border: 'none',
+            borderRadius: '9999px',
+            padding: '0.75rem 1.75rem',
+            fontWeight: '700',
+            fontSize: '0.95rem',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            boxShadow: tabActiva === 'terapias' ? '0 4px 14px rgba(37, 59, 89, 0.25)' : 'none',
+            transition: 'background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease',
+            whiteSpace: 'nowrap'
+          }}
+        >
+          <span>🌿</span> Terapias Integrativas (CRUD)
         </button>
 
         <button
@@ -288,7 +312,7 @@ export default function AdminClasesPage({ currentUser }) {
             alignItems: 'center',
             gap: '0.5rem',
             boxShadow: tabActiva === 'usuarios' ? '0 4px 14px rgba(37, 59, 89, 0.25)' : 'none',
-            transition: 'all 0.2s ease',
+            transition: 'background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease',
             whiteSpace: 'nowrap'
           }}
         >
@@ -299,6 +323,8 @@ export default function AdminClasesPage({ currentUser }) {
       {/* Renderizado según la pestaña activa */}
       {tabActiva === 'usuarios' ? (
         <AdminUsuariosTab />
+      ) : tabActiva === 'terapias' ? (
+        <AdminTerapiasTab />
       ) : (
         <>
           {/* Toast Notification */}
@@ -371,7 +397,7 @@ export default function AdminClasesPage({ currentUser }) {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.5rem',
-                transition: 'all 0.2s ease'
+                transition: 'background-color 0.2s ease, box-shadow 0.2s ease'
               }}
             >
               <span>➕</span> Nueva Clase
@@ -395,6 +421,7 @@ export default function AdminClasesPage({ currentUser }) {
               <input
                 type="text"
                 placeholder="🔍 Buscar por instructor o servicio..."
+                aria-label="Buscar clases por instructor o servicio"
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
                 style={{
@@ -424,7 +451,7 @@ export default function AdminClasesPage({ currentUser }) {
                     textTransform: 'capitalize',
                     backgroundColor: filtroEstado === est ? '#253B59' : '#F1F5F9',
                     color: filtroEstado === est ? '#FFFFFF' : '#64748B',
-                    transition: 'all 0.2s ease',
+                    transition: 'background-color 0.2s ease, color 0.2s ease',
                     minHeight: '38px'
                   }}
                 >
@@ -662,8 +689,35 @@ export default function AdminClasesPage({ currentUser }) {
 
           {/* Modal de Creación / Edición de los 9 Campos */}
           {isModalOpen && (
-            <div className="admin-modal-overlay" onClick={() => setIsModalOpen(false)}>
-              <div className="admin-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div
+              className="admin-modal-overlay"
+              onClick={() => setIsModalOpen(false)}
+              style={{
+                position: "fixed",
+                inset: 0,
+                backgroundColor: "rgba(15, 23, 42, 0.6)",
+                backdropFilter: "blur(4px)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "1rem",
+                zIndex: 1100,
+              }}
+            >
+              <div
+                className="admin-modal-content"
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  backgroundColor: "#FFFFFF",
+                  borderRadius: "24px",
+                  width: "100%",
+                  maxWidth: "600px",
+                  maxHeight: "90vh",
+                  overflowY: "auto",
+                  padding: "2rem",
+                  boxShadow: "0 20px 50px rgba(0, 0, 0, 0.2)",
+                }}
+              >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
                   <h2 style={{ fontSize: '1.35rem', fontWeight: '700', color: '#253B59', margin: 0 }}>
                     {claseEditando ? '✏️ Modificar Clase' : '➕ Crear Nueva Clase'}
@@ -678,7 +732,8 @@ export default function AdminClasesPage({ currentUser }) {
                   </button>
                 </div>
 
-                <form onSubmit={handleSubmitForm} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+
                   {/* 1. Tipo de Servicio & 2. Instructor */}
                   <div className="admin-form-grid-2">
                     <div>
@@ -725,8 +780,10 @@ export default function AdminClasesPage({ currentUser }) {
                         required
                         value={formData.cupo_maximo}
                         onChange={(e) => {
-                          const val = parseInt(e.target.value, 10);
-                          setFormData({ ...formData, cupo_maximo: isNaN(val) ? 1 : Math.max(1, val) });
+                          const raw = e.target.value;
+                          const parsed = parseInt(raw, 10);
+                          const val = isNaN(parsed) ? 1 : Math.max(1, parsed);
+                          setFormData((prev) => ({ ...prev, cupo_maximo: val }));
                         }}
                         style={{ width: '100%', padding: '0.75rem', borderRadius: '10px', border: '1px solid #CBD5E1' }}
                       />
@@ -743,8 +800,10 @@ export default function AdminClasesPage({ currentUser }) {
                         required
                         value={formData.cupos_disponibles}
                         onChange={(e) => {
-                          const val = parseInt(e.target.value, 10);
-                          setFormData({ ...formData, cupos_disponibles: isNaN(val) ? 0 : Math.max(0, val) });
+                          const raw = e.target.value;
+                          const parsed = parseInt(raw, 10);
+                          const val = isNaN(parsed) ? 0 : Math.max(0, parsed);
+                          setFormData((prev) => ({ ...prev, cupos_disponibles: val }));
                         }}
                         style={{ width: '100%', padding: '0.75rem', borderRadius: '10px', border: '1px solid #CBD5E1' }}
                       />
@@ -816,13 +875,15 @@ export default function AdminClasesPage({ currentUser }) {
 
                   {/* 9. Inscritos IDs (array) */}
                   <div>
-                    <label style={{ display: 'block', fontWeight: '600', fontSize: '0.875rem', color: '#253B59', marginBottom: '0.35rem' }}>
+                    <label htmlFor="admin-inscrito-uid" style={{ display: 'block', fontWeight: '600', fontSize: '0.875rem', color: '#253B59', marginBottom: '0.35rem' }}>
                       Inscritos IDs (array de UIDs)
                     </label>
                     <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
                       <input
+                        id="admin-inscrito-uid"
                         type="text"
                         placeholder="Agregar UID del usuario..."
+                        aria-label="Agregar UID del usuario"
                         value={inscritoInput}
                         onChange={(e) => setInscritoInput(e.target.value)}
                         style={{ flex: 1, padding: '0.6rem 0.8rem', borderRadius: '10px', border: '1px solid #CBD5E1' }}
@@ -864,6 +925,7 @@ export default function AdminClasesPage({ currentUser }) {
                           <button
                             type="button"
                             onClick={() => handleRemoverInscrito(uid)}
+                            aria-label={`Remover usuario ${uid}`}
                             style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#991B1B', fontWeight: '700' }}
                           >
                             ✕
