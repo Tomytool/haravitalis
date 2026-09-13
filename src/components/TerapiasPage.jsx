@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import imagenStudio from "/terapias_holisticas.png";
-import qrTerapias from "/qr_terapia.svg";
+import qrTerapias from "/contacto_orlando.jpeg";
 import { suscribirTerapiasActivas } from "../firebase/terapiasService";
 
 export default function TerapiasPage({
@@ -17,7 +17,9 @@ export default function TerapiasPage({
     return () => unsubscribe();
   }, []);
 
-  const sesionesDisponiblesUser = currentUser ? (currentUser.sesion_terapia ?? 0) : 0;
+  const sesionesDisponiblesUser = currentUser
+    ? (currentUser.sesion_terapia ?? 0)
+    : 0;
   const tieneSesionesTerapia = currentUser && sesionesDisponiblesUser > 0;
 
   const handleReservaClick = (nombreServicio) => {
@@ -26,7 +28,9 @@ export default function TerapiasPage({
       return;
     }
     if (!tieneSesionesTerapia) {
-      alert("No posees sesiones de terapia asignadas disponibles. Por favor contacta al administrador para cargar horas de terapia a tu cuenta.");
+      alert(
+        "No posees sesiones de terapia asignadas disponibles. Por favor contacta al administrador para cargar horas de terapia a tu cuenta.",
+      );
       return;
     }
     onNavigateToBooking(nombreServicio);
@@ -35,62 +39,55 @@ export default function TerapiasPage({
   const serviciosEstaticos = [
     {
       id: 1,
-      badge: "Terapia Principal",
+      badge: "Sesión Individual",
       duracion: "50 min",
-      titulo: "Acupuntura Bioenergética",
+      titulo: "1 Sesión de Terapia",
       descripcion:
-        "Inserción indolora de agujas estériles en puntos clave de los meridianos para restablecer el flujo de Qi, reducir inflamación articular y liberar endorfinas analgésicas.",
+        "Evaluación y tratamiento integral de Medicina Tradicional China o terapia miofascial adaptada a tus necesidades inmediatas.",
       bullets: [
-        "Alivio inmediato de dolor cervical y lumbar",
-        "Equilibrio emocional y disminución de ansiedad",
+        "Atención 100% personalizada",
+        "Diagnóstico bioenergético inicial",
+        "Acupuntura, Cupping o Masaje Tui Na",
       ],
       precio: "$25.000",
       destacado: false,
     },
     {
       id: 2,
-      badge: "Descompresión Miofascial",
-      duracion: "40 min",
-      titulo: "Ventosaterapia (Cupping)",
+      badge: "Plan Recomendado",
+      duracion: "2 sesiones x 50 min",
+      titulo: "Plan 2 Sesiones",
       descripcion:
-        "Aplicación de ventosas de cristal mediante succión suave para oxigenar los tejidos profundos, estimular la circulación linfática y disolver adherencias musculares.",
+        "Tratamiento continuo ideal para seguimiento de contracturas, alivio de dolores articulares y mantenimiento corporal.",
       bullets: [
-        "Drenaje de toxinas y mejora de vascularización",
-        "Relajación instantánea de trapecios y dorsales",
+        "Ahorro de $17.010 frente a precio individual",
+        "2 sesiones personalizadas de 50 min",
+        "Seguimiento de evolución corporal y energética",
       ],
-      precio: "$25.000",
-      destacado: false,
+      precio: "$32.990",
+      precioOriginal: "$50.000",
+      destacado: true,
     },
     {
       id: 3,
-      badge: "Terapia Manual Tradicional",
-      duracion: "60 min",
-      titulo: "Masaje Tui Na",
+      badge: "Máximo Ahorro",
+      duracion: "3 sesiones x 50 min",
+      titulo: "Plan 3 Sesiones",
       descripcion:
-        "Masaje terapéutico tradicional chino que utiliza presiones, tracciones y manipulaciones articulares clínicas para corregir desequilibrios biomecánicos.",
+        "Programa completo de regeneración profunda y equilibrio bioenergético prolongado en sinergia con Pilates Reformer.",
       bullets: [
-        "Ideal antes o después de sesiones intensas",
-        "Movilización ligamentosa y articular",
+        "Mejor valor ($13.330 por sesión)",
+        "3 sesiones integrativas completas",
+        "Plan terapéutico intensivo y personalizado",
       ],
-      precio: "$25.000",
+      precio: "$39.990",
+      precioOriginal: "$75.000",
       destacado: false,
     },
   ];
 
-  // Si existen terapias creadas por el admin en Firestore, las mostramos; sino, mostramos las estáticas iniciales
-  const listaServicios = terapiasFirestore.length > 0
-    ? terapiasFirestore.map((t) => ({
-        id: t.id,
-        badge: t.badge || "Terapia Integrativa",
-        duracion: t.duracion || "50 min",
-        titulo: t.titulo,
-        descripcion: t.descripcion,
-        bullets: t.bullets || ["Atención 100% personalizada", "Especialistas acreditados en MTC"],
-        precio: t.precio || "$25.000",
-        destacado: false,
-      }))
-    : serviciosEstaticos;
-
+  // Mostramos únicamente los 3 servicios / planes estáticos requeridos
+  const listaServicios = serviciosEstaticos;
 
   return (
     <div className="page-wrapper page-terapias">
@@ -134,9 +131,7 @@ export default function TerapiasPage({
               <div className="stat-divider"></div>
               <div className="stat-item">
                 <span className="stat-value">Sinergia</span>
-                <span className="stat-label">
-                  Pilates + Electromoxibustión/Qi
-                </span>
+                <span className="stat-label">Terapias Integrativas</span>
               </div>
               <div className="stat-divider"></div>
               <div className="stat-item">
@@ -154,31 +149,6 @@ export default function TerapiasPage({
                 alt="Santuario de Calma y Alivio en Hara Vitalis"
                 className="terapias-hero-img"
               />
-              <div className="floating-sanctuary-card glass-card">
-                <div className="sanctuary-icon-badge">
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="#253B59"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                  </svg>
-                </div>
-                <div className="sanctuary-text">
-                  <h4 className="sanctuary-title">
-                    Santuario de Calma & Alivio
-                  </h4>
-                  <p className="sanctuary-desc">
-                    Sesiones individuales en un entorno acústico y aromático
-                    sereno.
-                  </p>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -279,39 +249,63 @@ export default function TerapiasPage({
          ========================================================================= */}
       <section id="catalogo" className="terapias-catalogo-section">
         <div className="terapias-section-container">
-          <div className="catalogo-header-flex" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div className="catalogo-header-text">
-              <span className="badge-pill-subtle">CATÁLOGO DE SERVICIOS</span>
-              <h2 className="section-title-h2">
-                Terapias Integrativas Disponibles
-              </h2>
-              <p className="section-subtitle-left">
-                Cada tratamiento es llevado a cabo por especialistas acreditados
-                en Medicina Tradicional China, con protocolos adaptados a tu
-                estado físico y tus objetivos de bienestar.
-              </p>
-            </div>
+          <div className="section-header-center">
+            <span
+              className="badge-pill-subtle"
+              style={{ display: "inline-block", marginBottom: "0.75rem" }}
+            >
+              CATÁLOGO DE SERVICIOS
+            </span>
+            <h2 className="section-title-h2">
+              Terapias Integrativas Disponibles
+            </h2>
+            <p className="section-subtitle">
+              Cada tratamiento es llevado a cabo por especialistas acreditados
+              en Medicina Tradicional China, con protocolos adaptados a tu
+              estado físico y tus objetivos de bienestar.
+            </p>
 
             {/* Banner Informativo del Usuario Autenticado */}
             {currentUser ? (
               <div
                 style={{
-                  backgroundColor: tieneSesionesTerapia ? "rgba(220, 252, 231, 0.9)" : "rgba(254, 243, 199, 0.9)",
-                  border: tieneSesionesTerapia ? "1px solid #86EFAC" : "1px solid #FDE68A",
+                  backgroundColor: tieneSesionesTerapia
+                    ? "rgba(220, 252, 231, 0.95)"
+                    : "rgba(254, 243, 199, 0.95)",
+                  border: tieneSesionesTerapia
+                    ? "1px solid #86EFAC"
+                    : "1px solid #FDE68A",
                   borderRadius: "16px",
-                  padding: "1rem 1.5rem",
+                  padding: "1rem 1.75rem",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  gap: "1rem",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.03)",
-                  margin: "1rem 0 2rem 0"
+                  gap: "1.5rem",
+                  boxShadow: "0 4px 14px rgba(0,0,0,0.04)",
+                  maxWidth: "680px",
+                  width: "100%",
+                  margin: "1.75rem auto 0 auto",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                  <span style={{ fontSize: "1.5rem" }}>{tieneSesionesTerapia ? "🌿" : "⚠️"}</span>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.75rem",
+                    textAlign: "left",
+                  }}
+                >
+                  <span style={{ fontSize: "1.5rem" }}>
+                    {tieneSesionesTerapia ? "🌿" : "⚠️"}
+                  </span>
                   <div>
-                    <div style={{ fontWeight: "700", color: "#253B59", fontSize: "0.95rem" }}>
+                    <div
+                      style={{
+                        fontWeight: "700",
+                        color: "#253B59",
+                        fontSize: "0.95rem",
+                      }}
+                    >
                       Tus Horas / Sesiones de Terapia Disponibles
                     </div>
                     <div style={{ fontSize: "0.85rem", color: "#475569" }}>
@@ -329,30 +323,35 @@ export default function TerapiasPage({
                     fontSize: "1.25rem",
                     padding: "0.5rem 1.25rem",
                     borderRadius: "9999px",
-                    boxShadow: "0 2px 8px rgba(37, 59, 89, 0.2)"
+                    boxShadow: "0 2px 8px rgba(37, 59, 89, 0.2)",
+                    whiteSpace: "nowrap",
                   }}
                 >
-                  {sesionesDisponiblesUser} {sesionesDisponiblesUser === 1 ? "Sesión" : "Sesiones"}
+                  {sesionesDisponiblesUser}{" "}
+                  {sesionesDisponiblesUser === 1 ? "Sesión" : "Sesiones"}
                 </div>
               </div>
             ) : (
               <div
                 style={{
-                  backgroundColor: "rgba(241, 245, 249, 0.9)",
+                  backgroundColor: "rgba(241, 245, 249, 0.95)",
                   border: "1px solid #CBD5E1",
                   borderRadius: "16px",
-                  padding: "1.25rem 1.5rem",
-                  display: "flex",
+                  padding: "1rem 1.75rem",
+                  display: "inline-flex",
                   alignItems: "center",
+                  justifyContent: "center",
                   gap: "0.75rem",
-                  margin: "1rem 0 2rem 0",
-                  color: "#475569"
+                  margin: "1.75rem auto 0 auto",
+                  color: "#475569",
+                  boxShadow: "0 2px 10px rgba(0,0,0,0.02)",
                 }}
               >
                 <span style={{ fontSize: "1.25rem" }}>🔒</span>
                 <div>
-                  <strong style={{ color: "#253B59" }}>Reservas exclusivas para usuarios registrados:</strong>{" "}
-                  Debes <button onClick={() => onNavigateToAuth(false)} style={{ background: "none", border: "none", color: "#1D4ED8", fontWeight: "700", textDecoration: "underline", cursor: "pointer" }}>iniciar sesión</button> o tener un plan con horas de terapia activas (`sesion_terapia &gt; 0`) para agendar sesiones.
+                  <strong style={{ color: "#253B59", fontSize: "0.95rem" }}>
+                    Reservas exclusivas para usuarios registrados
+                  </strong>
                 </div>
               </div>
             )}
@@ -378,7 +377,12 @@ export default function TerapiasPage({
                 <p className="servicio-card-desc">{servicio.descripcion}</p>
 
                 <ul className="servicio-bullets-list">
-                  {servicio.bullets.map((bullet, idx) => (
+                  {(Array.isArray(servicio.bullets)
+                    ? servicio.bullets
+                    : typeof servicio.bullets === "string"
+                      ? servicio.bullets.split("\n").filter(Boolean)
+                      : []
+                  ).map((bullet, idx) => (
                     <li key={`${servicio.id}-${idx}`}>
                       <span className="check-icon">✓</span>
                       <span>{bullet}</span>
@@ -388,36 +392,43 @@ export default function TerapiasPage({
 
                 <div className="servicio-card-footer">
                   <div className="price-block">
-                    <span className="price-label">Precio por sesión</span>
+                    <span className="price-label">
+                      {servicio.precioOriginal
+                        ? "Precio total del plan"
+                        : "Precio por sesión"}
+                    </span>
                     <div className="price-values">
                       <span className="price-amount">{servicio.precio}</span>
+                      {servicio.precioOriginal && (
+                        <span className="price-original">
+                          {servicio.precioOriginal}
+                        </span>
+                      )}
                     </div>
                   </div>
 
                   <button
                     onClick={() => handleReservaClick(servicio.titulo)}
                     disabled={currentUser && !tieneSesionesTerapia}
-                    className={
-                      servicio.destacado
-                        ? "btn-servicio-featured"
-                        : "btn-servicio-action"
-                    }
+                    className="btn-servicio-action"
                     style={{
-                      opacity: (currentUser && !tieneSesionesTerapia) ? 0.5 : 1,
-                      cursor: (currentUser && !tieneSesionesTerapia) ? "not-allowed" : "pointer"
+                      opacity: currentUser && !tieneSesionesTerapia ? 0.5 : 1,
+                      cursor:
+                        currentUser && !tieneSesionesTerapia
+                          ? "not-allowed"
+                          : "pointer",
                     }}
                   >
                     {!currentUser
                       ? "Inicia Sesión para Reservar"
                       : !tieneSesionesTerapia
-                      ? "Sin Sesiones Disponibles"
-                      : "Reservar Sesión"}
+                        ? "Sin Sesiones Disponibles"
+                        : "Reservar Sesión"}
                   </button>
                 </div>
               </div>
             ))}
           </div>
-
         </div>
       </section>
 
@@ -473,13 +484,8 @@ export default function TerapiasPage({
               style={{ textAlign: "center" }}
             >
               <h3 className="form-card-title">
-                Escanea para Solicitar Asesoramiento
+                Escanea este Código QR para Solicitar Asesoramiento
               </h3>
-              <p className="form-card-subtitle">
-                Escanea este código QR desde tu teléfono para enviar tu
-                solicitud directamente a nuestro equipo.
-              </p>
-
               <div
                 className="qr-container"
                 style={{ margin: "1.5rem auto", maxWidth: "260px" }}

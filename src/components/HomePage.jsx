@@ -73,7 +73,21 @@ export default function HomePage({
       descripcion: "Acondicionamiento físico intensivo y hábito saludable.",
       caracteristicas: [
         "12 Clases mensuales de Reformer",
-        "Prioridad de reserva de horario",
+        "Flexibilidad de reprogramación",
+        "Desarrollo máximo de fuerza e higiene postural",
+      ],
+      popular: false,
+    },
+    {
+      id: "p5",
+      categoria: "planes",
+      titulo: "4 Clases Semanales",
+      frecuencia: "16 clases x mes",
+      precio: "$92.000",
+      descripcion: "Acondicionamiento físico intensivo y hábito saludable.",
+      caracteristicas: [
+        "16 Clases mensuales de Reformer",
+        "Flexibilidad de reprogramación",
         "Desarrollo máximo de fuerza e higiene postural",
       ],
       popular: false,
@@ -119,6 +133,22 @@ export default function HomePage({
         "Experiencia holística máxima para un renacer físico integral.",
       caracteristicas: [
         "12 Clases mensuales de Reformer",
+        "2 Sesiones de Terapia Integrativa intensivas",
+        "Seguimiento biomecánico y bioenergético total",
+      ],
+      popular: false,
+      badge: "EXPERIENCIA TOTAL",
+    },
+    {
+      id: "sp4",
+      categoria: "superplanes",
+      titulo: "Super Plan 16",
+      frecuencia: "16 clases + 2 terapias",
+      precio: "$109.000",
+      descripcion:
+        "Experiencia holística máxima para un renacer físico integral.",
+      caracteristicas: [
+        "16 Clases mensuales de Reformer",
         "2 Sesiones de Terapia Integrativa intensivas",
         "Seguimiento biomecánico y bioenergético total",
       ],
@@ -175,12 +205,27 @@ export default function HomePage({
                 </svg>
               </button>
 
-              <button
-                onClick={handleBookingClick}
+              <a
                 className="btn-hero-secondary"
+                href="#beneficios"
+                aria-label="Explora Nuestros Planes"
               >
-                Conoce las Sesiones
-              </button>
+                <span>Explora Nuestros Planes</span>
+                <svg
+                  className="btn-hero-icon"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </a>
             </div>
           </div>
 
@@ -192,28 +237,6 @@ export default function HomePage({
                 alt="Estudio de Pilates Reformer iluminado con luz natural"
                 className="hero-main-img"
               />
-
-              {/* Floating Card: Transformación Consciente */}
-              <div className="hero-floating-card">
-                <div className="floating-icon-circle">
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="#FFFFFF"
-                    strokeWidth="2.2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M12 3v3m0 12v3M5 12H2m20 0h-3m-2.5-6.5L14.4 7.6M9.6 16.4l-2.1 2.1m0-11.5l2.1 2.1m9.6 9.6l-2.1-2.1"></path>
-                  </svg>
-                </div>
-                <div className="floating-card-text">
-                  <h3>Transformación Consciente</h3>
-                  <p>Conecta mente y cuerpo en cada movimiento.</p>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -302,7 +325,10 @@ export default function HomePage({
       {/* 3. SECCIÓN PLANES & TARIFAS */}
       <section className="section-benefits" id="beneficios">
         <div className="benefits-container-card">
-          <div className="section-header-center">
+          <div
+            className="section-header-center"
+            style={{ marginBottom: "1.25rem" }}
+          >
             <span
               className="badge-pill-subtle"
               style={{ marginBottom: "0.75rem" }}

@@ -1478,22 +1478,48 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 8px 22px rgba(37, 59, 89, 0.32);
 }
 
+.btn-hero-primary svg,
+.btn-hero-primary .btn-hero-icon {
+  transition: transform var(--transition-fast);
+}
+
+.btn-hero-primary:hover svg,
+.btn-hero-primary:hover .btn-hero-icon {
+  transform: translateX(4px);
+}
+
 .btn-hero-secondary {
-  background-color: #FFFFFF;
+  background-color: var(--color-secondary);
   color: var(--color-primary);
-  border: 1px solid #CBD5E1;
+  border: 1px solid rgba(37, 59, 89, 0.12);
   border-radius: var(--radius-pill);
   padding: 0.875rem 2rem;
   font-size: 0.975rem;
   font-weight: 600;
   cursor: pointer;
-  transition: transform var(--transition-fast), background-color var(--transition-fast), border-color var(--transition-fast);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  box-shadow: 0 4px 14px rgba(206, 208, 242, 0.45);
+  transition: transform var(--transition-fast), background-color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .btn-hero-secondary:hover {
-  background-color: #F8FAF9;
-  border-color: var(--color-primary);
-  transform: translateY(-1px);
+  background-color: var(--color-secondary-hover);
+  border-color: rgba(37, 59, 89, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(181, 184, 236, 0.6);
+}
+
+.btn-hero-secondary .btn-hero-icon,
+.btn-hero-secondary .arrow-icon {
+  transition: transform var(--transition-fast);
+}
+
+.btn-hero-secondary:hover .btn-hero-icon,
+.btn-hero-secondary:hover .arrow-icon {
+  transform: translateX(4px);
 }
 
 /* Hero Visual & Floating Card */
@@ -3057,19 +3083,27 @@ h1, h2, h3, h4, h5, h6 {
 .btn-servicio-action {
   background-color: var(--color-primary);
   color: #FFFFFF;
-  border: none;
-  padding: 0.65rem 1.4rem;
+  border: 1px solid transparent;
+  padding: 0.7rem 1.2rem;
   border-radius: var(--radius-pill);
-  font-weight: 600;
-  font-size: 0.9rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  line-height: 1.25;
   cursor: pointer;
   transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 46px;
+  max-width: 180px;
+  width: 100%;
 }
 
-.btn-servicio-action:hover {
+.btn-servicio-action:hover:not(:disabled) {
   background-color: var(--color-primary-dark);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 12px rgba(37, 59, 89, 0.25);
 }
 
 /* Featured Service Card */
@@ -3109,22 +3143,17 @@ h1, h2, h3, h4, h5, h6 {
   color: #94A3B8;
 }
 
-.btn-servicio-featured {
-  background-color: var(--color-secondary);
-  color: var(--color-primary);
-  border: none;
-  padding: 0.65rem 1.4rem;
-  border-radius: var(--radius-pill);
-  font-weight: 700;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
+/* Featured Service Card Button Standardized */
+.servicio-card-featured .btn-servicio-action {
+  background-color: #253B59;
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-.btn-servicio-featured:hover {
-  background-color: #FFFFFF;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(206, 208, 242, 0.4);
+.servicio-card-featured .btn-servicio-action:hover:not(:disabled) {
+  background-color: #314a6e;
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
 }
 
 /* Section 4: Diagnóstico Form */
@@ -3347,7 +3376,7 @@ h1, h2, h3, h4, h5, h6 {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 2rem;
-  margin-top: 3rem;
+  margin-top: 1.5rem;
 }
 
 .plan-card-item {

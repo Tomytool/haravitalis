@@ -25,6 +25,18 @@
       "skillPath": "skills/database-schema-designer/SKILL.md",
       "computedHash": "f23c909d45c6207e974dbce0db4c648de13d586abb37057cfec34d62f25bb526"
     },
+    "drawio-logical-diagrams": {
+      "source": "giuseppe-trisciuoglio/developer-kit",
+      "sourceType": "github",
+      "skillPath": "plugins/developer-kit-core/skills/drawio-logical-diagrams/SKILL.md",
+      "computedHash": "75a7d2b7e36ebbeccd3a7ea30155de381eb3762e76334c02af88d4ce9c15e14c"
+    },
+    "drawio-skill": {
+      "source": "agents365-ai/drawio-skill",
+      "sourceType": "github",
+      "skillPath": "skills/drawio-skill/SKILL.md",
+      "computedHash": "03d5a504992d86e6a4461df41ab65182d41d494a58216003a2683bf9d46f53f7"
+    },
     "firebase-app-hosting-basics": {
       "source": "firebase/agent-skills",
       "sourceType": "github",
