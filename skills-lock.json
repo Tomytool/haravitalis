@@ -73,6 +73,12 @@
       "skillPath": "skills/react-doctor/SKILL.md",
       "computedHash": "78ab00efd20eee4f65d9ca55141ab3d8ba64767f6481ea2fc8d55953c1bfd243"
     },
+    "react-testing": {
+      "source": "affaan-m/ecc",
+      "sourceType": "github",
+      "skillPath": "skills/react-testing/SKILL.md",
+      "computedHash": "59bd15f26f018d6629557108f936ab691af887508ae71b9d339855e49e337012"
+    },
     "spring-boot-crud-patterns": {
       "source": "giuseppe-trisciuoglio/developer-kit",
       "sourceType": "github",

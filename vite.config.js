@@ -11,4 +11,9 @@ export default defineConfig({
     tailwindcss(),
     babel({ presets: [reactCompilerPreset()] }),
   ],
+  test: {
+    globals: true,
+    environment: "jsdom",
+    setupFiles: "./src/test/setup.js",
+  },
 });

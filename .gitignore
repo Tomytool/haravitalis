@@ -26,3 +26,4 @@ dist-ssr
 # Archivos de entorno
 .agents/*
 .sistema_diseno/*
+skills-lock.json

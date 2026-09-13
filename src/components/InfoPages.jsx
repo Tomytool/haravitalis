@@ -6,7 +6,7 @@ export function PrivacyPage({ onNavigateHome }) {
           ← Volver al Inicio
         </button>
         <h1 className="page-title margin-top-sm">Política de Privacidad</h1>
-        <p className="page-meta">Última actualización: Septiembre 2024</p>
+        <p className="page-meta">Última actualización: Septiembre 2026</p>
 
         <div className="info-content-body margin-top-md">
           <h2>1. Información que recopilamos</h2>

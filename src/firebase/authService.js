@@ -6,10 +6,53 @@ import {
   sendPasswordResetEmail,
   EmailAuthProvider,
   reauthenticateWithCredential,
-  updatePassword
+  updatePassword,
+  GoogleAuthProvider,
+  signInWithPopup
 } from "firebase/auth";
 import { doc, getDoc, setDoc, onSnapshot, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "./config";
+
+/**
+ * Inicia sesión o registra al usuario mediante su cuenta de Google.
+ * Crea automáticamente la ficha en Firestore si es un nuevo usuario.
+ */
+export async function iniciarSesionConGoogle() {
+  const provider = new GoogleAuthProvider();
+  // Solicitar prompt para seleccionar cuenta de Google si hay múltiples
+  provider.setCustomParameters({ prompt: 'select_account' });
+  
+  const userCredential = await signInWithPopup(auth, provider);
+  const user = userCredential.user;
+
+  // Obtener o crear perfil en Firestore
+  const userDocRef = doc(db, "usuarios", user.uid);
+  const userSnapshot = await getDoc(userDocRef);
+
+  if (userSnapshot.exists()) {
+    const data = userSnapshot.data();
+    return {
+      uid: user.uid,
+      clases_pactadas: data.clases_pactadas ?? 0,
+      sesion_terapia: data.sesion_terapia ?? 0,
+      ...data
+    };
+  } else {
+    // Si es su primer ingreso con Google, registrar sus datos extraídos del perfil de Gmail
+    const nuevoPerfil = {
+      nombre: user.displayName || user.email?.split("@")[0] || "Usuario Google",
+      email: user.email ? user.email.toLowerCase().trim() : "",
+      telefono: user.phoneNumber || "",
+      rol: "cliente",
+      estado_cuenta: "activo",
+      clases_pactadas: 0,
+      sesion_terapia: 0,
+      fecha_creacion: serverTimestamp()
+    };
+    await setDoc(userDocRef, nuevoPerfil);
+    return { uid: user.uid, ...nuevoPerfil };
+  }
+}
 
 /**
  * Inicia sesión con correo electrónico y contraseña.

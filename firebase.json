@@ -4,8 +4,15 @@
     "indexes": "firestore.indexes.json"
   },
   "auth": {
+    "authorizedDomains": [
+      "localhost"
+    ],
     "providers": {
-      "emailPassword": true
+      "emailPassword": true,
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "Huravitalis Pilates",
+        "supportEmail": "soporte@huravitalis.com"
+      }
     }
   }
 }
