@@ -4,15 +4,12 @@
     "indexes": "firestore.indexes.json"
   },
   "auth": {
-    "authorizedDomains": [
-      "localhost",
-      "tomytool.github.io"
-    ],
+    "authorizedDomains": ["localhost", "tomytool.github.io/haravitalis/"],
     "providers": {
       "emailPassword": true,
       "googleSignIn": {
         "oAuthBrandDisplayName": "Huravitalis Pilates",
-        "supportEmail": "soporte@huravitalis.com"
+        "supportEmail": "tomytool@gmail.com"
       }
     }
   }
