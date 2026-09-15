@@ -1,4 +1,8 @@
 import imagenStudio from '/pilates-studio.jpg';
+import imagenElena from '/instructor_elena.jpg';
+import imagenCarlos from '/instructor_carlos.jpg';
+import imagenSofia from '/instructor_sofia.jpg';
+import imagenOrlando from '/contacto_orlando.jpeg';
 
 export default function QuienesSomosPage({ onNavigateToAuth, onNavigateToBooking, currentUser }) {
   const handleCtaClick = () => {
@@ -8,6 +12,45 @@ export default function QuienesSomosPage({ onNavigateToAuth, onNavigateToBooking
       onNavigateToAuth(true); // Redirige a la página individual de registro
     }
   };
+
+  const equipoEspecialistas = [
+    {
+      id: "elena",
+      nombre: "Elena M.",
+      rol: "Instructora Senior de Reformer & Biomecánica",
+      categoria: "pilates",
+      imagen: imagenElena,
+      bio: "Especialista en alineación corporal y control de centro (Hara). Cuenta con más de 7 años de experiencia guiando sesiones personalizadas de Reformer.",
+      especialidades: ["Reformer Essentials", "Corrección Postural", "Alineación Articular"]
+    },
+    {
+      id: "carlos",
+      nombre: "Carlos G.",
+      rol: "Instructor de Reformer Flow & Fuerza Consciente",
+      categoria: "pilates",
+      imagen: imagenCarlos,
+      bio: "Enfocado en el desarrollo de la resistencia muscular y la fluidez del movimiento sin sobrecarga articular ni estrés mecánico.",
+      especialidades: ["Flow & Strength", "Advanced Reformer", "Resistencia Adaptable"]
+    },
+    {
+      id: "sofia",
+      nombre: "Sofía R.",
+      rol: "Instructora de Pilates Postural & Reeducación Física",
+      categoria: "pilates",
+      imagen: imagenSofia,
+      bio: "Apasionada por la reeducación postural global y el fortalecimiento consciente del núcleo para prevenir lesiones cotidianas.",
+      especialidades: ["Postural Pilates", "Pilates Mat & Core", "Flexibilidad Asistida"]
+    },
+    {
+      id: "orlando",
+      nombre: "Orlando S.",
+      rol: "Encargado de Terapias Integrativas & MTC",
+      categoria: "terapias",
+      imagen: imagenOrlando,
+      bio: "Especialista acreditado en evaluación energética de meridianos, regulación del Qi y liberación miofascial en sinergia con la práctica de Pilates.",
+      especialidades: ["Acupuntura", "Ventosaterapia (Cupping)", "Masaje Tui Na"]
+    }
+  ];
 
   return (
     <div className="page-wrapper page-quienes-somos">
@@ -55,6 +98,47 @@ export default function QuienesSomosPage({ onNavigateToAuth, onNavigateToBooking
               <h3>Atención Personalizada</h3>
               <p>Grupos reducidos e instructores certificados que adaptan la intensidad de la resistencia para cada nivel físico.</p>
             </div>
+          </div>
+        </section>
+
+        {/* Sección Nuestro Equipo de Especialistas */}
+        <section className="team-section">
+          <div className="section-header-center" style={{ textAlign: "center", marginBottom: "1.5rem" }}>
+            <span className="badge-pill-subtle" style={{ marginBottom: "0.75rem", display: "inline-block" }}>
+              NUESTRO EQUIPO DE ESPECIALISTAS
+            </span>
+            <h2 style={{ fontSize: "2rem", fontWeight: "700", color: "#253B59", marginBottom: "0.5rem" }}>
+              Profesores y Terapeutas a tu Servicio
+            </h2>
+            <p style={{ fontSize: "1rem", color: "#475569", maxWidth: "680px", margin: "0 auto" }}>
+              Contamos con instructores certificados en Pilates Reformer y especialistas en Medicina Tradicional China dedicados a potenciar tu salud física y balance bioenergético.
+            </p>
+          </div>
+
+          <div className="team-grid">
+            {equipoEspecialistas.map((persona) => (
+              <div key={persona.id} className="team-card">
+                <span className={`team-card-badge ${persona.categoria === 'terapias' ? 'badge-terapias' : 'badge-pilates'}`}>
+                  {persona.categoria === 'terapias' ? '🌿 Terapias Holísticas' : '🧘‍♀️ Pilates Reformer'}
+                </span>
+                
+                <div className="team-avatar-wrapper">
+                  <img src={persona.imagen} alt={`Foto de ${persona.nombre}`} className="team-avatar-img" />
+                </div>
+
+                <h3 className="team-card-title">{persona.nombre}</h3>
+                <p className="team-card-role">{persona.rol}</p>
+                <p className="team-card-bio">{persona.bio}</p>
+
+                <div className="team-specialties-container">
+                  {persona.especialidades.map((esp, idx) => (
+                    <span key={idx} className="team-specialty-chip">
+                      {esp}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </section>
 

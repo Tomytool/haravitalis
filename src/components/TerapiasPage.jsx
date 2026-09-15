@@ -268,88 +268,33 @@ export default function TerapiasPage({
             {/* Banner Informativo del Usuario Autenticado */}
             {currentUser ? (
               <div
-                style={{
-                  backgroundColor: tieneSesionesTerapia
-                    ? "rgba(220, 252, 231, 0.95)"
-                    : "rgba(254, 243, 199, 0.95)",
-                  border: tieneSesionesTerapia
-                    ? "1px solid #86EFAC"
-                    : "1px solid #FDE68A",
-                  borderRadius: "16px",
-                  padding: "1rem 1.75rem",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: "1.5rem",
-                  boxShadow: "0 4px 14px rgba(0,0,0,0.04)",
-                  maxWidth: "680px",
-                  width: "100%",
-                  margin: "1.75rem auto 0 auto",
-                }}
+                className={`terapias-user-alert-banner ${tieneSesionesTerapia ? "tiene-sesiones" : "sin-sesiones"}`}
               >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.75rem",
-                    textAlign: "left",
-                  }}
-                >
-                  <span style={{ fontSize: "1.5rem" }}>
+                <div className="terapias-alert-left">
+                  <span className="terapias-alert-icon">
                     {tieneSesionesTerapia ? "🌿" : "⚠️"}
                   </span>
                   <div>
-                    <div
-                      style={{
-                        fontWeight: "700",
-                        color: "#253B59",
-                        fontSize: "0.95rem",
-                      }}
-                    >
+                    <div className="terapias-alert-title">
                       Tus Horas / Sesiones de Terapia Disponibles
                     </div>
-                    <div style={{ fontSize: "0.85rem", color: "#475569" }}>
+                    <div className="terapias-alert-desc">
                       {tieneSesionesTerapia
                         ? "Puedes agendar y reservar tus sesiones de terapia integrativa."
                         : "No tienes sesiones cargadas. Solicita horas de terapia a la administración."}
                     </div>
                   </div>
                 </div>
-                <div
-                  style={{
-                    backgroundColor: "#253B59",
-                    color: "#FFFFFF",
-                    fontWeight: "800",
-                    fontSize: "1.25rem",
-                    padding: "0.5rem 1.25rem",
-                    borderRadius: "9999px",
-                    boxShadow: "0 2px 8px rgba(37, 59, 89, 0.2)",
-                    whiteSpace: "nowrap",
-                  }}
-                >
+                <div className="terapias-alert-badge">
                   {sesionesDisponiblesUser}{" "}
                   {sesionesDisponiblesUser === 1 ? "Sesión" : "Sesiones"}
                 </div>
               </div>
             ) : (
-              <div
-                style={{
-                  backgroundColor: "rgba(241, 245, 249, 0.95)",
-                  border: "1px solid #CBD5E1",
-                  borderRadius: "16px",
-                  padding: "1rem 1.75rem",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "0.75rem",
-                  margin: "1.75rem auto 0 auto",
-                  color: "#475569",
-                  boxShadow: "0 2px 10px rgba(0,0,0,0.02)",
-                }}
-              >
-                <span style={{ fontSize: "1.25rem" }}>🔒</span>
+              <div className="terapias-guest-alert-banner">
+                <span className="terapias-alert-icon">🔒</span>
                 <div>
-                  <strong style={{ color: "#253B59", fontSize: "0.95rem" }}>
+                  <strong className="terapias-guest-title">
                     Reservas exclusivas para usuarios registrados
                   </strong>
                 </div>
@@ -488,7 +433,6 @@ export default function TerapiasPage({
               </h3>
               <div
                 className="qr-container"
-                style={{ margin: "1.5rem auto", maxWidth: "260px" }}
               >
                 <img
                   src={qrTerapias}

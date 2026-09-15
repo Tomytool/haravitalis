@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Timestamp, doc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { suscribirClasesPorFecha } from "../firebase/clasesService";
@@ -9,10 +9,14 @@ import {
   suscribirMisInscripciones,
   cancelarReservaCliente,
 } from "../firebase/inscripcionesService";
+import {
+  suscribirTodasLasInscripcionesAdmin,
+  suscribirTodosLosUsuariosAdmin,
+} from "../firebase/usuariosService";
 import { sembrarDatosInicialesSiEsNecesario } from "../firebase/seedService";
 import imagenpilates from "/pilates-studio-wide.jpg";
 
-function generarProximosDias() {
+function generarCuatroSemanas(offsetBloque = 0) {
   const diasNombres = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
   const mesesNombres = [
     "Ene",
@@ -29,11 +33,20 @@ function generarProximosDias() {
     "Dic",
   ];
   const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+
+  // Calcular Lunes de la semana actual para alinear columnas (Lunes a Domingo)
+  const dayOfWeek = hoy.getDay();
+  const distToMon = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+
+  const inicioLunes = new Date(hoy);
+  inicioLunes.setDate(hoy.getDate() - distToMon + offsetBloque * 28);
+
   const listaDias = [];
 
-  for (let i = 0; i < 14; i++) {
-    const fecha = new Date(hoy);
-    fecha.setDate(hoy.getDate() + i);
+  for (let i = 0; i < 28; i++) {
+    const fecha = new Date(inicioLunes);
+    fecha.setDate(inicioLunes.getDate() + i);
 
     const diaSemanaStr = diasNombres[fecha.getDay()];
     const numero = fecha.getDate();
@@ -44,24 +57,91 @@ function generarProximosDias() {
 
     const id = `${yyyy}-${mm}-${dd}`;
 
+    const fechaSinHora = new Date(fecha);
+    fechaSinHora.setHours(0, 0, 0, 0);
+
+    const esHoy = fechaSinHora.getTime() === hoy.getTime();
+    const esPasado = fechaSinHora.getTime() < hoy.getTime();
+
+    const nombreDiaLargo =
+      diaSemanaStr === "Mar"
+        ? "Martes"
+        : diaSemanaStr === "Lun"
+          ? "Lunes"
+          : diaSemanaStr === "Mié"
+            ? "Miércoles"
+            : diaSemanaStr === "Jue"
+              ? "Jueves"
+              : diaSemanaStr === "Vie"
+                ? "Viernes"
+                : diaSemanaStr === "Sáb"
+                  ? "Sábado"
+                  : "Domingo";
+
     listaDias.push({
       id,
       fechaObj: fecha,
       diaSemana: diaSemanaStr,
       numero,
       mesStr,
-      nombreCompleto: `${diaSemanaStr === "Mar" ? "Martes" : diaSemanaStr === "Lun" ? "Lunes" : diaSemanaStr === "Mié" ? "Miércoles" : diaSemanaStr === "Jue" ? "Jueves" : diaSemanaStr === "Vie" ? "Viernes" : diaSemanaStr === "Sáb" ? "Sábado" : "Domingo"} ${numero} de ${mesStr}`,
+      mesIndex: fecha.getMonth(),
+      anio: yyyy,
+      esHoy,
+      esPasado,
+      semanaIndex: Math.floor(i / 7),
+      nombreCompleto: `${nombreDiaLargo} ${numero} de ${mesStr}`,
     });
   }
   return listaDias;
 }
 
 export default function BookingPage({ currentUser }) {
-  // Generar próximos 14 días a partir de hoy
-  const [diasDisponibles] = useState(generarProximosDias);
-  const [selectedDayObj, setSelectedDayObj] = useState(
-    () => diasDisponibles[0] || null,
+  // Estado de navegación para bloques de 4 semanas (0 = actual, +1 = +4 semanas, -1 = -4 semanas)
+  const [semanaOffset, setSemanaOffset] = useState(0);
+
+  // Memorización de los 28 días según el patrón rerender-memo y derived-state
+  const diasDisponibles = useMemo(
+    () => generarCuatroSemanas(semanaOffset),
+    [semanaOffset],
   );
+
+  // Seleccionar por defecto hoy o el primer día disponible
+  const [selectedDayObj, setSelectedDayObj] = useState(() => {
+    const hoyObj = diasDisponibles.find((d) => d.esHoy);
+    return hoyObj || diasDisponibles[0] || null;
+  });
+
+  // Título de mes dinámico memorizado (ej. "Sep 2026" o "Sep - Oct 2026")
+  const tituloMes = useMemo(() => {
+    if (!diasDisponibles || diasDisponibles.length === 0) return "Calendario";
+    const primerDia = diasDisponibles[0];
+    const ultimoDia = diasDisponibles[diasDisponibles.length - 1];
+
+    if (
+      primerDia.mesStr === ultimoDia.mesStr &&
+      primerDia.anio === ultimoDia.anio
+    ) {
+      return `${primerDia.mesStr} ${primerDia.anio}`;
+    }
+    if (primerDia.anio === ultimoDia.anio) {
+      return `${primerDia.mesStr} - ${ultimoDia.mesStr} ${primerDia.anio}`;
+    }
+    return `${primerDia.mesStr} ${primerDia.anio} - ${ultimoDia.mesStr} ${ultimoDia.anio}`;
+  }, [diasDisponibles]);
+
+  const handleSemanaOffsetChange = (newOffset) => {
+    setSemanaOffset(newOffset);
+    const nuevosDias = generarCuatroSemanas(newOffset);
+    const hoyObj = nuevosDias.find((d) => d.esHoy);
+    setSelectedDayObj(hoyObj || nuevosDias[0]);
+  };
+
+  const handleIrAHoy = () => {
+    setSemanaOffset(0);
+    const diasHoy = generarCuatroSemanas(0);
+    const hoyObj = diasHoy.find((d) => d.esHoy);
+    setSelectedDayObj(hoyObj || diasHoy[0]);
+  };
   const [clasesDelDia, setClasesDelDia] = useState([]);
   const [terapiasDisponibles, setTerapiasDisponibles] = useState([]);
   const [misInscripciones, setMisInscripciones] = useState([]);
@@ -149,6 +229,64 @@ export default function BookingPage({ currentUser }) {
 
     return () => unsubscribe();
   }, [currentUser]);
+
+  // Modo Administrador: escuchar inscripciones y mapa de usuarios para mostrar asistencia
+  const esAdmin = currentUser?.rol === "admin" || currentUser?.isAdmin === true;
+  const [todasLasInscripciones, setTodasLasInscripciones] = useState([]);
+  const [usuariosMap, setUsuariosMap] = useState({});
+
+  useEffect(() => {
+    if (!esAdmin) return;
+
+    const unsubInscripciones = suscribirTodasLasInscripcionesAdmin(
+      (listaInscripciones) => {
+        setTodasLasInscripciones(listaInscripciones);
+      },
+    );
+
+    const unsubUsuarios = suscribirTodosLosUsuariosAdmin((listaUsuarios) => {
+      const mapa = {};
+      listaUsuarios.forEach((u) => {
+        mapa[u.id] = u.nombre || u.email || "Usuario";
+      });
+      setUsuariosMap(mapa);
+    });
+
+    return () => {
+      unsubInscripciones();
+      unsubUsuarios();
+    };
+  }, [esAdmin]);
+
+  // Helper para obtener la lista de personas inscritas a una clase o terapia específica
+  const obtenerInscritosParaItem = (itemId, inscritosIds = []) => {
+    if (!esAdmin) return [];
+
+    const inscripcionesItem = todasLasInscripciones.filter(
+      (ins) => ins.clase_id === itemId && ins.estado === "confirmada",
+    );
+
+    if (inscripcionesItem.length > 0) {
+      return inscripcionesItem.map((ins) => ({
+        id: ins.id,
+        usuarioId: ins.usuario_id,
+        nombre:
+          usuariosMap[ins.usuario_id] || ins.nombre_usuario || "Usuario",
+        email: ins.email || "",
+      }));
+    }
+
+    if (inscritosIds && inscritosIds.length > 0) {
+      return inscritosIds.map((uid) => ({
+        id: uid,
+        usuarioId: uid,
+        nombre: usuariosMap[uid] || "Usuario",
+        email: "",
+      }));
+    }
+
+    return [];
+  };
 
   // Manejar reserva de Clases de Pilates Reformer
   const handleReservarClase = async (clase) => {
@@ -457,46 +595,24 @@ export default function BookingPage({ currentUser }) {
         <h2 className="booking-username">{nombreMostrar}</h2>
 
         {/* Resumen de Saldos Disponibles (Clases & Terapias) */}
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            justifyContent: "center",
-            gap: "0.75rem",
-            marginTop: "0.5rem",
-          }}
-        >
+        <div className="booking-balances-row">
           <div
+            className="balance-pill balance-pilates"
             style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              padding: "0.5rem 1.25rem",
               backgroundColor:
                 saldoClases > 0 ? "rgba(206, 208, 242, 0.5)" : "#FEE2E2",
-              borderRadius: "9999px",
               color: saldoClases > 0 ? "#253B59" : "#991B1B",
-              fontWeight: "700",
-              fontSize: "0.9rem",
-              transition: "background-color 0.3s ease, color 0.3s ease",
             }}
           >
             💳 Clases Pilates Pactadas: <strong>{saldoClases}</strong>
           </div>
 
           <div
+            className="balance-pill balance-terapia"
             style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              padding: "0.5rem 1.25rem",
               backgroundColor:
                 saldoTerapias > 0 ? "rgba(220, 252, 231, 0.9)" : "#FEE2E2",
-              borderRadius: "9999px",
               color: saldoTerapias > 0 ? "#15803D" : "#991B1B",
-              fontWeight: "700",
-              fontSize: "0.9rem",
-              transition: "background-color 0.3s ease, color 0.3s ease",
             }}
           >
             🌿 Sesiones Terapia Disponibles: <strong>{saldoTerapias}</strong>
@@ -554,109 +670,138 @@ export default function BookingPage({ currentUser }) {
       )}
 
       {/* Selector de Pestañas de Agendamiento en la Pantalla de Clases */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          gap: "0.75rem",
-          marginBottom: "2rem",
-          flexWrap: "wrap",
-        }}
-      >
+      <div className="booking-tabs-container">
         <button
           onClick={() => setTabActivaReserva("todas")}
-          style={{
-            padding: "0.6rem 1.25rem",
-            borderRadius: "9999px",
-            border: "none",
-            backgroundColor:
-              tabActivaReserva === "todas" ? "#253B59" : "#E2E8F0",
-            color: tabActivaReserva === "todas" ? "#FFFFFF" : "#475569",
-            fontWeight: "700",
-            fontSize: "0.875rem",
-            cursor: "pointer",
-            transition: "background-color 0.2s ease, color 0.2s ease",
-          }}
+          className={`booking-tab-btn ${tabActivaReserva === "todas" ? "active-todas" : ""}`}
         >
           🌟 Todas las Opciones
         </button>
 
         <button
           onClick={() => setTabActivaReserva("clases")}
-          style={{
-            padding: "0.6rem 1.25rem",
-            borderRadius: "9999px",
-            border: "none",
-            backgroundColor:
-              tabActivaReserva === "clases" ? "#253B59" : "#E2E8F0",
-            color: tabActivaReserva === "clases" ? "#FFFFFF" : "#475569",
-            fontWeight: "700",
-            fontSize: "0.875rem",
-            cursor: "pointer",
-            transition: "background-color 0.2s ease, color 0.2s ease",
-          }}
+          className={`booking-tab-btn ${tabActivaReserva === "clases" ? "active-clases" : ""}`}
         >
           🧘‍♀️ Clases Pilates Reformer
         </button>
 
         <button
           onClick={() => setTabActivaReserva("terapias")}
-          style={{
-            padding: "0.6rem 1.25rem",
-            borderRadius: "9999px",
-            border: "none",
-            backgroundColor:
-              tabActivaReserva === "terapias" ? "#15803D" : "#E2E8F0",
-            color: tabActivaReserva === "terapias" ? "#FFFFFF" : "#475569",
-            fontWeight: "700",
-            fontSize: "0.875rem",
-            cursor: "pointer",
-            transition: "background-color 0.2s ease, color 0.2s ease",
-          }}
+          className={`booking-tab-btn ${tabActivaReserva === "terapias" ? "active-terapias" : ""}`}
         >
           🌿 Sesiones Terapia Integrativa
         </button>
       </div>
 
-      {/* Grid Principal: Izquierda (Calendario + Clases & Terapias) / Derecha (Sidebar Próximas Reservas) */}
-      <div className="booking-grid">
-        <div className="booking-main">
-          {/* Tarjeta de Calendario Horizontal */}
-          <div className="calendar-card">
+      {/* Grid Principal Layout Split: Izquierda (Calendario Sticky) / Derecha (Clases & Terapias) */}
+      <div className="booking-split-container">
+        {/* COLUMNA IZQUIERDA: CALENDARIO DE 4 SEMANAS (STICKY) */}
+        <aside className="booking-left-sidebar">
+          <div className="calendar-card sticky-calendar">
             <div className="calendar-card-header">
-              <span className="month-title">
-                {selectedDayObj
-                  ? `${selectedDayObj.mesStr} ${selectedDayObj.fechaObj.getFullYear()}`
-                  : "Calendario"}
-              </span>
+              <div className="calendar-header-info">
+                <span className="month-title">{tituloMes}</span>
+                <span className="calendar-badge">4 Semanas</span>
+              </div>
+
+              <div className="calendar-nav-btns">
+                <button
+                  type="button"
+                  className="nav-btn-secondary"
+                  onClick={handleIrAHoy}
+                  title="Ir al día de hoy"
+                >
+                  Hoy
+                </button>
+                <button
+                  type="button"
+                  className="nav-arrow-btn"
+                  onClick={() => handleSemanaOffsetChange(semanaOffset - 1)}
+                  title="4 semanas anteriores"
+                  aria-label="4 semanas anteriores"
+                >
+                  ‹
+                </button>
+                <button
+                  type="button"
+                  className="nav-arrow-btn"
+                  onClick={() => handleSemanaOffsetChange(semanaOffset + 1)}
+                  title="Próximas 4 semanas"
+                  aria-label="Próximas 4 semanas"
+                >
+                  ›
+                </button>
+              </div>
             </div>
 
-            <div className="days-row">
+            <div className="days-row calendar-grid-4weeks">
               {diasDisponibles.map((dia) => {
                 const isActive = selectedDayObj && dia.id === selectedDayObj.id;
                 return (
                   <button
                     key={dia.id}
-                    className={`day-pill ${isActive ? "active" : ""}`}
+                    type="button"
+                    aria-selected={isActive}
+                    aria-label={dia.nombreCompleto}
+                    className={`day-pill ${isActive ? "active" : ""} ${dia.esHoy ? "is-today" : ""} ${dia.esPasado ? "is-past" : ""}`}
                     onClick={() => setSelectedDayObj(dia)}
                   >
                     <span className="day-name">{dia.diaSemana}</span>
                     <span className="day-number">{dia.numero}</span>
+                    {dia.esHoy && <span className="today-dot" title="Hoy" />}
                   </button>
                 );
               })}
             </div>
           </div>
+        </aside>
+
+        {/* COLUMNA DERECHA: CLASES Y TERAPIAS DISPONIBLES PARA EL DÍA SELECCIONADO */}
+        <main className="booking-right-content">
+          {/* Banner Informativo del Día Seleccionado */}
+          <div className="selected-day-banner">
+            <div className="selected-day-info">
+              <span className="selected-day-icon">📅</span>
+              <div>
+                <h3 className="selected-day-title">
+                  {selectedDayObj?.nombreCompleto || "Selecciona un día"}
+                </h3>
+                <span className="selected-day-subtitle">
+                  {(tabActivaReserva === "todas"
+                    ? clasesDelDia.length + terapiasDelDia.length
+                    : tabActivaReserva === "clases"
+                      ? clasesDelDia.length
+                      : terapiasDelDia.length)}{" "}
+                  opción
+                  {(tabActivaReserva === "todas"
+                    ? clasesDelDia.length + terapiasDelDia.length
+                    : tabActivaReserva === "clases"
+                      ? clasesDelDia.length
+                      : terapiasDelDia.length) !== 1
+                    ? "es"
+                    : ""}{" "}
+                  disponible
+                  {(tabActivaReserva === "todas"
+                    ? clasesDelDia.length + terapiasDelDia.length
+                    : tabActivaReserva === "clases"
+                      ? clasesDelDia.length
+                      : terapiasDelDia.length) !== 1
+                    ? "s"
+                    : ""}{" "}
+                  para reservar
+                </span>
+              </div>
+            </div>
+          </div>
 
           {/* SECCIÓN 1: CLASES DE PILATES REFORMER */}
           {(tabActivaReserva === "todas" || tabActivaReserva === "clases") && (
-            <div style={{ marginBottom: "3rem" }}>
+            <div style={{ marginBottom: "2.5rem" }}>
               <h3
                 className="classes-section-title"
                 style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
               >
-                <span>🧘‍♀️</span> Clases de Pilates Reformer -{" "}
-                {selectedDayObj?.nombreCompleto || ""}
+                <span>🧘‍♀️</span> Clases de Pilates Reformer
               </h3>
 
               <div className="classes-list">
@@ -693,6 +838,9 @@ export default function BookingPage({ currentUser }) {
 
                     const horaInicioStr = formatearHora(clase.fecha_inicio);
                     const horaFinStr = formatearHora(clase.fecha_fin);
+                    const inscritosClase = esAdmin
+                      ? obtenerInscritosParaItem(clase.id, clase.inscritos_ids)
+                      : [];
 
                     return (
                       <div key={clase.id} className="class-card">
@@ -724,19 +872,55 @@ export default function BookingPage({ currentUser }) {
                                     : `${clase.cupos_disponibles} plaza${clase.cupos_disponibles > 1 ? "s" : ""}`}
                               </span>
                             </div>
+
+                            {/* Panel Exclusivo de Administrador: Alumnos con Reserva */}
+                            {esAdmin && (
+                              <div className="admin-roster-box">
+                                <div className="admin-roster-header">
+                                  <span className="admin-roster-badge">
+                                    🛡️ Admin
+                                  </span>
+                                  <span className="admin-roster-count">
+                                    Inscritos: <strong>{inscritosClase.length}</strong>
+                                    {clase.cupos_totales
+                                      ? ` / ${clase.cupos_totales}`
+                                      : ""}
+                                  </span>
+                                </div>
+                                {inscritosClase.length > 0 ? (
+                                  <div className="admin-roster-list">
+                                    {inscritosClase.map((alumno, idx) => (
+                                      <span
+                                        key={alumno.id || idx}
+                                        className="admin-alumno-chip"
+                                        title={
+                                          alumno.email
+                                            ? `${alumno.nombre} (${alumno.email})`
+                                            : alumno.nombre
+                                        }
+                                      >
+                                        <span className="admin-alumno-avatar">
+                                          {alumno.nombre.charAt(0).toUpperCase()}
+                                        </span>
+                                        <span className="admin-alumno-nombre">
+                                          {alumno.nombre}
+                                        </span>
+                                      </span>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <span className="admin-roster-empty">
+                                    Sin alumnos inscritos aún
+                                  </span>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </div>
 
-                        <div>
+                        <div className="class-action-box">
                           {yaInscrito ? (
-                            <div
-                              style={{
-                                display: "flex",
-                                flexDirection: "column",
-                                alignItems: "flex-end",
-                                gap: "0.5rem",
-                              }}
-                            >
+                            <div className="class-action-inscrito">
                               <span className="badge-reservado-clase">
                                 ✓ Reservado
                               </span>
@@ -841,8 +1025,7 @@ export default function BookingPage({ currentUser }) {
                     gap: "0.5rem",
                   }}
                 >
-                  <span>🌿</span> Sesiones de Terapia Integrativa -{" "}
-                  {selectedDayObj?.nombreCompleto || ""}
+                  <span>🌿</span> Sesiones de Terapia Integrativa
                 </h3>
               </div>
 
@@ -881,6 +1064,9 @@ export default function BookingPage({ currentUser }) {
 
                     const horaInicioStr = formatearHora(terapia.fecha_inicio);
                     const horaFinStr = formatearHora(terapia.fecha_fin);
+                    const inscritosTerapia = esAdmin
+                      ? obtenerInscritosParaItem(terapia.id, terapia.inscritos_ids)
+                      : [];
 
                     return (
                       <div
@@ -962,19 +1148,55 @@ export default function BookingPage({ currentUser }) {
                                 🩺 {terapia.terapeuta || "Especialista MTC"}
                               </span>
                             </div>
+
+                            {/* Panel Exclusivo de Administrador: Paciente / Alumno con Reserva */}
+                            {esAdmin && (
+                              <div className="admin-roster-box admin-roster-terapia">
+                                <div className="admin-roster-header">
+                                  <span className="admin-roster-badge badge-admin-terapia">
+                                    🛡️ Admin
+                                  </span>
+                                  <span className="admin-roster-count">
+                                    Paciente reservado: <strong>{inscritosTerapia.length}</strong>
+                                    {terapia.cupos_totales
+                                      ? ` / ${terapia.cupos_totales}`
+                                      : ` / ${terapia.cupos_disponibles ?? 1}`}
+                                  </span>
+                                </div>
+                                {inscritosTerapia.length > 0 ? (
+                                  <div className="admin-roster-list">
+                                    {inscritosTerapia.map((paciente, idx) => (
+                                      <span
+                                        key={paciente.id || idx}
+                                        className="admin-alumno-chip chip-terapia"
+                                        title={
+                                          paciente.email
+                                            ? `${paciente.nombre} (${paciente.email})`
+                                            : paciente.nombre
+                                        }
+                                      >
+                                        <span className="admin-alumno-avatar avatar-terapia">
+                                          {paciente.nombre.charAt(0).toUpperCase()}
+                                        </span>
+                                        <span className="admin-alumno-nombre">
+                                          {paciente.nombre}
+                                        </span>
+                                      </span>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <span className="admin-roster-empty">
+                                    Sin pacientes citados aún
+                                  </span>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </div>
 
-                        <div>
+                        <div className="class-action-box">
                           {yaInscrito ? (
-                            <div
-                              style={{
-                                display: "flex",
-                                flexDirection: "column",
-                                alignItems: "flex-end",
-                                gap: "0.5rem",
-                              }}
-                            >
+                            <div className="class-action-inscrito">
                               <span className="badge-reservado-terapia">
                                 ✓ Terapia Reservada
                               </span>
@@ -1055,7 +1277,7 @@ export default function BookingPage({ currentUser }) {
               </div>
             </div>
           )}
-        </div>
+        </main>
       </div>
     </div>
   );

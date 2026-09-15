@@ -96,6 +96,12 @@
   padding: 0;
 }
 
+html {
+  overflow-x: hidden;
+  max-width: 100vw;
+  scroll-behavior: smooth;
+}
+
 body {
   font-family: var(--font-body);
   background-color: var(--color-bg);
@@ -105,6 +111,8 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 
 #root {
@@ -500,20 +508,82 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--color-text-muted);
 }
 
-.booking-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 2.5rem;
+/* Booking Split Layout */
+.booking-split-container {
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 1.75rem;
+  align-items: start;
   width: 100%;
-  max-width: 1000px;
-  margin: 0 auto;
 }
 
-/* Main Booking Content Left */
-.booking-main {
+.booking-left-sidebar {
+  width: 100%;
+}
+
+.sticky-calendar {
+  position: sticky;
+  top: 5.5rem;
+  z-index: 5;
+}
+
+.booking-right-content {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+/* Banner Informativo del Día Seleccionado */
+.selected-day-banner {
+  background: linear-gradient(135deg, #1E293B 0%, #253B59 100%);
+  color: #FFFFFF;
+  border-radius: var(--radius-lg);
+  padding: 1.15rem 1.5rem;
+  box-shadow: 0 4px 16px rgba(30, 41, 59, 0.12);
+  margin-bottom: 0.5rem;
+}
+
+.selected-day-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.selected-day-icon {
+  font-size: 1.6rem;
+  background: rgba(255, 255, 255, 0.15);
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.selected-day-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0 0 0.15rem 0;
+  color: #FFFFFF;
+}
+
+.selected-day-subtitle {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 500;
+}
+
+@media (max-width: 1024px) {
+  .booking-split-container {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .sticky-calendar {
+    position: static;
+  }
 }
 
 /* Calendar Card */
@@ -522,7 +592,7 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
   padding: 1.5rem 2rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
 }
 
 .calendar-card-header {
@@ -530,12 +600,35 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.calendar-header-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .month-title {
-  font-size: 1.25rem;
+  font-size: 1.35rem;
   font-weight: 700;
   color: var(--color-primary);
+  letter-spacing: -0.01em;
+}
+
+.calendar-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.65rem;
+  background-color: #F1F5F9;
+  color: #475569;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  border: 1px solid #E2E8F0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .calendar-nav-btns {
@@ -544,69 +637,146 @@ h1, h2, h3, h4, h5, h6 {
   gap: 0.5rem;
 }
 
-.nav-arrow-btn {
-  background: none;
-  border: none;
+.nav-btn-secondary {
+  background-color: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  color: #334155;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.4rem 0.85rem;
+  border-radius: 8px;
   cursor: pointer;
-  padding: 0.35rem 0.6rem;
-  font-size: 1.1rem;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.nav-btn-secondary:hover {
+  background-color: #F1F5F9;
+  border-color: #CBD5E1;
+  color: #0F172A;
+}
+
+.nav-arrow-btn {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  font-size: 1.15rem;
+  font-weight: 600;
   color: var(--color-primary);
-  border-radius: 6px;
-  transition: var(--transition-fast);
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .nav-arrow-btn:hover {
-  background-color: var(--color-bg);
+  background-color: #E2E8F0;
+  border-color: #CBD5E1;
+  transform: scale(1.05);
 }
 
-.days-row {
+.days-row.calendar-grid-4weeks {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 0.75rem;
+  gap: 0.65rem 0.5rem;
 }
 
 .day-pill {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 0.85rem 0.5rem;
-  border-radius: var(--radius-md);
-  background-color: #FFFFFF;
-  border: 1px solid transparent;
+  padding: 0.75rem 0.4rem;
+  border-radius: 12px;
+  background-color: #F8FAFC;
+  border: 1.5px solid #F1F5F9;
   cursor: pointer;
-  transition: transform var(--transition-fast), background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+  transition: transform 0.18s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
-.day-pill:hover {
-  background-color: var(--color-bg);
+.day-pill:hover:not(.active) {
+  background-color: #FFFFFF;
+  border-color: #CBD5E1;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .day-pill.active {
-  background-color: var(--color-primary);
+  background-color: var(--color-primary, #253B59);
   color: #FFFFFF;
-  box-shadow: var(--shadow-sm);
+  border-color: var(--color-primary, #253B59);
+  transform: scale(1.03);
+  box-shadow: 0 6px 18px rgba(37, 59, 89, 0.28);
+}
+
+.day-pill.is-today:not(.active) {
+  border-color: var(--color-primary, #253B59);
+  background-color: #F0F4F8;
+}
+
+.day-pill.is-past:not(.active) {
+  opacity: 0.6;
+}
+
+.today-dot {
+  position: absolute;
+  bottom: 4px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: var(--color-primary, #253B59);
+}
+
+.day-pill.active .today-dot {
+  background-color: #38BDF8;
 }
 
 .day-name {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--color-text-muted);
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.25rem;
+  text-transform: capitalize;
 }
 
 .day-pill.active .day-name {
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .day-number {
-  font-size: 1.35rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: var(--color-primary);
 }
 
 .day-pill.active .day-number {
   color: #FFFFFF;
+}
+
+@media (max-width: 640px) {
+  .calendar-card {
+    padding: 1rem;
+  }
+
+  .days-row.calendar-grid-4weeks {
+    gap: 0.4rem 0.25rem;
+  }
+
+  .day-pill {
+    padding: 0.6rem 0.15rem;
+    border-radius: 8px;
+  }
+
+  .day-name {
+    font-size: 0.68rem;
+  }
+
+  .day-number {
+    font-size: 1.05rem;
+  }
 }
 
 /* Classes Section */
@@ -695,17 +865,25 @@ h1, h2, h3, h4, h5, h6 {
 .class-pills-row {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   margin-top: 0.25rem;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: 100%;
 }
 
 .badge-pill {
-  font-size: 0.775rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  padding: 0.25rem 0.75rem;
+  padding: 0.25rem 0.65rem;
   border-radius: var(--radius-pill);
   background-color: #E2E8F0;
   color: #334155;
+  white-space: normal;
+  word-break: break-word;
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
 }
 
 .badge-pill.plazas {
@@ -716,6 +894,79 @@ h1, h2, h3, h4, h5, h6 {
 .badge-pill.completo {
   background-color: #FEE2E2;
   color: #991B1B;
+}
+
+.badge-pill.inactiva {
+  background-color: #F1F5F9;
+  color: #64748B;
+}
+
+.class-action-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.class-action-inscrito {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.booking-balances-row {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.balance-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.booking-tabs-container {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.booking-tab-btn {
+  padding: 0.6rem 1.25rem;
+  border-radius: 9999px;
+  border: none;
+  background-color: #E2E8F0;
+  color: #475569;
+  font-weight: 700;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+.booking-tab-btn.active-todas,
+.booking-tab-btn.active-clases {
+  background-color: #253B59;
+  color: #FFFFFF;
+}
+
+.booking-tab-btn.active-terapias {
+  background-color: #15803D;
+  color: #FFFFFF;
 }
 
 .btn-reserve {
@@ -1196,15 +1447,227 @@ h1, h2, h3, h4, h5, h6 {
   .auth-card {
     padding: 2rem 1.5rem;
   }
+
+  .booking-balances-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .balance-pill {
+    justify-content: center;
+    width: 100%;
+    font-size: 0.825rem;
+    padding: 0.5rem 0.85rem;
+  }
+
+  .booking-tabs-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .booking-tab-btn {
+    width: 100%;
+    text-align: center;
+  }
   
   .class-card {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 1.25rem;
-  }
-  
-  .btn-reserve, .btn-disabled {
+    align-items: stretch;
+    gap: 1rem;
+    padding: 1rem;
     width: 100%;
+    box-sizing: border-box;
+    border-radius: 14px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  }
+
+  .class-left-info {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  .time-box {
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    min-width: unset !important;
+    padding: 0.5rem 0.85rem !important;
+    border-radius: 10px !important;
+  }
+
+  .time-text {
+    margin-bottom: 0 !important;
+    font-size: 1.05rem !important;
+  }
+
+  .class-details {
+    width: 100%;
+  }
+
+  .class-name {
+    font-size: 1.1rem;
+  }
+
+  .class-action-box {
+    width: 100%;
+    align-items: stretch;
+    margin-top: 0.25rem;
+  }
+
+  .class-action-inscrito {
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .btn-booking-primary,
+  .btn-booking-terapia,
+  .btn-booking-disabled,
+  .btn-anular-card-active,
+  .btn-anular-card-disabled,
+  .btn-reserve,
+  .btn-disabled {
+    width: 100% !important;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    border-radius: 10px;
+  }
+
+  /* Tarjetas de Precio en HomePage Móvil */
+  .planes-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: 100%;
+  }
+
+  .plan-card-item {
+    padding: 2rem 1.25rem 1.5rem 1.25rem;
+    width: 100%;
+    box-sizing: border-box;
+    border-radius: 16px;
+    margin-top: 0.5rem;
+  }
+
+  .plan-badge-tag {
+    top: -12px;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    font-size: 0.7rem;
+    padding: 0.3rem 0.85rem;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(37, 59, 89, 0.25);
+  }
+
+  .planes-tabs-container {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 16px;
+    flex-direction: column;
+    padding: 0.4rem;
+    gap: 0.4rem;
+  }
+
+  .plan-tab-btn {
+    width: 100%;
+    text-align: center;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    padding: 0.65rem;
+  }
+
+  .plan-price-amount {
+    font-size: 1.8rem;
+  }
+
+  .btn-plan-action {
+    width: 100%;
+    padding: 0.85rem;
+    font-size: 0.95rem;
+    text-align: center;
+    border-radius: 12px;
+  }
+
+  /* Tarjetas de Precio en TerapiasPage Móvil */
+  .terapias-user-alert-banner {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1.25rem 1rem;
+    gap: 1rem;
+  }
+
+  .terapias-alert-left {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .terapias-alert-badge {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+    display: flex;
+    white-space: normal;
+    font-size: 1rem;
+  }
+
+  .catalogo-cards-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: 100%;
+  }
+
+  .servicio-card,
+  .servicio-card-featured {
+    padding: 1.5rem 1.25rem;
+    width: 100%;
+    box-sizing: border-box;
+    border-radius: 16px;
+  }
+
+  .card-top-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .servicio-card-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  .price-block {
+    align-items: center;
+    text-align: center;
+  }
+
+  .price-values {
+    justify-content: center;
+  }
+
+  .price-amount {
+    font-size: 1.75rem;
+  }
+
+  .btn-servicio-action {
+    max-width: 100% !important;
+    width: 100% !important;
+    text-align: center;
+    justify-content: center;
+    min-height: 48px;
+    font-size: 0.95rem;
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
   }
 }
 
@@ -2849,7 +3312,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .sinergia-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
   gap: 2rem;
 }
 
@@ -2941,8 +3404,86 @@ h1, h2, h3, h4, h5, h6 {
 
 .catalogo-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
   gap: 2rem;
+}
+
+/* Terapias User Alert Banner */
+.terapias-user-alert-banner {
+  border-radius: 16px;
+  padding: 1rem 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+  max-width: 680px;
+  width: 100%;
+  margin: 1.75rem auto 0 auto;
+}
+
+.terapias-user-alert-banner.tiene-sesiones {
+  background-color: rgba(220, 252, 231, 0.95);
+  border: 1px solid #86EFAC;
+}
+
+.terapias-user-alert-banner.sin-sesiones {
+  background-color: rgba(254, 243, 199, 0.95);
+  border: 1px solid #FDE68A;
+}
+
+.terapias-alert-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: left;
+}
+
+.terapias-alert-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.terapias-alert-title {
+  font-weight: 700;
+  color: #253B59;
+  font-size: 0.95rem;
+}
+
+.terapias-alert-desc {
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.terapias-alert-badge {
+  background-color: #253B59;
+  color: #FFFFFF;
+  font-weight: 800;
+  font-size: 1.15rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: 9999px;
+  box-shadow: 0 2px 8px rgba(37, 59, 89, 0.2);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.terapias-guest-alert-banner {
+  background-color: rgba(241, 245, 249, 0.95);
+  border: 1px solid #CBD5E1;
+  border-radius: 16px;
+  padding: 1rem 1.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin: 1.75rem auto 0 auto;
+  color: #475569;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+}
+
+.terapias-guest-title {
+  color: #253B59;
+  font-size: 0.95rem;
 }
 
 .servicio-card {
@@ -3221,6 +3762,12 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: var(--shadow-lg);
 }
 
+.qr-container {
+  margin: 1.5rem auto;
+  max-width: 240px;
+  width: 100%;
+}
+
 .form-card-title {
   font-size: 1.4rem;
   font-weight: 800;
@@ -3374,7 +3921,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .planes-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
   gap: 2rem;
   margin-top: 1.5rem;
 }
@@ -3886,6 +4433,954 @@ h1, h2, h3, h4, h5, h6 {
   line-height: 1.25;
   opacity: 0.85;
 }
+
+/* ==========================================================================
+   NUESTRA SECCIÓN DE EQUIPO: INSTRUCTORES Y TERAPEUTAS (SISTEMA_DISENO.md)
+   ========================================================================== */
+
+.team-section {
+  position: relative;
+  margin-top: 4.5rem;
+  margin-bottom: 4rem;
+}
+
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.75rem;
+  margin-top: 2.5rem;
+}
+
+.team-card {
+  background: var(--glass-bg);
+  border: var(--glass-border);
+  border-radius: 20px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-glass);
+  padding: 2rem 1.5rem 1.75rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.team-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+  border-color: rgba(37, 59, 89, 0.25);
+}
+
+.team-card-badge {
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.9rem;
+  border-radius: var(--radius-pill);
+  margin-bottom: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.team-card-badge.badge-pilates {
+  background: rgba(206, 208, 242, 0.45);
+  color: #253B59;
+  border: 1px solid rgba(206, 208, 242, 0.8);
+}
+
+.team-card-badge.badge-terapias {
+  background: rgba(78, 159, 142, 0.15);
+  color: #2D6A5D;
+  border: 1px solid rgba(78, 159, 142, 0.35);
+}
+
+.team-avatar-wrapper {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  padding: 4px;
+  background: linear-gradient(135deg, #CED0F2 0%, #253B59 100%);
+  margin-bottom: 1.25rem;
+  box-shadow: var(--shadow-md);
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+
+.team-card-badge.badge-terapias + .team-avatar-wrapper {
+  background: linear-gradient(135deg, #4E9F8E 0%, #253B59 100%);
+}
+
+.team-card:hover .team-avatar-wrapper {
+  transform: scale(1.05);
+  box-shadow: 0 10px 24px rgba(37, 59, 89, 0.2);
+}
+
+.team-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #FFFFFF;
+}
+
+.team-card-title {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 0.3rem;
+}
+
+.team-card-role {
+  font-family: var(--font-heading);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-mint);
+  margin-bottom: 1rem;
+  line-height: 1.35;
+}
+
+.team-card-bio {
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  line-height: 1.55;
+  margin-bottom: 1.25rem;
+  flex-grow: 1;
+}
+
+.team-specialties-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+  width: 100%;
+  border-top: 1px solid rgba(206, 208, 242, 0.4);
+  padding-top: 1rem;
+  margin-top: auto;
+}
+
+.team-specialty-chip {
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-subtle);
+  color: var(--color-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.team-card:hover .team-specialty-chip {
+  background: rgba(206, 208, 242, 0.5);
+}
+
+/* ==========================================================================
+   OPTIMIZACIÓN RESPONSIVE UI/UX PRO MAX - TARJETAS HOMEPAGE Y TERAPIASPAGE
+   Soporte robusto para viewports ultra-compactos (320px - 640px)
+   ========================================================================== */
+
+/* 1. Breakpoint Tablet / Móvil Grande (<= 768px) */
+@media (max-width: 768px) {
+  .feature-cards-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem;
+  }
+
+  .sinergia-cards-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem;
+  }
+
+  .catalogo-cards-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem;
+  }
+
+  .planes-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem;
+  }
+}
+
+/* 2. Breakpoint Móvil Estándar (<= 640px) */
+@media (max-width: 640px) {
+  /* Contenedores generales con respiro balanceado */
+  .homepage-container {
+    padding: 1.75rem 1rem 3rem 1rem;
+    gap: 3.5rem;
+    overflow-x: hidden;
+  }
+
+  .page-wrapper.page-terapias {
+    overflow-x: hidden;
+  }
+
+  .terapias-hero-section {
+    padding: 2.75rem 1rem 2.25rem 1rem;
+  }
+
+  .terapias-sinergia-section,
+  .terapias-catalogo-section,
+  .terapias-diagnostico-section {
+    padding: 3rem 1rem;
+  }
+
+  .section-header-center {
+    margin-bottom: 2rem;
+  }
+
+  .section-title,
+  .section-title-h2 {
+    font-size: clamp(1.4rem, 5.5vw, 1.85rem);
+    line-height: 1.25;
+  }
+
+  .section-intro-text,
+  .section-subtitle {
+    font-size: clamp(0.875rem, 3.2vw, 0.975rem);
+    line-height: 1.55;
+  }
+
+  /* Tarjeta contenedora de beneficios en HomePage */
+  .benefits-container-card {
+    padding: 2rem 1rem;
+    gap: 2rem;
+    border-radius: 24px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Pestañas de Planes en HomePage */
+  .planes-tabs-container {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 16px;
+    flex-direction: column;
+    padding: 0.35rem;
+    gap: 0.35rem;
+    margin: 1.25rem auto 0;
+  }
+
+  .plan-tab-btn {
+    width: 100%;
+    text-align: center;
+    border-radius: 10px;
+    font-size: clamp(0.8rem, 3vw, 0.875rem);
+    padding: 0.65rem 0.5rem;
+    white-space: normal;
+    line-height: 1.25;
+  }
+
+  /* Grilla y Tarjetas de Planes (HomePage) */
+  .planes-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+    width: 100% !important;
+  }
+
+  .plan-card-item {
+    width: 100% !important;
+    box-sizing: border-box;
+    padding: 1.75rem 1.15rem 1.35rem 1.15rem;
+    border-radius: 16px;
+    margin-top: 0.5rem;
+  }
+
+  .plan-badge-tag {
+    top: -11px;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    font-size: clamp(0.65rem, 2.6vw, 0.72rem);
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-pill);
+    max-width: calc(100% - 24px);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(37, 59, 89, 0.22);
+  }
+
+  .plan-frecuencia-badge {
+    font-size: 0.72rem;
+    padding: 0.25rem 0.65rem;
+    margin-bottom: 0.65rem;
+  }
+
+  .plan-card-title {
+    font-size: clamp(1.15rem, 4.5vw, 1.35rem);
+    line-height: 1.25;
+    margin-bottom: 0.45rem;
+  }
+
+  .plan-card-desc {
+    font-size: clamp(0.825rem, 2.8vw, 0.875rem);
+    line-height: 1.45;
+  }
+
+  .plan-price-wrapper {
+    margin: 1rem 0;
+  }
+
+  .plan-price-amount {
+    font-size: clamp(1.65rem, 6.5vw, 2rem);
+    line-height: 1.1;
+  }
+
+  .plan-features-list {
+    margin: 0 0 1.5rem 0;
+    gap: 0.5rem;
+  }
+
+  .plan-features-list li {
+    font-size: clamp(0.8rem, 2.7vw, 0.875rem);
+    gap: 0.5rem;
+    line-height: 1.35;
+    word-break: break-word;
+  }
+
+  .plan-check-icon {
+    font-size: 0.9rem;
+    line-height: 1;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .btn-plan-action {
+    width: 100% !important;
+    min-height: 46px;
+    padding: 0.75rem 0.6rem;
+    font-size: clamp(0.825rem, 3.2vw, 0.925rem);
+    text-align: center;
+    justify-content: center;
+    display: flex;
+    align-items: center;
+    border-radius: var(--radius-pill);
+    line-height: 1.25;
+    white-space: normal;
+  }
+
+  /* Feature Cards (¿Qué es Reformer? en HomePage) */
+  .feature-card {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 1.5rem 1.15rem;
+    border-radius: 16px;
+  }
+
+  .feature-icon-badge {
+    width: 42px;
+    height: 42px;
+    margin-bottom: 1rem;
+  }
+
+  .feature-card-title {
+    font-size: clamp(1.1rem, 4.2vw, 1.25rem);
+    line-height: 1.3;
+    margin-bottom: 0.65rem;
+  }
+
+  .feature-card-body {
+    font-size: clamp(0.825rem, 2.8vw, 0.9rem);
+    line-height: 1.55;
+  }
+
+  /* Sinergia Cards (TerapiasPage) */
+  .sinergia-cards-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.25rem !important;
+    width: 100% !important;
+  }
+
+  .sinergia-card {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 1.5rem 1.15rem;
+    border-radius: 16px;
+  }
+
+  .sinergia-card-icon {
+    width: 42px;
+    height: 42px;
+    margin-bottom: 1rem;
+  }
+
+  .sinergia-card-title {
+    font-size: clamp(1.05rem, 4.2vw, 1.2rem);
+    line-height: 1.3;
+    margin-bottom: 0.5rem;
+  }
+
+  .sinergia-card-text {
+    font-size: clamp(0.825rem, 2.8vw, 0.9rem);
+    line-height: 1.5;
+  }
+
+  /* Catálogo de Terapias (TerapiasPage) */
+  .catalogo-cards-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+    width: 100% !important;
+  }
+
+  .servicio-card,
+  .servicio-card-featured {
+    width: 100% !important;
+    box-sizing: border-box;
+    padding: 1.5rem 1.15rem;
+    border-radius: 16px;
+    min-width: 0;
+  }
+
+  .card-top-bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.85rem;
+    width: 100%;
+  }
+
+  .badge-tag {
+    font-size: clamp(0.68rem, 2.6vw, 0.72rem);
+    padding: 0.25rem 0.65rem;
+    letter-spacing: 0.02em;
+  }
+
+  .card-duration {
+    font-size: clamp(0.78rem, 2.6vw, 0.825rem);
+  }
+
+  .servicio-card-title {
+    font-size: clamp(1.15rem, 4.5vw, 1.3rem);
+    line-height: 1.25;
+    margin-bottom: 0.5rem;
+  }
+
+  .servicio-card-desc {
+    font-size: clamp(0.825rem, 2.8vw, 0.9rem);
+    line-height: 1.5;
+    margin-bottom: 1.25rem;
+  }
+
+  .servicio-bullets-list {
+    margin: 0 0 1.5rem 0;
+    gap: 0.5rem;
+  }
+
+  .servicio-bullets-list li {
+    font-size: clamp(0.8rem, 2.7vw, 0.875rem);
+    gap: 0.5rem;
+    line-height: 1.35;
+    word-break: break-word;
+  }
+
+  .servicio-card-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.85rem;
+    padding-top: 1rem;
+    text-align: center;
+    width: 100%;
+  }
+
+  .price-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .price-label {
+    font-size: 0.72rem;
+    margin-bottom: 0.15rem;
+  }
+
+  .price-values {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+  }
+
+  .price-amount {
+    font-size: clamp(1.45rem, 5.5vw, 1.75rem);
+    font-weight: 800;
+  }
+
+  .price-original {
+    font-size: 0.825rem;
+  }
+
+  .btn-servicio-action {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 46px;
+    font-size: clamp(0.8rem, 3.2vw, 0.925rem);
+    padding: 0.75rem 0.5rem;
+    text-align: center;
+    justify-content: center;
+    display: flex;
+    align-items: center;
+    border-radius: var(--radius-pill);
+    white-space: normal;
+    line-height: 1.25;
+  }
+
+  /* Alert Banners en TerapiasPage */
+  .terapias-user-alert-banner {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1.15rem 0.85rem;
+    gap: 0.85rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .terapias-alert-left {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.4rem;
+  }
+
+  .terapias-alert-badge {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+    font-size: 0.925rem;
+  }
+
+  /* Sección Diagnóstico y QR */
+  .diagnostico-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .step-card {
+    padding: 1rem 0.85rem;
+    gap: 0.85rem;
+    border-radius: 12px;
+  }
+
+  .diagnostico-form-card {
+    padding: 1.5rem 1rem;
+    border-radius: 18px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .form-card-title {
+    font-size: clamp(1.1rem, 4.2vw, 1.3rem);
+    line-height: 1.3;
+  }
+
+  .qr-container {
+    max-width: 220px;
+    margin: 1.25rem auto;
+    width: 100%;
+  }
+}
+
+/* ==========================================================================
+   3. Breakpoint Pantallas Ultra-Compactas (<= 380px y soporte 320px)
+   Ajuste fino de paddings, márgenes y tipografía para evitar pérdida de espacio
+   ========================================================================== */
+@media (max-width: 380px) {
+  /* Espaciado del contenedor principal al mínimo óptimo (10px - 12px) */
+  .homepage-container {
+    padding: 1.25rem 0.65rem 2.5rem 0.65rem;
+    gap: 2.75rem;
+  }
+
+  .terapias-hero-section {
+    padding: 2.25rem 0.65rem 1.75rem 0.65rem;
+  }
+
+  .terapias-sinergia-section,
+  .terapias-catalogo-section,
+  .terapias-diagnostico-section {
+    padding: 2.25rem 0.65rem;
+  }
+
+  /* Tarjeta contenedora de beneficios en HomePage */
+  .benefits-container-card {
+    padding: 1.35rem 0.65rem;
+    border-radius: 18px;
+    gap: 1.5rem;
+  }
+
+  /* Pestañas de filtro de planes */
+  .planes-tabs-container {
+    padding: 0.25rem;
+    gap: 0.25rem;
+    border-radius: 12px;
+  }
+
+  .plan-tab-btn {
+    font-size: 0.76rem;
+    padding: 0.55rem 0.35rem;
+    line-height: 1.2;
+  }
+
+  /* Tarjeta de Plan en 320px */
+  .plan-card-item {
+    padding: 1.35rem 0.75rem 1.15rem 0.75rem;
+    border-radius: 14px;
+  }
+
+  .plan-badge-tag {
+    font-size: 0.64rem;
+    padding: 0.2rem 0.6rem;
+    max-width: calc(100% - 16px);
+  }
+
+  .plan-frecuencia-badge {
+    font-size: 0.68rem;
+    padding: 0.2rem 0.55rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .plan-card-title {
+    font-size: 1.125rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .plan-card-desc {
+    font-size: 0.8rem;
+    line-height: 1.4;
+  }
+
+  .plan-price-amount {
+    font-size: 1.55rem;
+  }
+
+  .plan-features-list {
+    margin-bottom: 1.25rem;
+    gap: 0.45rem;
+  }
+
+  .plan-features-list li {
+    font-size: 0.78rem;
+    gap: 0.4rem;
+    line-height: 1.3;
+  }
+
+  .btn-plan-action {
+    min-height: 44px;
+    padding: 0.7rem 0.4rem;
+    font-size: 0.8rem;
+    line-height: 1.2;
+  }
+
+  /* Feature cards en 320px */
+  .feature-card {
+    padding: 1.25rem 0.75rem;
+    border-radius: 14px;
+  }
+
+  .feature-card-title {
+    font-size: 1.075rem;
+  }
+
+  .feature-card-body {
+    font-size: 0.8rem;
+    line-height: 1.45;
+  }
+
+  /* Sinergia cards en 320px */
+  .sinergia-card {
+    padding: 1.25rem 0.75rem;
+    border-radius: 14px;
+  }
+
+  .sinergia-card-title {
+    font-size: 1.05rem;
+  }
+
+  .sinergia-card-text {
+    font-size: 0.8rem;
+    line-height: 1.45;
+  }
+
+  /* Tarjetas de catálogo de terapias en 320px */
+  .servicio-card,
+  .servicio-card-featured {
+    padding: 1.25rem 0.75rem;
+    border-radius: 14px;
+  }
+
+  .badge-tag {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.55rem;
+  }
+
+  .card-duration {
+    font-size: 0.75rem;
+  }
+
+  .servicio-card-title {
+    font-size: 1.125rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .servicio-card-desc {
+    font-size: 0.8rem;
+    line-height: 1.4;
+    margin-bottom: 1rem;
+  }
+
+  .servicio-bullets-list {
+    margin-bottom: 1.25rem;
+    gap: 0.45rem;
+  }
+
+  .servicio-bullets-list li {
+    font-size: 0.78rem;
+    gap: 0.4rem;
+    line-height: 1.3;
+  }
+
+  .price-amount {
+    font-size: 1.4rem;
+  }
+
+  .btn-servicio-action {
+    min-height: 44px;
+    padding: 0.7rem 0.4rem;
+    font-size: 0.8rem;
+    line-height: 1.2;
+  }
+
+  /* Diagnóstico & QR en 320px */
+  .diagnostico-form-card {
+    padding: 1.25rem 0.75rem;
+    border-radius: 14px;
+  }
+
+  .qr-container {
+    max-width: 190px;
+    margin: 1rem auto;
+  }
+
+  .step-card {
+    padding: 0.85rem 0.65rem;
+    gap: 0.65rem;
+  }
+
+  .step-number {
+    width: 28px;
+    height: 28px;
+    font-size: 0.85rem;
+  }
+
+  .step-title {
+    font-size: 0.875rem;
+  }
+
+  .step-desc {
+    font-size: 0.78rem;
+  }
+}
+
+/* ==========================================================================
+   PANEL ROSTER DE ADMINISTRADOR EN TARJETAS DE AGENDAMIENTO (BOOKING)
+   Diseñado con @ui-ux-pro-max: claridad visual, micro-interacciones y accesibilidad
+   ========================================================================== */
+
+.admin-roster-box {
+  margin-top: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  background: rgba(247, 248, 252, 0.95);
+  border: 1px solid rgba(206, 208, 242, 0.7);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(37, 59, 89, 0.04);
+}
+
+.admin-roster-box:hover {
+  border-color: var(--color-primary);
+  background: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(37, 59, 89, 0.08);
+}
+
+.admin-roster-terapia {
+  background: rgba(240, 253, 244, 0.95);
+  border-color: rgba(187, 247, 208, 0.85);
+  box-shadow: 0 2px 6px rgba(21, 128, 61, 0.04);
+}
+
+.admin-roster-terapia:hover {
+  border-color: #15803D;
+  background: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(21, 128, 61, 0.08);
+}
+
+.admin-roster-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.admin-roster-badge {
+  font-family: var(--font-heading);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.15rem 0.55rem;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-primary);
+  color: #FFFFFF;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  box-shadow: 0 2px 5px rgba(37, 59, 89, 0.2);
+}
+
+.badge-admin-terapia {
+  background-color: #15803D;
+  box-shadow: 0 2px 5px rgba(21, 128, 61, 0.2);
+}
+
+.admin-roster-count {
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  color: #475569;
+}
+
+.admin-roster-count strong {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.admin-roster-terapia .admin-roster-count strong {
+  color: #15803D;
+}
+
+.admin-roster-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.admin-alumno-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.6rem 0.2rem 0.25rem;
+  background-color: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: var(--radius-pill);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #1E293B;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  max-width: 100%;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-alumno-chip:hover {
+  transform: translateY(-1px);
+  border-color: #CBD5E1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.chip-terapia {
+  border-color: #BBF7D0;
+}
+
+.chip-terapia:hover {
+  border-color: #86EFAC;
+}
+
+.admin-alumno-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background-color: var(--color-primary);
+  color: #FFFFFF;
+  font-family: var(--font-heading);
+  font-size: 0.68rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.avatar-terapia {
+  background-color: #15803D;
+}
+
+.admin-alumno-nombre {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+  font-size: 0.78rem;
+  line-height: 1.2;
+}
+
+.admin-roster-empty {
+  font-size: 0.75rem;
+  color: #94A3B8;
+  font-style: italic;
+  display: inline-block;
+  padding: 0.1rem 0;
+}
+
+@media (max-width: 380px) {
+  .admin-roster-box {
+    padding: 0.5rem 0.65rem;
+    gap: 0.35rem;
+  }
+
+  .admin-roster-badge {
+    font-size: 0.62rem;
+    padding: 0.1rem 0.45rem;
+  }
+
+  .admin-roster-count {
+    font-size: 0.7rem;
+  }
+
+  .admin-alumno-chip {
+    font-size: 0.72rem;
+    padding: 0.15rem 0.5rem 0.15rem 0.2rem;
+  }
+
+  .admin-alumno-avatar {
+    width: 18px;
+    height: 18px;
+    font-size: 0.6rem;
+  }
+
+  .admin-alumno-nombre {
+    max-width: 110px;
+  }
+}
+
+
+
 
 
 

@@ -27,3 +27,4 @@ dist-ssr
 .agents/*
 .sistema_diseno/*
 skills-lock.json
+src/test/*

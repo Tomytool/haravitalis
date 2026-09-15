@@ -7,6 +7,12 @@
       "skillPath": "skills/components/layout/card/SKILL.md",
       "computedHash": "50690ef34d6d4f334756f749fcf2f5e4b949d1b58f57ddd57e890b8a4963b7a2"
     },
+    "create-readme": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "skillPath": "skills/create-readme/SKILL.md",
+      "computedHash": "d0ece1b2164ce1376e4ab6e98d6ac079df3a2a94f5f02224362b6a1ce2516ae9"
+    },
     "crud-generator": {
       "source": "thapaliyabikendra/ai-artifacts",
       "sourceType": "github",
@@ -54,6 +60,12 @@
       "sourceType": "github",
       "skillPath": "skills/firebase-firestore/SKILL.md",
       "computedHash": "090565389f17369f9c97cbe8d76c4ac7f0b93254c52fbc2f1d10f8234ad63500"
+    },
+    "frontend-ui-engineering": {
+      "source": "addyosmani/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/frontend-ui-engineering/SKILL.md",
+      "computedHash": "cb4e981ecb5f701b451fc4e937a38049b49fd4523f213e06cffbd00b007060dc"
     },
     "modern-javascript-patterns": {
       "source": "wshobson/agents",
