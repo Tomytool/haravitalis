@@ -1210,7 +1210,7 @@ export default function AdminUsuariosTab() {
                       backgroundColor: "#FFFFFF",
                     }}
                   >
-                    {![0, 1, 4, 8, 12].includes(
+                    {![0, 1, 4, 8, 12, 16].includes(
                       Number(formData.clases_pactadas),
                     ) && (
                       <option value={formData.clases_pactadas}>
@@ -1222,6 +1222,7 @@ export default function AdminUsuariosTab() {
                     <option value={4}>4</option>
                     <option value={8}>8</option>
                     <option value={12}>12</option>
+                    <option value={16}>16</option>
                   </select>
                 </div>
 
