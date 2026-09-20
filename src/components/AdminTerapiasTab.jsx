@@ -181,22 +181,25 @@ export default function AdminTerapiasTab() {
   });
 
   return (
-    <div style={{ marginTop: "1rem" }}>
+    <div style={{ marginTop: "0.5rem" }}>
       {/* Toast Notification */}
       {notification.message && (
         <div
           style={{
             position: "fixed",
             top: "88px",
-            right: "24px",
+            right: "16px",
+            left: "16px",
+            maxWidth: "400px",
+            margin: "0 auto",
             backgroundColor: notification.error ? "#991B1B" : "#253B59",
             color: "#FFFFFF",
-            padding: "0.85rem 1.5rem",
+            padding: "0.85rem 1.25rem",
             borderRadius: "12px",
             boxShadow: "0 10px 25px rgba(37, 59, 89, 0.25)",
             zIndex: 1200,
             fontWeight: "600",
-            fontSize: "0.95rem",
+            fontSize: "0.9rem",
             display: "flex",
             alignItems: "center",
             gap: "0.5rem",
@@ -209,104 +212,69 @@ export default function AdminTerapiasTab() {
       )}
 
       {/* Header y Acción Principal */}
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: "1rem",
-          marginBottom: "2rem",
-        }}
-      >
+      <div className="admin-header-flex">
         <div>
           <span
             style={{
               display: "inline-flex",
               alignItems: "center",
               gap: "0.5rem",
-              padding: "0.375rem 1rem",
+              padding: "0.3rem 0.85rem",
               backgroundColor: "rgba(206, 208, 242, 0.4)",
               color: "#253B59",
               borderRadius: "9999px",
-              fontSize: "0.875rem",
-              fontWeight: "600",
-              letterSpacing: "0.05em",
+              fontSize: "0.8rem",
+              fontWeight: "700",
+              letterSpacing: "0.04em",
               textTransform: "uppercase",
-              marginBottom: "0.5rem",
+              marginBottom: "0.4rem",
             }}
           >
             🌿 Terapias Integrativas & MTC
           </span>
           <h1
             style={{
-              fontSize: "clamp(1.75rem, 3.5vw, 2.5rem)",
+              fontSize: "clamp(1.35rem, 5vw, 2.25rem)",
               fontWeight: "700",
               color: "#253B59",
               margin: 0,
+              lineHeight: 1.2,
             }}
           >
-            Gestión de Sesiones de Terapia
+            Gestión de Terapias
           </h1>
         </div>
 
-        <button
-          onClick={handleAbrirCrear}
-          style={{
-            backgroundColor: "#253B59",
-            color: "#FFFFFF",
-            borderRadius: "9999px",
-            padding: "0.875rem 1.75rem",
-            border: "none",
-            fontWeight: "600",
-            fontSize: "0.95rem",
-            cursor: "pointer",
-            boxShadow: "0 4px 14px rgba(37, 59, 89, 0.25)",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            transition: "background-color 0.2s ease, box-shadow 0.2s ease",
-          }}
-        >
-          <span>🌿➕</span> Crear Sesión de Terapia
-        </button>
+        <div className="admin-header-actions">
+          <button
+            type="button"
+            onClick={handleAbrirCrear}
+            className="admin-btn-action admin-btn-action--primary"
+          >
+            <span>🌿➕</span>
+            <span>Nueva Sesión</span>
+          </button>
+        </div>
       </div>
 
       {/* Filtros */}
-      <div
-        style={{
-          backgroundColor: "rgba(255, 255, 255, 0.9)",
-          border: "1px solid rgba(206, 208, 242, 0.5)",
-          borderRadius: "20px",
-          padding: "1.25rem",
-          marginBottom: "2rem",
-          boxShadow: "0 10px 30px rgba(37, 59, 89, 0.04)",
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "1rem",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <div style={{ flex: "1 1 300px" }}>
+      <div className="admin-filter-bar">
+        <div style={{ width: "100%" }}>
           <input
             type="text"
-            placeholder="Buscar por título, terapeuta o categoría..."
+            placeholder="🔍 Buscar por título, terapeuta o categoría..."
             aria-label="Buscar terapias por título, terapeuta o categoría"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "0.75rem 1rem",
-              borderRadius: "12px",
-              border: "1px solid #CBD5E1",
-              fontSize: "0.95rem",
-            }}
+            className="admin-filter-input"
           />
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <label htmlFor="admin-terapias-filtro-estado" style={{ fontSize: "0.85rem", color: "#64748B", fontWeight: "600" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", width: "100%" }}>
+          <label
+            htmlFor="admin-terapias-filtro-estado"
+            style={{ fontSize: "0.8rem", color: "#64748B", fontWeight: "600", minWidth: "50px" }}
+          >
             Estado:
           </label>
           <select
@@ -314,24 +282,25 @@ export default function AdminTerapiasTab() {
             aria-label="Filtrar por estado"
             value={filtroEstado}
             onChange={(e) => setFiltroEstado(e.target.value)}
+            className="admin-input-mobile"
             style={{
-              padding: "0.6rem 0.9rem",
+              padding: "0.55rem 0.75rem",
               borderRadius: "10px",
               border: "1px solid #CBD5E1",
-              fontSize: "0.9rem",
               backgroundColor: "#FFFFFF",
               color: "#253B59",
               fontWeight: "600",
+              minHeight: "42px",
             }}
           >
-            <option value="todas">Todas</option>
+            <option value="todas">Todas las terapias</option>
             <option value="activa">Activa</option>
             <option value="inactiva">Inactiva</option>
           </select>
         </div>
       </div>
 
-      {/* Tabla de Terapias */}
+      {/* Tabla de Terapias (Desktop) + Tarjetas Móviles (Mobile) */}
       <div
         style={{
           backgroundColor: "rgba(255, 255, 255, 0.9)",
@@ -350,68 +319,150 @@ export default function AdminTerapiasTab() {
             No se encontraron sesiones de terapia registradas.
           </div>
         ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                textAlign: "left",
-              }}
-            >
-              <thead>
-                <tr
-                  style={{
-                    backgroundColor: "#F1F5F9",
-                    borderBottom: "1px solid #E2E8F0",
-                    color: "#253B59",
-                  }}
-                >
-                  <th style={{ padding: "1rem" }}>Terapia / Servicio</th>
-                  <th style={{ padding: "1rem" }}>Terapeuta</th>
-                  <th style={{ padding: "1rem" }}>Duración & Precio</th>
-                  <th style={{ padding: "1rem" }}>Horario / Fecha</th>
-                  <th style={{ padding: "1rem" }}>Estado</th>
-                  <th style={{ padding: "1rem", textAlign: "right" }}>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {terapiasFiltradas.map((t) => (
-                  <tr key={t.id} style={{ borderBottom: "1px solid #F1F5F9" }}>
-                    <td style={{ padding: "1rem" }}>
-                      <div style={{ fontWeight: "700", color: "#253B59" }}>
-                        {t.titulo}
-                      </div>
-                      <div style={{ fontSize: "0.8rem", color: "#64748B" }}>
-                        🏷️ {t.badge}
-                      </div>
-                    </td>
+          <>
+            {/* 1. VISTA TABLA (DESKTOP) */}
+            <div className="admin-table-desktop" style={{ overflowX: "auto" }}>
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  textAlign: "left",
+                }}
+              >
+                <thead>
+                  <tr
+                    style={{
+                      backgroundColor: "#F1F5F9",
+                      borderBottom: "1px solid #E2E8F0",
+                      color: "#253B59",
+                    }}
+                  >
+                    <th style={{ padding: "1rem" }}>Terapia / Servicio</th>
+                    <th style={{ padding: "1rem" }}>Terapeuta</th>
+                    <th style={{ padding: "1rem" }}>Duración & Precio</th>
+                    <th style={{ padding: "1rem" }}>Horario / Fecha</th>
+                    <th style={{ padding: "1rem" }}>Estado</th>
+                    <th style={{ padding: "1rem", textAlign: "right" }}>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {terapiasFiltradas.map((t) => (
+                    <tr key={t.id} style={{ borderBottom: "1px solid #F1F5F9" }}>
+                      <td style={{ padding: "1rem" }}>
+                        <div style={{ fontWeight: "700", color: "#253B59" }}>
+                          {t.titulo}
+                        </div>
+                        <div style={{ fontSize: "0.8rem", color: "#64748B" }}>
+                          🏷️ {t.badge}
+                        </div>
+                      </td>
 
-                    <td style={{ padding: "1rem", color: "#334155" }}>
-                      🧑‍⚕️ {t.terapeuta || t.instructor || "Especialista MTC"}
-                    </td>
+                      <td style={{ padding: "1rem", color: "#334155" }}>
+                        🧑‍⚕️ {t.terapeuta || t.instructor || "Especialista MTC"}
+                      </td>
 
-                    <td style={{ padding: "1rem" }}>
-                      <div style={{ fontWeight: "600", color: "#1E293B" }}>
-                        ⏱️ {t.duracion}
+                      <td style={{ padding: "1rem" }}>
+                        <div style={{ fontWeight: "600", color: "#1E293B" }}>
+                          ⏱️ {t.duracion}
+                        </div>
+                        <div style={{ fontSize: "0.85rem", color: "#166534", fontWeight: "700" }}>
+                          💰 {t.precio}
+                        </div>
+                      </td>
+
+                      <td style={{ padding: "1rem", fontSize: "0.85rem", color: "#475569" }}>
+                        {formatearFechaTabla(t.fecha_inicio)}
+                      </td>
+
+                      <td style={{ padding: "1rem" }}>
+                        <span
+                          style={{
+                            display: "inline-block",
+                            padding: "0.25rem 0.65rem",
+                            borderRadius: "9999px",
+                            backgroundColor:
+                              t.estado === "activa" ? "#DCFCE7" : "#FEE2E2",
+                            color: t.estado === "activa" ? "#15803D" : "#B91C1C",
+                            fontWeight: "700",
+                            fontSize: "0.75rem",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          {t.estado}
+                        </span>
+                      </td>
+
+                      <td style={{ padding: "1rem", textAlign: "right" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "flex-end",
+                            gap: "0.5rem",
+                          }}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => handleAbrirEditar(t)}
+                            style={{
+                              backgroundColor: "#CED0F2",
+                              color: "#253B59",
+                              border: "none",
+                              borderRadius: "8px",
+                              padding: "0.4rem 0.8rem",
+                              fontWeight: "600",
+                              fontSize: "0.85rem",
+                              cursor: "pointer",
+                            }}
+                          >
+                            ✏️ Editar
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setConfirmDeleteId(t.id)}
+                            style={{
+                              backgroundColor: "#FEE2E2",
+                              color: "#991B1B",
+                              border: "none",
+                              borderRadius: "8px",
+                              padding: "0.4rem 0.8rem",
+                              fontWeight: "600",
+                              fontSize: "0.85rem",
+                              cursor: "pointer",
+                            }}
+                          >
+                            🗑️ Eliminar
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* 2. VISTA TARJETAS (MOBILE 320PX PORTRAIT) */}
+            <div className="admin-cards-mobile">
+              {terapiasFiltradas.map((t) => {
+                const estadoColor =
+                  t.estado === "activa"
+                    ? { bg: "#DCFCE7", text: "#15803D" }
+                    : { bg: "#FEE2E2", text: "#B91C1C" };
+
+                return (
+                  <div key={t.id} className="admin-data-card">
+                    <div className="admin-card-header">
+                      <div>
+                        <div className="admin-card-title">{t.titulo}</div>
+                        <div className="admin-card-subtitle">🏷️ {t.badge}</div>
                       </div>
-                      <div style={{ fontSize: "0.85rem", color: "#166534", fontWeight: "700" }}>
-                        💰 {t.precio}
-                      </div>
-                    </td>
-
-                    <td style={{ padding: "1rem", fontSize: "0.85rem", color: "#475569" }}>
-                      {formatearFechaTabla(t.fecha_inicio)}
-                    </td>
-
-                    <td style={{ padding: "1rem" }}>
                       <span
                         style={{
                           display: "inline-block",
                           padding: "0.25rem 0.65rem",
                           borderRadius: "9999px",
-                          backgroundColor:
-                            t.estado === "activa" ? "#DCFCE7" : "#FEE2E2",
-                          color: t.estado === "activa" ? "#15803D" : "#B91C1C",
+                          backgroundColor: estadoColor.bg,
+                          color: estadoColor.text,
                           fontWeight: "700",
                           fontSize: "0.75rem",
                           textTransform: "uppercase",
@@ -419,97 +470,90 @@ export default function AdminTerapiasTab() {
                       >
                         {t.estado}
                       </span>
-                    </td>
+                    </div>
 
-                    <td style={{ padding: "1rem", textAlign: "right" }}>
-                      <div
+                    <div className="admin-card-body">
+                      <div className="admin-card-row">
+                        <span style={{ color: "#64748B" }}>🧑‍⚕️ Terapeuta:</span>
+                        <span style={{ fontWeight: "600", textAlign: "right" }}>
+                          {t.terapeuta || t.instructor || "Especialista MTC"}
+                        </span>
+                      </div>
+
+                      <div className="admin-card-row">
+                        <span style={{ color: "#64748B" }}>⏱️ Duración / Precio:</span>
+                        <span style={{ fontWeight: "700", color: "#166534" }}>
+                          {t.duracion} • {t.precio}
+                        </span>
+                      </div>
+
+                      <div className="admin-card-row">
+                        <span style={{ color: "#64748B" }}>📅 Horario:</span>
+                        <span style={{ fontWeight: "600", textAlign: "right" }}>
+                          {formatearFechaTabla(t.fecha_inicio)}
+                        </span>
+                      </div>
+
+                      <div className="admin-card-row">
+                        <span style={{ color: "#64748B" }}>📊 Cupos:</span>
+                        <span style={{ fontWeight: "600" }}>
+                          {t.cupos_disponibles ?? 1} / {t.cupo_maximo ?? 1} disponible(s)
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="admin-card-actions">
+                      <button
+                        type="button"
+                        onClick={() => handleAbrirEditar(t)}
                         style={{
-                          display: "flex",
-                          justifyContent: "flex-end",
-                          gap: "0.5rem",
+                          backgroundColor: "#CED0F2",
+                          color: "#253B59",
                         }}
                       >
-                        <button
-                          onClick={() => handleAbrirEditar(t)}
-                          style={{
-                            backgroundColor: "#CED0F2",
-                            color: "#253B59",
-                            border: "none",
-                            borderRadius: "8px",
-                            padding: "0.4rem 0.8rem",
-                            fontWeight: "600",
-                            fontSize: "0.85rem",
-                            cursor: "pointer",
-                          }}
-                        >
-                          ✏️ Editar
-                        </button>
+                        ✏️ Editar
+                      </button>
 
-                        <button
-                          onClick={() => setConfirmDeleteId(t.id)}
-                          style={{
-                            backgroundColor: "#FEE2E2",
-                            color: "#991B1B",
-                            border: "none",
-                            borderRadius: "8px",
-                            padding: "0.4rem 0.8rem",
-                            fontWeight: "600",
-                            fontSize: "0.85rem",
-                            cursor: "pointer",
-                          }}
-                        >
-                          🗑️ Eliminar
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDeleteId(t.id)}
+                        style={{
+                          backgroundColor: "#FEE2E2",
+                          color: "#991B1B",
+                        }}
+                      >
+                        🗑️ Eliminar
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
 
       {/* Modal Formulario (Crear / Editar Terapia) */}
       {isModalOpen && (
         <div
+          className="admin-modal-overlay"
           onClick={() => setIsModalOpen(false)}
-          style={{
-            position: "fixed",
-            inset: 0,
-            backgroundColor: "rgba(15, 23, 42, 0.6)",
-            backdropFilter: "blur(4px)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "1rem",
-            zIndex: 1100,
-          }}
         >
           <div
+            className="admin-modal-content"
             onClick={(e) => e.stopPropagation()}
-            style={{
-              backgroundColor: "#FFFFFF",
-              borderRadius: "24px",
-              width: "100%",
-              maxWidth: "600px",
-              maxHeight: "90vh",
-              overflowY: "auto",
-              padding: "2rem",
-              boxShadow: "0 20px 50px rgba(0, 0, 0, 0.2)",
-            }}
           >
             <div
               style={{
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                marginBottom: "1.5rem",
+                marginBottom: "1.25rem",
               }}
             >
               <h2
                 style={{
-                  fontSize: "1.4rem",
+                  fontSize: "1.35rem",
                   fontWeight: "700",
                   color: "#253B59",
                   margin: 0,
@@ -536,9 +580,11 @@ export default function AdminTerapiasTab() {
             </div>
 
             <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-
               <div>
-                <label htmlFor="terapia-titulo" style={{ display: "block", fontWeight: "600", fontSize: "0.875rem", color: "#253B59", marginBottom: "0.35rem" }}>
+                <label
+                  htmlFor="terapia-titulo"
+                  style={{ display: "block", fontWeight: "600", fontSize: "0.875rem", color: "#253B59", marginBottom: "0.35rem" }}
+                >
                   Título / Nombre de la Terapia *
                 </label>
                 <input
@@ -548,13 +594,16 @@ export default function AdminTerapiasTab() {
                   value={formData.titulo}
                   onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
                   placeholder="ej. Acupuntura Bioenergética"
-                  style={{ width: "100%", padding: "0.75rem", borderRadius: "10px", border: "1px solid #CBD5E1" }}
+                  className="admin-input-mobile"
                 />
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+              <div className="admin-form-grid-2">
                 <div>
-                  <label htmlFor="terapia-badge" style={{ display: "block", fontWeight: "600", fontSize: "0.875rem", color: "#253B59", marginBottom: "0.35rem" }}>
+                  <label
+                    htmlFor="terapia-badge"
+                    style={{ display: "block", fontWeight: "600", fontSize: "0.875rem", color: "#253B59", marginBottom: "0.35rem" }}
+                  >
                     Categoría / Badge
                   </label>
                   <input
@@ -563,12 +612,15 @@ export default function AdminTerapiasTab() {
                     value={formData.badge}
                     onChange={(e) => setFormData({ ...formData, badge: e.target.value })}
                     placeholder="ej. Terapia Principal"
-                    style={{ width: "100%", padding: "0.75rem", borderRadius: "10px", border: "1px solid #CBD5E1" }}
+                    className="admin-input-mobile"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="terapia-duracion" style={{ display: "block", fontWeight: "600", fontSize: "0.875rem", color: "#253B59", marginBottom: "0.35rem" }}>
+                  <label
+                    htmlFor="terapia-duracion"
+                    style={{ display: "block", fontWeight: "600", fontSize: "0.875rem", color: "#253B59", marginBottom: "0.35rem" }}
+                  >
                     Duración Estimada
                   </label>
                   <input
@@ -577,13 +629,16 @@ export default function AdminTerapiasTab() {
                     value={formData.duracion}
                     onChange={(e) => setFormData({ ...formData, duracion: e.target.value })}
                     placeholder="ej. 50 min"
-                    style={{ width: "100%", padding: "0.75rem", borderRadius: "10px", border: "1px solid #CBD5E1" }}
+                    className="admin-input-mobile"
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="terapia-descripcion" style={{ display: "block", fontWeight: "600", fontSize: "0.875rem", color: "#253B59", marginBottom: "0.35rem" }}>
+                <label
+                  htmlFor="terapia-descripcion"
+                  style={{ display: "block", fontWeight: "600", fontSize: "0.875rem", color: "#253B59", marginBottom: "0.35rem" }}
+                >
                   Descripción de la Terapia
                 </label>
                 <textarea
@@ -592,13 +647,17 @@ export default function AdminTerapiasTab() {
                   value={formData.descripcion}
                   onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
                   placeholder="Describe los beneficios y el objetivo clínico o energético de la sesión..."
-                  style={{ width: "100%", padding: "0.75rem", borderRadius: "10px", border: "1px solid #CBD5E1", resize: "vertical" }}
+                  className="admin-input-mobile"
+                  style={{ resize: "vertical" }}
                 />
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+              <div className="admin-form-grid-2">
                 <div>
-                  <label htmlFor="terapia-terapeuta" style={{ display: "block", fontWeight: "600", fontSize: "0.875rem", color: "#253B59", marginBottom: "0.35rem" }}>
+                  <label
+                    htmlFor="terapia-terapeuta"
+                    style={{ display: "block", fontWeight: "600", fontSize: "0.875rem", color: "#253B59", marginBottom: "0.35rem" }}
+                  >
                     Terapeuta / Especialista
                   </label>
                   <input
@@ -607,12 +666,15 @@ export default function AdminTerapiasTab() {
                     value={formData.terapeuta}
                     onChange={(e) => setFormData({ ...formData, terapeuta: e.target.value })}
                     placeholder="ej. Dr. Camila Soto"
-                    style={{ width: "100%", padding: "0.75rem", borderRadius: "10px", border: "1px solid #CBD5E1" }}
+                    className="admin-input-mobile"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="terapia-precio" style={{ display: "block", fontWeight: "600", fontSize: "0.875rem", color: "#253B59", marginBottom: "0.35rem" }}>
+                  <label
+                    htmlFor="terapia-precio"
+                    style={{ display: "block", fontWeight: "600", fontSize: "0.875rem", color: "#253B59", marginBottom: "0.35rem" }}
+                  >
                     Precio de la Sesión
                   </label>
                   <input
@@ -621,14 +683,17 @@ export default function AdminTerapiasTab() {
                     value={formData.precio}
                     onChange={(e) => setFormData({ ...formData, precio: e.target.value })}
                     placeholder="ej. $25.000"
-                    style={{ width: "100%", padding: "0.75rem", borderRadius: "10px", border: "1px solid #CBD5E1" }}
+                    className="admin-input-mobile"
                   />
                 </div>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem" }}>
+              <div className="admin-form-grid-3">
                 <div>
-                  <label htmlFor="terapia-fecha-inicio" style={{ display: "block", fontWeight: "600", fontSize: "0.85rem", color: "#253B59", marginBottom: "0.35rem" }}>
+                  <label
+                    htmlFor="terapia-fecha-inicio"
+                    style={{ display: "block", fontWeight: "600", fontSize: "0.85rem", color: "#253B59", marginBottom: "0.35rem" }}
+                  >
                     Fecha / Hora Inicio
                   </label>
                   <input
@@ -636,12 +701,15 @@ export default function AdminTerapiasTab() {
                     type="datetime-local"
                     value={formData.fecha_inicio}
                     onChange={(e) => setFormData({ ...formData, fecha_inicio: e.target.value })}
-                    style={{ width: "100%", padding: "0.75rem", borderRadius: "10px", border: "1px solid #CBD5E1" }}
+                    className="admin-input-mobile"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="terapia-visible-desde" style={{ display: "block", fontWeight: "600", fontSize: "0.85rem", color: "#253B59", marginBottom: "0.35rem" }}>
+                  <label
+                    htmlFor="terapia-visible-desde"
+                    style={{ display: "block", fontWeight: "600", fontSize: "0.85rem", color: "#253B59", marginBottom: "0.35rem" }}
+                  >
                     Visible Desde *
                   </label>
                   <input
@@ -650,19 +718,23 @@ export default function AdminTerapiasTab() {
                     required
                     value={formData.visible_desde}
                     onChange={(e) => setFormData({ ...formData, visible_desde: e.target.value })}
-                    style={{ width: "100%", padding: "0.75rem", borderRadius: "10px", border: "1px solid #CBD5E1" }}
+                    className="admin-input-mobile"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="terapia-estado" style={{ display: "block", fontWeight: "600", fontSize: "0.85rem", color: "#253B59", marginBottom: "0.35rem" }}>
+                  <label
+                    htmlFor="terapia-estado"
+                    style={{ display: "block", fontWeight: "600", fontSize: "0.85rem", color: "#253B59", marginBottom: "0.35rem" }}
+                  >
                     Estado
                   </label>
                   <select
                     id="terapia-estado"
                     value={formData.estado}
                     onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
-                    style={{ width: "100%", padding: "0.75rem", borderRadius: "10px", border: "1px solid #CBD5E1", backgroundColor: "#FFFFFF" }}
+                    className="admin-input-mobile"
+                    style={{ backgroundColor: "#FFFFFF" }}
                   >
                     <option value="activa">activa</option>
                     <option value="inactiva">inactiva</option>
@@ -670,9 +742,7 @@ export default function AdminTerapiasTab() {
                 </div>
               </div>
 
-
-
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "1rem", marginTop: "1.5rem" }}>
+              <div className="admin-modal-actions">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
@@ -684,6 +754,7 @@ export default function AdminTerapiasTab() {
                     border: "none",
                     fontWeight: "600",
                     cursor: "pointer",
+                    minHeight: "44px",
                   }}
                 >
                   Cancelar
@@ -700,6 +771,7 @@ export default function AdminTerapiasTab() {
                     fontWeight: "600",
                     cursor: "pointer",
                     boxShadow: "0 4px 14px rgba(37, 59, 89, 0.25)",
+                    minHeight: "44px",
                   }}
                 >
                   {guardando ? "Guardando..." : terapiaEditando ? "Guardar Cambios" : "Crear Sesión"}
@@ -713,61 +785,50 @@ export default function AdminTerapiasTab() {
       {/* Confirmación Eliminar */}
       {confirmDeleteId && (
         <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            backgroundColor: "rgba(15, 23, 42, 0.6)",
-            backdropFilter: "blur(4px)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "1rem",
-            zIndex: 1200,
-          }}
+          className="admin-modal-overlay"
+          onClick={() => setConfirmDeleteId(null)}
         >
           <div
-            style={{
-              backgroundColor: "#FFFFFF",
-              borderRadius: "20px",
-              padding: "2rem",
-              maxWidth: "450px",
-              width: "100%",
-              textAlign: "center",
-              boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
-            }}
+            className="admin-modal-content"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: "420px", textAlign: "center" }}
           >
-            <div style={{ fontSize: "2.5rem", marginBottom: "1rem" }}>🗑️</div>
-            <h3 style={{ fontSize: "1.25rem", fontWeight: "700", color: "#253B59", marginBottom: "0.5rem" }}>
+            <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>🗑️</div>
+            <h3 style={{ fontSize: "1.2rem", fontWeight: "700", color: "#253B59", marginBottom: "0.5rem" }}>
               ¿Eliminar Sesión de Terapia?
             </h3>
-            <p style={{ color: "#64748B", fontSize: "0.95rem", marginBottom: "1.5rem" }}>
+            <p style={{ color: "#64748B", fontSize: "0.9rem", marginBottom: "1.25rem" }}>
               Esta acción eliminará el registro de la terapia integrativa permanentemente.
             </p>
-            <div style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
+            <div className="admin-modal-actions">
               <button
+                type="button"
                 onClick={() => setConfirmDeleteId(null)}
                 style={{
                   backgroundColor: "#F1F5F9",
                   color: "#64748B",
                   borderRadius: "9999px",
-                  padding: "0.75rem 1.5rem",
+                  padding: "0.75rem 1.2rem",
                   border: "none",
                   fontWeight: "600",
                   cursor: "pointer",
+                  minHeight: "44px",
                 }}
               >
                 Cancelar
               </button>
               <button
+                type="button"
                 onClick={handleConfirmarEliminar}
                 style={{
                   backgroundColor: "#DC2626",
                   color: "#FFFFFF",
                   borderRadius: "9999px",
-                  padding: "0.75rem 1.5rem",
+                  padding: "0.75rem 1.2rem",
                   border: "none",
                   fontWeight: "600",
                   cursor: "pointer",
+                  minHeight: "44px",
                 }}
               >
                 Sí, Eliminar

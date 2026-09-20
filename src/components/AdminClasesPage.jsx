@@ -299,95 +299,37 @@ export default function AdminClasesPage({ currentUser }) {
   return (
     <div className="admin-page-container">
       {/* Selector de Pestañas Principal de Administrador */}
-      <div
-        style={{
-          display: "flex",
-          gap: "0.75rem",
-          marginBottom: "2rem",
-          borderBottom: "2px solid rgba(206, 208, 242, 0.4)",
-          paddingBottom: "0.75rem",
-          overflowX: "auto",
-          WebkitOverflowScrolling: "touch",
-        }}
-      >
+      <nav className="admin-tabs-nav" aria-label="Secciones del panel de administración">
         <button
+          type="button"
           onClick={() => setTabActiva("clases")}
-          style={{
-            backgroundColor: tabActiva === "clases" ? "#253B59" : "#F1F5F9",
-            color: tabActiva === "clases" ? "#FFFFFF" : "#64748B",
-            border: "none",
-            borderRadius: "9999px",
-            padding: "0.75rem 1.75rem",
-            fontWeight: "700",
-            fontSize: "0.95rem",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            boxShadow:
-              tabActiva === "clases"
-                ? "0 4px 14px rgba(37, 59, 89, 0.25)"
-                : "none",
-            transition:
-              "background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease",
-            whiteSpace: "nowrap",
-          }}
+          className={`admin-tab-btn ${tabActiva === "clases" ? "admin-tab-btn--active" : "admin-tab-btn--inactive"}`}
+          aria-current={tabActiva === "clases" ? "page" : undefined}
         >
-          <span>🗓️</span> Clases de Pilates
+          <span>🗓️</span>
+          <span>Clases</span>
         </button>
 
         <button
+          type="button"
           onClick={() => setTabActiva("terapias")}
-          style={{
-            backgroundColor: tabActiva === "terapias" ? "#253B59" : "#F1F5F9",
-            color: tabActiva === "terapias" ? "#FFFFFF" : "#64748B",
-            border: "none",
-            borderRadius: "9999px",
-            padding: "0.75rem 1.75rem",
-            fontWeight: "700",
-            fontSize: "0.95rem",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            boxShadow:
-              tabActiva === "terapias"
-                ? "0 4px 14px rgba(37, 59, 89, 0.25)"
-                : "none",
-            transition:
-              "background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease",
-            whiteSpace: "nowrap",
-          }}
+          className={`admin-tab-btn ${tabActiva === "terapias" ? "admin-tab-btn--active" : "admin-tab-btn--inactive"}`}
+          aria-current={tabActiva === "terapias" ? "page" : undefined}
         >
-          <span>🌿</span> Terapias Integrativas
+          <span>🌿</span>
+          <span>Terapias</span>
         </button>
 
         <button
+          type="button"
           onClick={() => setTabActiva("usuarios")}
-          style={{
-            backgroundColor: tabActiva === "usuarios" ? "#253B59" : "#F1F5F9",
-            color: tabActiva === "usuarios" ? "#FFFFFF" : "#64748B",
-            border: "none",
-            borderRadius: "9999px",
-            padding: "0.75rem 1.75rem",
-            fontWeight: "700",
-            fontSize: "0.95rem",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            boxShadow:
-              tabActiva === "usuarios"
-                ? "0 4px 14px rgba(37, 59, 89, 0.25)"
-                : "none",
-            transition:
-              "background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease",
-            whiteSpace: "nowrap",
-          }}
+          className={`admin-tab-btn ${tabActiva === "usuarios" ? "admin-tab-btn--active" : "admin-tab-btn--inactive"}`}
+          aria-current={tabActiva === "usuarios" ? "page" : undefined}
         >
-          <span>👥</span> Usuarios e Inscritos
+          <span>👥</span>
+          <span>Usuarios</span>
         </button>
-      </div>
+      </nav>
 
       {/* Renderizado según la pestaña activa */}
       {tabActiva === "usuarios" ? (
@@ -402,15 +344,18 @@ export default function AdminClasesPage({ currentUser }) {
               style={{
                 position: "fixed",
                 top: "88px",
-                right: "24px",
+                right: "16px",
+                left: "16px",
+                maxWidth: "400px",
+                margin: "0 auto",
                 backgroundColor: notification.error ? "#991B1B" : "#253B59",
                 color: "#FFFFFF",
-                padding: "0.85rem 1.5rem",
+                padding: "0.85rem 1.25rem",
                 borderRadius: "12px",
                 boxShadow: "0 10px 25px rgba(37, 59, 89, 0.25)",
                 zIndex: 1200,
                 fontWeight: "600",
-                fontSize: "0.95rem",
+                fontSize: "0.9rem",
                 display: "flex",
                 alignItems: "center",
                 gap: "0.5rem",
@@ -425,123 +370,72 @@ export default function AdminClasesPage({ currentUser }) {
           )}
 
           {/* Header del Panel de Clases */}
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: "1rem",
-              marginBottom: "2rem",
-            }}
-          >
+          <div className="admin-header-flex">
             <div>
               <span
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
                   gap: "0.5rem",
-                  padding: "0.375rem 1rem",
+                  padding: "0.3rem 0.85rem",
                   backgroundColor: "rgba(206, 208, 242, 0.4)",
                   color: "#253B59",
                   borderRadius: "9999px",
-                  fontSize: "0.875rem",
-                  fontWeight: "600",
-                  letterSpacing: "0.05em",
+                  fontSize: "0.8rem",
+                  fontWeight: "700",
+                  letterSpacing: "0.04em",
                   textTransform: "uppercase",
-                  marginBottom: "0.5rem",
+                  marginBottom: "0.4rem",
                 }}
               >
-                ⚙️ Panel de Control Administrador
+                ⚙️ Administración
               </span>
               <h1
                 style={{
-                  fontSize: "clamp(1.75rem, 3.5vw, 2.5rem)",
+                  fontSize: "clamp(1.35rem, 5vw, 2.25rem)",
                   fontWeight: "700",
                   color: "#253B59",
                   margin: 0,
+                  lineHeight: 1.2,
                 }}
               >
                 Gestión de Clases
               </h1>
             </div>
 
-            <button
-              onClick={handleAbrirCrear}
-              style={{
-                backgroundColor: "#253B59",
-                color: "#FFFFFF",
-                borderRadius: "9999px",
-                padding: "0.875rem 1.75rem",
-                border: "none",
-                fontWeight: "600",
-                fontSize: "0.95rem",
-                cursor: "pointer",
-                boxShadow: "0 4px 14px rgba(37, 59, 89, 0.25)",
-                display: "flex",
-                alignItems: "center",
-                gap: "0.5rem",
-                transition: "background-color 0.2s ease, box-shadow 0.2s ease",
-              }}
-            >
-              <span>➕</span> Nueva Clase
-            </button>
+            <div className="admin-header-actions">
+              <button
+                type="button"
+                onClick={handleAbrirCrear}
+                className="admin-btn-action admin-btn-action--primary"
+              >
+                <span>➕</span>
+                <span>Nueva Clase</span>
+              </button>
+            </div>
           </div>
 
           {/* Barra de Búsqueda y Filtros */}
-          <div
-            style={{
-              backgroundColor: "rgba(255, 255, 255, 0.9)",
-              border: "1px solid rgba(206, 208, 242, 0.5)",
-              borderRadius: "20px",
-              padding: "1.25rem",
-              marginBottom: "2rem",
-              boxShadow: "0 10px 30px rgba(37, 59, 89, 0.04)",
-              display: "flex",
-              flexWrap: "wrap",
-              gap: "1rem",
-              alignItems: "center",
-            }}
-          >
-            <div style={{ flex: "1 1 280px", width: "100%" }}>
+          <div className="admin-filter-bar">
+            <div style={{ width: "100%" }}>
               <input
                 type="text"
                 placeholder="🔍 Buscar por instructor o servicio..."
                 aria-label="Buscar clases por instructor o servicio"
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "0.75rem 1rem",
-                  borderRadius: "12px",
-                  border: "1px solid #CBD5E1",
-                  fontSize: "0.95rem",
-                  outline: "none",
-                  backgroundColor: "#F8FAFC",
-                }}
+                className="admin-filter-input"
               />
             </div>
 
-            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+            <div className="admin-filter-chips">
               {["todas", "activa", "inactiva", "completada", "cancelada"].map(
                 (est) => (
                   <button
                     key={est}
+                    type="button"
                     onClick={() => setFiltroEstado(est)}
-                    style={{
-                      padding: "0.5rem 1rem",
-                      borderRadius: "9999px",
-                      border: "none",
-                      fontWeight: "600",
-                      fontSize: "0.85rem",
-                      cursor: "pointer",
-                      textTransform: "capitalize",
-                      backgroundColor:
-                        filtroEstado === est ? "#253B59" : "#F1F5F9",
-                      color: filtroEstado === est ? "#FFFFFF" : "#64748B",
-                      transition: "background-color 0.2s ease, color 0.2s ease",
-                      minHeight: "38px",
-                    }}
+                    className={`admin-filter-chip ${filtroEstado === est ? "admin-filter-chip--active" : "admin-filter-chip--inactive"}`}
                   >
                     {est}
                   </button>
@@ -887,31 +781,10 @@ export default function AdminClasesPage({ currentUser }) {
             <div
               className="admin-modal-overlay"
               onClick={() => setIsModalOpen(false)}
-              style={{
-                position: "fixed",
-                inset: 0,
-                backgroundColor: "rgba(15, 23, 42, 0.6)",
-                backdropFilter: "blur(4px)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "1rem",
-                zIndex: 1100,
-              }}
             >
               <div
                 className="admin-modal-content"
                 onClick={(e) => e.stopPropagation()}
-                style={{
-                  backgroundColor: "#FFFFFF",
-                  borderRadius: "24px",
-                  width: "100%",
-                  maxWidth: "600px",
-                  maxHeight: "90vh",
-                  overflowY: "auto",
-                  padding: "2rem",
-                  boxShadow: "0 20px 50px rgba(0, 0, 0, 0.2)",
-                }}
               >
                 <div
                   style={{
@@ -1349,14 +1222,7 @@ export default function AdminClasesPage({ currentUser }) {
                   </div>
 
                   {/* Botones de Acción */}
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "flex-end",
-                      gap: "1rem",
-                      marginTop: "1rem",
-                    }}
-                  >
+                  <div className="admin-modal-actions">
                     <button
                       type="button"
                       onClick={() => setIsModalOpen(false)}
@@ -1410,7 +1276,7 @@ export default function AdminClasesPage({ currentUser }) {
               <div
                 className="admin-modal-content"
                 onClick={(e) => e.stopPropagation()}
-                style={{ maxWidth: "400px", textAlign: "center" }}
+                style={{ maxWidth: "420px", textAlign: "center" }}
               >
                 <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>
                   ⚠️
@@ -1420,6 +1286,7 @@ export default function AdminClasesPage({ currentUser }) {
                     color: "#253B59",
                     fontWeight: "700",
                     margin: "0 0 0.5rem 0",
+                    fontSize: "1.2rem",
                   }}
                 >
                   ¿Eliminar esta clase?
@@ -1428,24 +1295,20 @@ export default function AdminClasesPage({ currentUser }) {
                   style={{
                     color: "#64748B",
                     fontSize: "0.9rem",
-                    marginBottom: "1.5rem",
+                    marginBottom: "1.25rem",
                   }}
                 >
                   Esta acción borrará permanentemente la clase de Firestore.
                 </p>
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "1rem",
-                    justifyContent: "center",
-                  }}
-                >
+                <div className="admin-modal-actions">
                   <button
+                    type="button"
                     onClick={() => setConfirmDeleteId(null)}
                     style={{
                       backgroundColor: "#F1F5F9",
+                      color: "#64748B",
                       border: "none",
-                      padding: "0.6rem 1.2rem",
+                      padding: "0.75rem 1.2rem",
                       borderRadius: "9999px",
                       fontWeight: "600",
                       cursor: "pointer",
@@ -1455,12 +1318,13 @@ export default function AdminClasesPage({ currentUser }) {
                     Cancelar
                   </button>
                   <button
+                    type="button"
                     onClick={handleConfirmarEliminar}
                     style={{
                       backgroundColor: "#EF4444",
                       color: "#FFFFFF",
                       border: "none",
-                      padding: "0.6rem 1.2rem",
+                      padding: "0.75rem 1.2rem",
                       borderRadius: "9999px",
                       fontWeight: "600",
                       cursor: "pointer",

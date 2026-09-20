@@ -330,15 +330,18 @@ export default function AdminUsuariosTab({ currentUser }) {
           style={{
             position: "fixed",
             top: "88px",
-            right: "24px",
+            right: "16px",
+            left: "16px",
+            maxWidth: "400px",
+            margin: "0 auto",
             backgroundColor: notification.error ? "#991B1B" : "#253B59",
             color: "#FFFFFF",
-            padding: "0.85rem 1.5rem",
+            padding: "0.85rem 1.25rem",
             borderRadius: "12px",
             boxShadow: "0 10px 25px rgba(37, 59, 89, 0.25)",
             zIndex: 1200,
             fontWeight: "600",
-            fontSize: "0.95rem",
+            fontSize: "0.9rem",
             display: "flex",
             alignItems: "center",
             gap: "0.5rem",
@@ -353,300 +356,184 @@ export default function AdminUsuariosTab({ currentUser }) {
       )}
 
       {/* Header y Acción Principal */}
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: "1rem",
-          marginBottom: "2rem",
-        }}
-      >
+      <div className="admin-header-flex">
         <div>
           <span
             style={{
               display: "inline-flex",
               alignItems: "center",
               gap: "0.5rem",
-              padding: "0.375rem 1rem",
+              padding: "0.3rem 0.85rem",
               backgroundColor: "rgba(206, 208, 242, 0.4)",
               color: "#253B59",
               borderRadius: "9999px",
-              fontSize: "0.875rem",
-              fontWeight: "600",
-              letterSpacing: "0.05em",
+              fontSize: "0.8rem",
+              fontWeight: "700",
+              letterSpacing: "0.04em",
               textTransform: "uppercase",
-              marginBottom: "0.5rem",
+              marginBottom: "0.4rem",
             }}
           >
-            👥 Directorio & Administración de Usuarios
+            👥 Directorio de Usuarios
           </span>
           <h1
             style={{
-              fontSize: "clamp(1.75rem, 3.5vw, 2.5rem)",
+              fontSize: "clamp(1.35rem, 5vw, 2.25rem)",
               fontWeight: "700",
               color: "#253B59",
               margin: 0,
+              lineHeight: 1.2,
             }}
           >
-            Gestión de Usuarios Inscritos
+            Gestión de Usuarios
           </h1>
         </div>
 
-        <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+        <div className="admin-header-actions">
           {/* Botón Descargar Reporte CSV (exclusivo admin) */}
           <button
             type="button"
             onClick={handleDescargarCSV}
             disabled={descargandoCSV}
             aria-label="Descargar historial de pagos en formato CSV"
-            style={{
-              backgroundColor: "#FFFFFF",
-              color: "#253B59",
-              borderRadius: "9999px",
-              padding: "0.875rem 1.4rem",
-              border: "1.5px solid #CED0F2",
-              fontWeight: "700",
-              fontSize: "0.95rem",
-              cursor: descargandoCSV ? "not-allowed" : "pointer",
-              boxShadow: "0 2px 8px rgba(37, 59, 89, 0.08)",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              minHeight: "44px",
-              transition: "all 0.2s ease",
-              opacity: descargandoCSV ? 0.7 : 1,
-            }}
+            className="admin-btn-action admin-btn-action--secondary"
+            style={{ opacity: descargandoCSV ? 0.7 : 1 }}
           >
             <span>{descargandoCSV ? "⏳" : "📊"}</span>
-            <span>{descargandoCSV ? "Generando CSV..." : "Descargar Pagos CSV"}</span>
+            <span>{descargandoCSV ? "Generando CSV..." : "Pagos CSV"}</span>
           </button>
 
           <button
+            type="button"
             onClick={handleAbrirCrear}
-            style={{
-              backgroundColor: "#253B59",
-              color: "#FFFFFF",
-              borderRadius: "9999px",
-              padding: "0.875rem 1.75rem",
-              border: "none",
-              fontWeight: "600",
-              fontSize: "0.95rem",
-              cursor: "pointer",
-              boxShadow: "0 4px 14px rgba(37, 59, 89, 0.25)",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              minHeight: "44px",
-              transition: "background-color 0.2s ease, box-shadow 0.2s ease",
-            }}
+            className="admin-btn-action admin-btn-action--primary"
           >
-            <span>👤➕</span> Nuevo Usuario
+            <span>👤➕</span>
+            <span>Nuevo Usuario</span>
           </button>
         </div>
       </div>
 
       {/* KPI Cards Grilla Adaptable */}
       <div className="admin-kpi-grid">
-        <div
-          style={{
-            backgroundColor: "#FFFFFF",
-            borderRadius: "16px",
-            padding: "1.25rem",
-            border: "1px solid rgba(206, 208, 242, 0.6)",
-            boxShadow: "0 4px 12px rgba(37, 59, 89, 0.04)",
-          }}
-        >
-          <div
-            style={{
-              fontSize: "0.85rem",
-              color: "#64748B",
-              fontWeight: "600",
-              marginBottom: "0.25rem",
-            }}
-          >
+        <div className="admin-kpi-card">
+          <div className="admin-kpi-label" style={{ color: "#64748B" }}>
             Total Usuarios
           </div>
-          <div
-            style={{ fontSize: "1.8rem", fontWeight: "800", color: "#253B59" }}
-          >
+          <div className="admin-kpi-value" style={{ color: "#253B59" }}>
             {totalUsuarios}
           </div>
         </div>
 
-        <div
-          style={{
-            backgroundColor: "#FFFFFF",
-            borderRadius: "16px",
-            padding: "1.25rem",
-            border: "1px solid rgba(206, 208, 242, 0.6)",
-            boxShadow: "0 4px 12px rgba(37, 59, 89, 0.04)",
-          }}
-        >
-          <div
-            style={{
-              fontSize: "0.85rem",
-              color: "#166534",
-              fontWeight: "600",
-              marginBottom: "0.25rem",
-            }}
-          >
-            Cuentas Activas
+        <div className="admin-kpi-card">
+          <div className="admin-kpi-label" style={{ color: "#166534" }}>
+            Activos
           </div>
-          <div
-            style={{ fontSize: "1.8rem", fontWeight: "800", color: "#15803D" }}
-          >
+          <div className="admin-kpi-value" style={{ color: "#15803D" }}>
             {totalActivos}
           </div>
         </div>
 
-        <div
-          style={{
-            backgroundColor: "#FFFFFF",
-            borderRadius: "16px",
-            padding: "1.25rem",
-            border: "1px solid rgba(206, 208, 242, 0.6)",
-            boxShadow: "0 4px 12px rgba(37, 59, 89, 0.04)",
-          }}
-        >
-          <div
-            style={{
-              fontSize: "0.85rem",
-              color: "#1D4ED8",
-              fontWeight: "600",
-              marginBottom: "0.25rem",
-            }}
-          >
-            Administradores
+        <div className="admin-kpi-card">
+          <div className="admin-kpi-label" style={{ color: "#1D4ED8" }}>
+            Admins
           </div>
-          <div
-            style={{ fontSize: "1.8rem", fontWeight: "800", color: "#1E40AF" }}
-          >
+          <div className="admin-kpi-value" style={{ color: "#1E40AF" }}>
             {totalAdmins}
           </div>
         </div>
 
-        <div
-          style={{
-            backgroundColor: "#FFFFFF",
-            borderRadius: "16px",
-            padding: "1.25rem",
-            border: "1px solid rgba(206, 208, 242, 0.6)",
-            boxShadow: "0 4px 12px rgba(37, 59, 89, 0.04)",
-          }}
-        >
-          <div
-            style={{
-              fontSize: "0.85rem",
-              color: "#991B1B",
-              fontWeight: "600",
-              marginBottom: "0.25rem",
-            }}
-          >
-            Inactivos / Suspendidos
+        <div className="admin-kpi-card">
+          <div className="admin-kpi-label" style={{ color: "#991B1B" }}>
+            Inactivos
           </div>
-          <div
-            style={{ fontSize: "1.8rem", fontWeight: "800", color: "#B91C1C" }}
-          >
+          <div className="admin-kpi-value" style={{ color: "#B91C1C" }}>
             {totalInactivos}
           </div>
         </div>
       </div>
 
       {/* Barra de Filtros y Búsqueda */}
-      <div
-        style={{
-          backgroundColor: "rgba(255, 255, 255, 0.9)",
-          border: "1px solid rgba(206, 208, 242, 0.5)",
-          borderRadius: "20px",
-          padding: "1.25rem",
-          marginBottom: "2rem",
-          boxShadow: "0 10px 30px rgba(37, 59, 89, 0.04)",
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "1rem",
-          alignItems: "center",
-        }}
-      >
-        <div style={{ flex: "1 1 280px", width: "100%" }}>
+      <div className="admin-filter-bar">
+        <div style={{ width: "100%" }}>
           <input
             type="text"
             placeholder="🔍 Buscar por nombre, email o teléfono..."
             aria-label="Buscar usuarios por nombre, email o teléfono"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "0.75rem 1rem",
-              borderRadius: "12px",
-              border: "1px solid #CBD5E1",
-              fontSize: "0.95rem",
-              outline: "none",
-              backgroundColor: "#F8FAFC",
-            }}
+            className="admin-filter-input"
           />
         </div>
 
-        {/* Filtro Rol */}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <label
-            htmlFor="admin-usuarios-filtro-rol"
-            style={{ fontSize: "0.85rem", color: "#64748B", fontWeight: "600" }}
-          >
-            Rol:
-          </label>
-          <select
-            id="admin-usuarios-filtro-rol"
-            aria-label="Filtrar por rol"
-            value={filtroRol}
-            onChange={(e) => setFiltroRol(e.target.value)}
-            style={{
-              padding: "0.6rem 0.9rem",
-              borderRadius: "10px",
-              border: "1px solid #CBD5E1",
-              fontSize: "0.9rem",
-              backgroundColor: "#FFFFFF",
-              color: "#253B59",
-              fontWeight: "600",
-              minHeight: "40px",
-            }}
-          >
-            <option value="todos">Todos</option>
-            <option value="cliente">Cliente</option>
-            <option value="admin">Admin</option>
-          </select>
-        </div>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "0.5rem",
+            width: "100%",
+          }}
+        >
+          {/* Filtro Rol */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+            <label
+              htmlFor="admin-usuarios-filtro-rol"
+              style={{ fontSize: "0.8rem", color: "#64748B", fontWeight: "600" }}
+            >
+              Rol:
+            </label>
+            <select
+              id="admin-usuarios-filtro-rol"
+              aria-label="Filtrar por rol"
+              value={filtroRol}
+              onChange={(e) => setFiltroRol(e.target.value)}
+              className="admin-input-mobile"
+              style={{
+                padding: "0.55rem 0.75rem",
+                borderRadius: "10px",
+                border: "1px solid #CBD5E1",
+                backgroundColor: "#FFFFFF",
+                color: "#253B59",
+                fontWeight: "600",
+                minHeight: "42px",
+              }}
+            >
+              <option value="todos">Todos los roles</option>
+              <option value="cliente">Cliente</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
 
-        {/* Filtro Estado */}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <label
-            htmlFor="admin-usuarios-filtro-estado"
-            style={{ fontSize: "0.85rem", color: "#64748B", fontWeight: "600" }}
-          >
-            Estado:
-          </label>
-          <select
-            id="admin-usuarios-filtro-estado"
+          {/* Filtro Estado */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+            <label
+              htmlFor="admin-usuarios-filtro-estado"
+              style={{ fontSize: "0.8rem", color: "#64748B", fontWeight: "600" }}
+            >
+              Estado:
+            </label>
+            <select
+              id="admin-usuarios-filtro-estado"
             aria-label="Filtrar por estado"
             value={filtroEstado}
             onChange={(e) => setFiltroEstado(e.target.value)}
-            style={{
-              padding: "0.6rem 0.9rem",
-              borderRadius: "10px",
-              border: "1px solid #CBD5E1",
-              fontSize: "0.9rem",
-              backgroundColor: "#FFFFFF",
-              color: "#253B59",
-              fontWeight: "600",
-              minHeight: "40px",
-            }}
-          >
-            <option value="todos">Todos</option>
-            <option value="activo">Activo</option>
-            <option value="inactivo">Inactivo</option>
-            <option value="suspendido">Suspendido</option>
-          </select>
+              className="admin-input-mobile"
+              style={{
+                padding: "0.55rem 0.75rem",
+                borderRadius: "10px",
+                border: "1px solid #CBD5E1",
+                backgroundColor: "#FFFFFF",
+                color: "#253B59",
+                fontWeight: "600",
+                minHeight: "42px",
+              }}
+            >
+              <option value="todos">Todos</option>
+              <option value="activo">Activo</option>
+              <option value="inactivo">Inactivo</option>
+              <option value="suspendido">Suspendido</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -1136,7 +1023,6 @@ export default function AdminUsuariosTab({ currentUser }) {
           <div
             className="admin-modal-content"
             onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: "540px" }}
           >
             <div
               style={{
@@ -1180,7 +1066,7 @@ export default function AdminUsuariosTab({ currentUser }) {
               style={{
                 display: "flex",
                 flexDirection: "column",
-                gap: "1.1rem",
+                gap: "1rem",
               }}
             >
               <div>
@@ -1205,12 +1091,7 @@ export default function AdminUsuariosTab({ currentUser }) {
                     setFormData({ ...formData, nombre: e.target.value })
                   }
                   placeholder="ej. María González"
-                  style={{
-                    width: "100%",
-                    padding: "0.75rem",
-                    borderRadius: "10px",
-                    border: "1px solid #CBD5E1",
-                  }}
+                  className="admin-input-mobile"
                 />
               </div>
 
@@ -1236,12 +1117,7 @@ export default function AdminUsuariosTab({ currentUser }) {
                     setFormData({ ...formData, email: e.target.value })
                   }
                   placeholder="ej. maria@ejemplo.com"
-                  style={{
-                    width: "100%",
-                    padding: "0.75rem",
-                    borderRadius: "10px",
-                    border: "1px solid #CBD5E1",
-                  }}
+                  className="admin-input-mobile"
                 />
               </div>
 
@@ -1266,12 +1142,7 @@ export default function AdminUsuariosTab({ currentUser }) {
                     setFormData({ ...formData, telefono: e.target.value })
                   }
                   placeholder="ej. +56 9 1234 5678"
-                  style={{
-                    width: "100%",
-                    padding: "0.75rem",
-                    borderRadius: "10px",
-                    border: "1px solid #CBD5E1",
-                  }}
+                  className="admin-input-mobile"
                 />
               </div>
 
@@ -1298,27 +1169,14 @@ export default function AdminUsuariosTab({ currentUser }) {
                         clases_pactadas: Number(e.target.value),
                       })
                     }
-                    style={{
-                      width: "100%",
-                      padding: "0.75rem",
-                      borderRadius: "10px",
-                      border: "1px solid #CBD5E1",
-                      backgroundColor: "#FFFFFF",
-                    }}
+                    className="admin-input-mobile"
+                    style={{ backgroundColor: "#FFFFFF" }}
                   >
-                    {![0, 1, 4, 8, 12, 16].includes(
-                      Number(formData.clases_pactadas),
-                    ) && (
-                      <option value={formData.clases_pactadas}>
-                        {formData.clases_pactadas}
+                    {[0, 1, 2, 4, 8, 12, 16, 20, 24].map((num) => (
+                      <option key={num} value={num}>
+                        {num} clase(s)
                       </option>
-                    )}
-                    <option value={0}>0</option>
-                    <option value={1}>1</option>
-                    <option value={4}>4</option>
-                    <option value={8}>8</option>
-                    <option value={12}>12</option>
-                    <option value={16}>16</option>
+                    ))}
                   </select>
                 </div>
 
@@ -1333,29 +1191,26 @@ export default function AdminUsuariosTab({ currentUser }) {
                       marginBottom: "0.35rem",
                     }}
                   >
-                    Sesiones de Terapia
+                    Sesiones Terapia
                   </label>
-                  <input
+                  <select
                     id="user-form-terapia"
-                    type="number"
-                    min="0"
                     value={formData.sesion_terapia}
-                    onChange={(e) => {
-                      const val = e.target.value ? Math.max(0, parseInt(e.target.value, 10) || 0) : 0;
-                      setFormData((prev) => ({
-                        ...prev,
-                        sesion_terapia: val,
-                      }));
-                    }}
-                    placeholder="0"
-                    style={{
-                      width: "100%",
-                      padding: "0.75rem",
-                      borderRadius: "10px",
-                      border: "1px solid #CBD5E1",
-                      backgroundColor: "#FFFFFF",
-                    }}
-                  />
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        sesion_terapia: Number(e.target.value),
+                      })
+                    }
+                    className="admin-input-mobile"
+                    style={{ backgroundColor: "#FFFFFF" }}
+                  >
+                    {[0, 1, 2, 3, 4, 5, 8, 10, 12].map((num) => (
+                      <option key={num} value={num}>
+                        {num} sesión(es)
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
@@ -1364,12 +1219,12 @@ export default function AdminUsuariosTab({ currentUser }) {
                     style={{
                       display: "block",
                       fontWeight: "600",
-                      fontSize: "0.875rem",
+                      fontSize: "0.85rem",
                       color: "#253B59",
                       marginBottom: "0.35rem",
                     }}
                   >
-                    Rol
+                    Rol Asignado
                   </label>
                   <select
                     id="user-form-rol"
@@ -1377,54 +1232,44 @@ export default function AdminUsuariosTab({ currentUser }) {
                     onChange={(e) =>
                       setFormData({ ...formData, rol: e.target.value })
                     }
-                    style={{
-                      width: "100%",
-                      padding: "0.75rem",
-                      borderRadius: "10px",
-                      border: "1px solid #CBD5E1",
-                      backgroundColor: "#FFFFFF",
-                    }}
+                    className="admin-input-mobile"
+                    style={{ backgroundColor: "#FFFFFF" }}
                   >
                     <option value="cliente">cliente</option>
                     <option value="admin">admin</option>
                   </select>
                 </div>
+              </div>
 
-                <div>
-                  <label
-                    htmlFor="user-form-estado"
-                    style={{
-                      display: "block",
-                      fontWeight: "600",
-                      fontSize: "0.875rem",
-                      color: "#253B59",
-                      marginBottom: "0.35rem",
-                    }}
-                  >
-                    Estado Cuenta
-                  </label>
-                  <select
-                    id="user-form-estado"
-                    value={formData.estado_cuenta}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        estado_cuenta: e.target.value,
-                      })
-                    }
-                    style={{
-                      width: "100%",
-                      padding: "0.75rem",
-                      borderRadius: "10px",
-                      border: "1px solid #CBD5E1",
-                      backgroundColor: "#FFFFFF",
-                    }}
-                  >
-                    <option value="activo">activo</option>
-                    <option value="inactivo">inactivo</option>
-                    <option value="suspendido">suspendido</option>
-                  </select>
-                </div>
+              <div>
+                <label
+                  htmlFor="user-form-estado"
+                  style={{
+                    display: "block",
+                    fontWeight: "600",
+                    fontSize: "0.85rem",
+                    color: "#253B59",
+                    marginBottom: "0.35rem",
+                  }}
+                >
+                  Estado de la Cuenta
+                </label>
+                <select
+                  id="user-form-estado"
+                  value={formData.estado_cuenta}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      estado_cuenta: e.target.value,
+                    })
+                  }
+                  className="admin-input-mobile"
+                  style={{ backgroundColor: "#FFFFFF" }}
+                >
+                  <option value="activo">activo</option>
+                  <option value="inactivo">inactivo</option>
+                  <option value="suspendido">suspendido</option>
+                </select>
               </div>
 
               {/* Vista previa en vivo del cálculo automático de tarifa y cobro */}
@@ -1448,10 +1293,10 @@ export default function AdminUsuariosTab({ currentUser }) {
                       backgroundColor: calculo.monto > 0 ? "#F0FDF4" : "#F8FAFC",
                       border: `1.5px solid ${calculo.monto > 0 ? "#86EFAC" : "#E2E8F0"}`,
                       borderRadius: "14px",
-                      padding: "1rem 1.25rem",
+                      padding: "0.85rem 1rem",
                       display: "flex",
                       flexDirection: "column",
-                      gap: "0.4rem",
+                      gap: "0.35rem",
                     }}
                   >
                     <div
@@ -1460,24 +1305,24 @@ export default function AdminUsuariosTab({ currentUser }) {
                         justifyContent: "space-between",
                         alignItems: "center",
                         flexWrap: "wrap",
-                        gap: "0.5rem",
+                        gap: "0.4rem",
                       }}
                     >
                       <span
                         style={{
-                          fontSize: "0.88rem",
+                          fontSize: "0.85rem",
                           fontWeight: "700",
                           color: "#253B59",
                           display: "flex",
                           alignItems: "center",
-                          gap: "0.4rem",
+                          gap: "0.3rem",
                         }}
                       >
-                        💳 Cálculo Automático de Tarifa:
+                        💳 Tarifa Automática:
                       </span>
                       <span
                         style={{
-                          fontSize: "1.25rem",
+                          fontSize: "1.15rem",
                           fontWeight: "800",
                           color: calculo.monto > 0 ? "#15803D" : "#64748B",
                         }}
@@ -1487,20 +1332,20 @@ export default function AdminUsuariosTab({ currentUser }) {
                     </div>
                     <div
                       style={{
-                        fontSize: "0.82rem",
+                        fontSize: "0.78rem",
                         color: "#475569",
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "center",
                         flexWrap: "wrap",
-                        gap: "0.5rem",
+                        gap: "0.35rem",
                       }}
                     >
                       <span>
-                        Plan detectado: <strong>{calculo.detalle}</strong>
+                        Plan: <strong>{calculo.detalle}</strong>
                       </span>
-                      <span style={{ fontSize: "0.78rem", color: "#64748B" }}>
-                        (Se registrará automáticamente en Firestore)
+                      <span style={{ fontSize: "0.75rem", color: "#64748B" }}>
+                        (Firestore sync)
                       </span>
                     </div>
                   </div>
@@ -1508,14 +1353,7 @@ export default function AdminUsuariosTab({ currentUser }) {
               })()}
 
               {/* Botones */}
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  gap: "1rem",
-                  marginTop: "1rem",
-                }}
-              >
+              <div className="admin-modal-actions">
                 <button
                   type="button"
                   onClick={() => setIsFormModalOpen(false)}
@@ -1568,7 +1406,6 @@ export default function AdminUsuariosTab({ currentUser }) {
           <div
             className="admin-modal-content"
             onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: "600px" }}
           >
             <div
               style={{
@@ -1581,7 +1418,7 @@ export default function AdminUsuariosTab({ currentUser }) {
               <div>
                 <h2
                   style={{
-                    fontSize: "1.3rem",
+                    fontSize: "1.25rem",
                     fontWeight: "700",
                     color: "#253B59",
                     margin: 0,
@@ -1591,13 +1428,13 @@ export default function AdminUsuariosTab({ currentUser }) {
                 </h2>
                 <div
                   style={{
-                    fontSize: "0.875rem",
+                    fontSize: "0.85rem",
                     color: "#64748B",
                     marginTop: "0.15rem",
+                    overflowWrap: "anywhere",
                   }}
                 >
-                  Usuario: <strong>{usuarioClasesSeleccionado.nombre}</strong> (
-                  {usuarioClasesSeleccionado.email})
+                  Usuario: <strong>{usuarioClasesSeleccionado.nombre}</strong>
                 </div>
               </div>
               <button
@@ -1628,15 +1465,15 @@ export default function AdminUsuariosTab({ currentUser }) {
                 return (
                   <div
                     style={{
-                      padding: "2rem",
+                      padding: "1.75rem 1rem",
                       textAlign: "center",
                       color: "#64748B",
                       backgroundColor: "#F8FAFC",
                       borderRadius: "12px",
+                      fontSize: "0.9rem",
                     }}
                   >
-                    Este usuario no tiene inscripciones ni reservas activas
-                    actualmente.
+                    Este usuario no tiene reservas activas actualmente.
                   </div>
                 );
               }
@@ -1646,7 +1483,7 @@ export default function AdminUsuariosTab({ currentUser }) {
                   style={{
                     display: "flex",
                     flexDirection: "column",
-                    gap: "1rem",
+                    gap: "0.75rem",
                   }}
                 >
                   {reservasUsuario.map((ins) => (
@@ -1655,13 +1492,11 @@ export default function AdminUsuariosTab({ currentUser }) {
                       style={{
                         backgroundColor: "#F8FAFC",
                         border: "1px solid #E2E8F0",
-                        borderRadius: "14px",
-                        padding: "1rem",
+                        borderRadius: "12px",
+                        padding: "0.85rem",
                         display: "flex",
-                        flexWrap: "wrap",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        gap: "1rem",
+                        flexDirection: "column",
+                        gap: "0.65rem",
                       }}
                     >
                       <div>
@@ -1669,14 +1504,14 @@ export default function AdminUsuariosTab({ currentUser }) {
                           style={{
                             fontWeight: "700",
                             color: "#253B59",
-                            fontSize: "1rem",
+                            fontSize: "0.95rem",
                           }}
                         >
                           {ins.tipo_servicio || "Pilates Reformer"}
                         </div>
                         <div
                           style={{
-                            fontSize: "0.85rem",
+                            fontSize: "0.8rem",
                             color: "#64748B",
                             marginTop: "0.2rem",
                           }}
@@ -1685,9 +1520,9 @@ export default function AdminUsuariosTab({ currentUser }) {
                         </div>
                         <div
                           style={{
-                            fontSize: "0.85rem",
+                            fontSize: "0.8rem",
                             color: "#334155",
-                            marginTop: "0.2rem",
+                            marginTop: "0.15rem",
                           }}
                         >
                           📅 Fecha Clase: {formatearFecha(ins.fecha_clase)}
@@ -1695,17 +1530,22 @@ export default function AdminUsuariosTab({ currentUser }) {
                       </div>
 
                       <button
+                        type="button"
                         onClick={() => handleCancelarReserva(ins)}
                         style={{
                           backgroundColor: "#FEE2E2",
                           color: "#991B1B",
                           border: "none",
                           borderRadius: "8px",
-                          padding: "0.55rem 1rem",
+                          padding: "0.6rem 1rem",
                           fontWeight: "600",
                           fontSize: "0.85rem",
                           cursor: "pointer",
-                          minHeight: "42px",
+                          minHeight: "44px",
+                          width: "100%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
                         }}
                       >
                         Cancelar Reserva
@@ -1728,7 +1568,7 @@ export default function AdminUsuariosTab({ currentUser }) {
           <div
             className="admin-modal-content"
             onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: "400px", textAlign: "center" }}
+            style={{ maxWidth: "420px", textAlign: "center" }}
           >
             <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>⚠️</div>
             <h3
@@ -1736,6 +1576,7 @@ export default function AdminUsuariosTab({ currentUser }) {
                 color: "#253B59",
                 fontWeight: "700",
                 margin: "0 0 0.5rem 0",
+                fontSize: "1.2rem",
               }}
             >
               ¿Eliminar a {confirmDeleteUser.nombre}?
@@ -1743,23 +1584,22 @@ export default function AdminUsuariosTab({ currentUser }) {
             <p
               style={{
                 color: "#64748B",
-                fontSize: "0.9rem",
-                marginBottom: "1.5rem",
+                fontSize: "0.875rem",
+                marginBottom: "1.25rem",
+                lineHeight: 1.4,
               }}
             >
-              Esta acción eliminará permanentemente al usuario, borrando todas
-              sus reservas e inscripciones y liberando los cupos
-              correspondientes en las clases.
+              Esta acción eliminará permanentemente al usuario, liberando los cupos correspondientes en las clases.
             </p>
-            <div
-              style={{ display: "flex", gap: "1rem", justifyContent: "center" }}
-            >
+            <div className="admin-modal-actions">
               <button
+                type="button"
                 onClick={() => setConfirmDeleteUser(null)}
                 style={{
                   backgroundColor: "#F1F5F9",
+                  color: "#64748B",
                   border: "none",
-                  padding: "0.6rem 1.2rem",
+                  padding: "0.75rem 1.2rem",
                   borderRadius: "9999px",
                   fontWeight: "600",
                   cursor: "pointer",
@@ -1769,12 +1609,13 @@ export default function AdminUsuariosTab({ currentUser }) {
                 Cancelar
               </button>
               <button
+                type="button"
                 onClick={handleConfirmarEliminar}
                 style={{
                   backgroundColor: "#EF4444",
                   color: "#FFFFFF",
                   border: "none",
-                  padding: "0.6rem 1.2rem",
+                  padding: "0.75rem 1.2rem",
                   borderRadius: "9999px",
                   fontWeight: "600",
                   cursor: "pointer",
