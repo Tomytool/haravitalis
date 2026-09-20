@@ -30,6 +30,15 @@ export default function Navbar({
     currentUser?.nombre || currentUser?.email?.split("@")[0] || "Usuario";
   const esAdmin = currentUser?.rol === "admin";
 
+  // Desglose del nombre para vista en dos renglones compactos (estilo badge luxury)
+  const palabrasNombre = nombreMostrar.trim().split(/\s+/);
+  const linea1Nombre =
+    palabrasNombre.length > 1
+      ? palabrasNombre.slice(0, -1).join(" ")
+      : palabrasNombre[0];
+  const linea2Nombre =
+    palabrasNombre.length > 1 ? palabrasNombre[palabrasNombre.length - 1] : "";
+
   // Bloqueo de scroll en el body al abrir menú móvil
   useEffect(() => {
     if (mobileMenuOpen) {
@@ -70,7 +79,7 @@ export default function Navbar({
 
   return (
     <header className="navbar">
-      {/* Brand Logo */}
+      {/* Logotipo y Marca Oficial */}
       <button
         type="button"
         className="brand-logo"
@@ -78,9 +87,12 @@ export default function Navbar({
         onClick={() => handleNavView("home")}
       >
         <div className="brand-icon">
-          <LogoIcon size={38} />
+          <LogoIcon size={46} className="navbar-logo-img" />
         </div>
-        <span className="brand-name">Hara Vitalis</span>
+        <div className="brand-text-block">
+          <span className="brand-name">Hara Vitalis</span>
+          <span className="brand-tagline">Pilates Reformer & Bienestar</span>
+        </div>
       </button>
 
       {/* Backdrop Overlay interactivo al abrir menú móvil */}
@@ -109,19 +121,21 @@ export default function Navbar({
           </button>
           <button
             type="button"
-            className={`nav-link ${vistaActual === "quienes-somos" ? "active" : ""}`}
+            className={`nav-link nav-link-two-lines ${vistaActual === "quienes-somos" ? "active" : ""}`}
             aria-current={vistaActual === "quienes-somos" ? "page" : undefined}
             onClick={() => handleNavView("quienes-somos")}
           >
-            ¿Quiénes somos?
+            <span>¿Quiénes</span>
+            <span>somos?</span>
           </button>
           <button
             type="button"
-            className={`nav-link ${vistaActual === "terapia" ? "active" : ""}`}
+            className={`nav-link nav-link-two-lines ${vistaActual === "terapia" ? "active" : ""}`}
             aria-current={vistaActual === "terapia" ? "page" : undefined}
             onClick={() => handleNavView("terapia")}
           >
-            Terapias Integrativas
+            <span>Terapias</span>
+            <span>Integrativas</span>
           </button>
 
           {/* Dynamic User Views for Admin / Logged-in Users */}
@@ -138,11 +152,12 @@ export default function Navbar({
               {esAdmin && (
                 <button
                   type="button"
-                  className={`nav-link ${vistaActual === "admin" ? "active" : ""}`}
+                  className={`nav-link nav-link-two-lines ${vistaActual === "admin" ? "active" : ""}`}
                   aria-current={vistaActual === "admin" ? "page" : undefined}
                   onClick={() => handleNavView("admin")}
                 >
-                  ⚙️ Panel Admin
+                  <span>⚙️ Panel</span>
+                  <span>Admin</span>
                 </button>
               )}
             </>
@@ -175,12 +190,17 @@ export default function Navbar({
             </div>
           ) : (
             <div className="mobile-user-actions">
-              <div className="user-badge mobile-user-badge">
-                <span className="user-avatar-icon" aria-hidden="true">👤</span>
-                <span className="user-name-text">
-                  {nombreMostrar}
-                  {esAdmin && <span className="admin-badge-pill">Admin</span>}
+              <div className="user-badge mobile-user-badge" title={nombreMostrar}>
+                <span className="user-avatar-icon" aria-hidden="true">
+                  👤
                 </span>
+                <div className="user-name-stacked">
+                  <span className="user-name-primary">{linea1Nombre}</span>
+                  <div className="user-name-secondary">
+                    {linea2Nombre && <span className="user-surname">{linea2Nombre}</span>}
+                    {esAdmin && <span className="admin-badge-pill">Admin</span>}
+                  </div>
+                </div>
               </div>
 
               <div className="mobile-user-buttons">
@@ -236,31 +256,43 @@ export default function Navbar({
           </div>
         ) : (
           <div className="navbar-user-actions">
-            <div className="user-badge">
-              <span className="user-avatar-icon" aria-hidden="true">👤</span>
-              <span className="user-name-text">
-                {nombreMostrar}
-                {esAdmin && <span className="admin-badge-pill">Admin</span>}
+            <div className="user-badge" title={nombreMostrar}>
+              <span className="user-avatar-icon" aria-hidden="true">
+                👤
               </span>
+              <div className="user-name-stacked">
+                <span className="user-name-primary">{linea1Nombre}</span>
+                <div className="user-name-secondary">
+                  {linea2Nombre && <span className="user-surname">{linea2Nombre}</span>}
+                  {esAdmin && <span className="admin-badge-pill">Admin</span>}
+                </div>
+              </div>
             </div>
 
             <button
               type="button"
               onClick={() => setIsChangePasswordOpen(true)}
-              className="btn-change-password"
+              className="btn-change-password btn-two-lines"
               title="Cambiar Contraseña"
               aria-label="Cambiar Contraseña de usuario"
             >
-              🔑 Cambiar Clave
+              <span className="btn-two-lines-icon" aria-hidden="true">🔑</span>
+              <span className="btn-two-lines-text">
+                <span>Cambiar</span>
+                <span>Clave</span>
+              </span>
             </button>
 
             <button
               type="button"
               onClick={onLogout}
-              className="btn-logout"
+              className="btn-logout btn-two-lines"
               aria-label="Cerrar sesión de usuario"
             >
-              Cerrar sesión
+              <span className="btn-two-lines-text">
+                <span>Cerrar</span>
+                <span>Sesión</span>
+              </span>
             </button>
           </div>
         )}
@@ -278,7 +310,11 @@ export default function Navbar({
         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         aria-expanded={mobileMenuOpen}
         aria-controls="navbar-menu"
-        aria-label={mobileMenuOpen ? "Cerrar menú de navegación" : "Abrir menú de navegación"}
+        aria-label={
+          mobileMenuOpen
+            ? "Cerrar menú de navegación"
+            : "Abrir menú de navegación"
+        }
       >
         <svg
           width="24"

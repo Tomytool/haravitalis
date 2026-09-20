@@ -152,102 +152,212 @@ h1, h2, h3, h4, h5, h6 {
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid rgba(206, 208, 242, 0.5);
-  padding: 0.75rem 2.25rem;
+  padding: 0.65rem 1.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.75rem;
   height: 76px;
   box-shadow: 0 4px 20px rgba(37, 59, 89, 0.05);
   transition: background-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .brand-logo {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.85rem;
   background: none;
   border: none;
-  padding: 0;
+  padding: 0.25rem 0.5rem;
+  margin: -0.25rem -0.5rem;
+  border-radius: var(--radius-md);
   cursor: pointer;
   text-decoration: none;
   transition: transform var(--transition-fast);
 }
 
 .brand-logo:hover {
-  transform: scale(1.02);
+  transform: translateY(-1px);
+}
+
+.brand-logo:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
 }
 
 .brand-icon {
-  width: 44px;
-  height: 44px;
-  background-color: #FFFFFF;
-  border: 1.5px solid rgba(206, 208, 242, 0.8);
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  min-height: 52px;
+  background: linear-gradient(145deg, #FFFFFF 0%, #F5F7FC 100%);
+  border: 1.5px solid rgba(37, 59, 89, 0.18);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 3px;
-  box-shadow: 0 4px 12px rgba(37, 59, 89, 0.08);
+  padding: 2px;
+  box-shadow: 
+    0 4px 14px rgba(37, 59, 89, 0.08),
+    0 0 0 1px rgba(206, 208, 242, 0.5),
+    inset 0 1px 2px rgba(255, 255, 255, 0.95);
   overflow: hidden;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  position: relative;
+  transition: transform var(--transition-normal), border-color var(--transition-normal), box-shadow var(--transition-normal);
 }
 
 .brand-logo:hover .brand-icon {
   border-color: var(--color-primary);
-  box-shadow: 0 6px 16px rgba(37, 59, 89, 0.15);
+  transform: scale(1.04);
+  box-shadow: 
+    0 6px 18px rgba(37, 59, 89, 0.15),
+    0 0 0 2px rgba(206, 208, 242, 0.75),
+    inset 0 1px 2px rgba(255, 255, 255, 1);
+}
+
+.official-brand-logo {
+  transition: filter var(--transition-fast), transform var(--transition-fast);
+  filter: drop-shadow(0 1px 2px rgba(37, 59, 89, 0.12)) contrast(1.05) saturate(1.08);
+}
+
+.brand-logo:hover .official-brand-logo {
+  filter: drop-shadow(0 2px 4px rgba(37, 59, 89, 0.18)) contrast(1.08) saturate(1.12);
+}
+
+.brand-text-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  line-height: 1;
+  text-align: left;
 }
 
 .brand-name {
   font-family: var(--font-brand);
-  font-size: clamp(1.85rem, 2.5vw, 2.35rem);
+  font-size: clamp(1.9rem, 2.6vw, 2.45rem);
   font-weight: 400;
   color: var(--color-primary);
-  line-height: 1;
+  line-height: 1.05;
   letter-spacing: -0.01em;
+  text-shadow: 0 1px 2px rgba(37, 59, 89, 0.04);
+}
+
+.brand-tagline {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--color-primary-light);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  margin-top: -0.1rem;
+  white-space: nowrap;
+  opacity: 0.95;
 }
 
 .navbar-user-actions {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.5rem;
 }
 
 .user-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  background-color: rgba(37, 59, 89, 0.05);
+  border: 1px solid rgba(206, 208, 242, 0.65);
+  padding: 0.35rem 0.85rem;
+  border-radius: var(--radius-pill);
+  box-shadow: 0 1px 3px rgba(37, 59, 89, 0.03);
+}
+
+.user-avatar-icon {
+  font-size: 1.15rem;
+  color: #4C3C82;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-weight: 600;
-  font-size: 0.875rem;
+  justify-content: center;
+}
+
+.user-name-stacked {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  line-height: 1.15;
+  text-align: left;
+}
+
+.user-name-primary {
+  font-size: 0.85rem;
+  font-weight: 700;
   color: var(--color-primary);
-  background-color: rgba(37, 59, 89, 0.06);
-  border: 1px solid rgba(206, 208, 242, 0.5);
-  padding: 0.45rem 0.95rem;
-  border-radius: var(--radius-pill);
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+}
+
+.user-name-secondary {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+}
+
+.user-surname {
+  font-weight: 700;
+  color: var(--color-primary);
 }
 
 .admin-badge-pill {
-  background-color: var(--color-secondary);
-  color: var(--color-primary);
-  font-size: 0.725rem;
-  font-weight: 700;
-  padding: 0.15rem 0.5rem;
+  background-color: #D9DCF9;
+  color: #253B59;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.1rem 0.45rem;
   border-radius: 999px;
-  margin-left: 0.35rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  line-height: 1.2;
+}
+
+.btn-two-lines {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  line-height: 1.15;
+  cursor: pointer;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.btn-two-lines-icon {
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-two-lines-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.15;
+  text-align: left;
+  font-size: 0.76rem;
+  font-weight: 600;
 }
 
 .btn-change-password {
   background-color: rgba(206, 208, 242, 0.35);
   color: var(--color-primary);
   border: 1px solid rgba(206, 208, 242, 0.6);
-  border-radius: var(--radius-pill);
-  padding: 0.45rem 0.9rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background-color var(--transition-fast), transform var(--transition-fast);
 }
 
 .btn-change-password:hover {
@@ -258,24 +368,14 @@ h1, h2, h3, h4, h5, h6 {
 .btn-logout {
   background-color: transparent;
   border: 1px solid var(--color-border);
-  padding: 0.45rem 0.9rem;
-  border-radius: var(--radius-pill);
-  font-size: 0.825rem;
-  font-weight: 600;
   color: var(--color-text-muted);
-  cursor: pointer;
-  transition: border-color var(--transition-fast), color var(--transition-fast), background-color var(--transition-fast);
 }
 
 .btn-logout:hover {
   border-color: #EF4444;
   color: #DC2626;
   background-color: #FEF2F2;
-}
-
-.btn-logout:hover {
-  background-color: #F1F5F9;
-  color: #0F172A;
+  transform: translateY(-1px);
 }
 
 /* Split Screen Layout (Login) */
@@ -1715,14 +1815,26 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--color-text-main);
   font-family: 'Montserrat', sans-serif;
   font-weight: 500;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   background: transparent;
   border: none;
   border-radius: var(--radius-pill);
-  padding: 0.5rem 1.15rem;
+  padding: 0.45rem 0.95rem;
   cursor: pointer;
   white-space: nowrap;
   transition: color var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.nav-link.nav-link-two-lines {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.15;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.815rem;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .nav-link:hover {
@@ -2444,10 +2556,58 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+@media (max-width: 1180px) {
+  .navbar {
+    padding: 0.65rem 1rem;
+    gap: 0.5rem;
+  }
+
+  .brand-tagline {
+    display: none;
+  }
+
+  .navbar-links {
+    padding: 0.25rem 0.35rem;
+    gap: 0.2rem;
+  }
+
+  .nav-link {
+    padding: 0.35rem 0.65rem;
+  }
+
+  .nav-link.nav-link-two-lines {
+    padding: 0.3rem 0.55rem;
+  }
+
+  .navbar-user-actions {
+    gap: 0.35rem;
+  }
+
+  .user-badge {
+    padding: 0.3rem 0.6rem;
+  }
+}
+
 @media (max-width: 960px) {
   .navbar {
     padding: 0.75rem 1.25rem;
     height: 70px;
+  }
+
+  .brand-icon {
+    width: 46px;
+    height: 46px;
+    min-width: 46px;
+    min-height: 46px;
+  }
+
+  .brand-name {
+    font-size: 1.95rem;
+  }
+
+  .brand-tagline {
+    font-size: 0.58rem;
+    letter-spacing: 0.1em;
   }
 
   .desktop-only-actions {
@@ -2498,6 +2658,12 @@ h1, h2, h3, h4, h5, h6 {
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  .navbar-links .nav-link.nav-link-two-lines {
+    flex-direction: row;
+    gap: 0.35rem;
+    font-size: 0.95rem;
   }
 
   .mobile-drawer-actions {
@@ -2582,6 +2748,28 @@ h1, h2, h3, h4, h5, h6 {
     left: 12px;
     right: 12px;
     bottom: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .brand-logo {
+    gap: 0.65rem;
+  }
+
+  .brand-icon {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    min-height: 42px;
+    padding: 1.5px;
+  }
+
+  .brand-name {
+    font-size: 1.75rem;
+  }
+
+  .brand-tagline {
+    display: none;
   }
 }
 
