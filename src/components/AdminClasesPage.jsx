@@ -391,7 +391,7 @@ export default function AdminClasesPage({ currentUser }) {
 
       {/* Renderizado según la pestaña activa */}
       {tabActiva === "usuarios" ? (
-        <AdminUsuariosTab />
+        <AdminUsuariosTab currentUser={currentUser} />
       ) : tabActiva === "terapias" ? (
         <AdminTerapiasTab />
       ) : (

@@ -33,5 +33,10 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAuthenticated();
     }
+
+    // Colección: historial_pagos_usuarios (Auditoría de Pagos y Tarifas)
+    match /historial_pagos_usuarios/{pagoId} {
+      allow read, write: if isAuthenticated();
+    }
   }
 }

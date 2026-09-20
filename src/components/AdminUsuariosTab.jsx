@@ -9,8 +9,15 @@ import {
   modificarClasesPactadasAdmin,
   modificarSesionesTerapiaAdmin,
 } from "../firebase/usuariosService";
+import {
+  registrarHistorialPagoAdmin,
+  obtenerHistorialPagosAdmin,
+  exportarHistorialPagosCSV,
+  calcularTarifaAutomatica,
+  formatearMonedaCLP,
+} from "../firebase/pagosService";
 
-export default function AdminUsuariosTab() {
+export default function AdminUsuariosTab({ currentUser }) {
   const [usuarios, setUsuarios] = useState([]);
   const [inscripciones, setInscripciones] = useState([]);
   const [cargando, setCargando] = useState(true);
@@ -40,6 +47,7 @@ export default function AdminUsuariosTab() {
   });
 
   const [guardando, setGuardando] = useState(false);
+  const [descargandoCSV, setDescargandoCSV] = useState(false);
   const [notification, setNotification] = useState({
     message: "",
     error: false,
@@ -157,7 +165,7 @@ export default function AdminUsuariosTab() {
     }
   };
 
-  // Guardar (Crear o Actualizar)
+  // Guardar (Crear o Actualizar) y registrar historial de pago automático
   const handleSubmitForm = async (e) => {
     e.preventDefault();
     if (!formData.nombre.trim() || !formData.email.trim()) {
@@ -171,11 +179,38 @@ export default function AdminUsuariosTab() {
     setGuardando(true);
     try {
       if (usuarioEditando) {
+        const saldoAnteriorClases = usuarioEditando.clases_pactadas ?? 0;
+        const saldoAnteriorTerapias = usuarioEditando.sesion_terapia ?? 0;
+
         await actualizarUsuarioAdmin(usuarioEditando.id, formData);
-        mostrarNotificacion("¡Datos del usuario actualizados con éxito!");
+
+        // Registrar en historial_pagos_usuarios
+        await registrarHistorialPagoAdmin({
+          usuario: { id: usuarioEditando.id, ...formData },
+          admin: currentUser,
+          saldoAnteriorClases,
+          saldoNuevoClases: formData.clases_pactadas,
+          saldoAnteriorTerapias,
+          saldoNuevoTerapias: formData.sesion_terapia,
+          tipoOperacion: "modificar_usuario",
+        });
+
+        mostrarNotificacion("¡Datos del usuario y registro de pago guardados con éxito!");
       } else {
-        await crearUsuarioAdmin(formData);
-        mostrarNotificacion("¡Nuevo usuario registrado con éxito!");
+        const nuevoId = await crearUsuarioAdmin(formData);
+
+        // Registrar en historial_pagos_usuarios
+        await registrarHistorialPagoAdmin({
+          usuario: { id: nuevoId, ...formData },
+          admin: currentUser,
+          saldoAnteriorClases: 0,
+          saldoNuevoClases: formData.clases_pactadas,
+          saldoAnteriorTerapias: 0,
+          saldoNuevoTerapias: formData.sesion_terapia,
+          tipoOperacion: "nuevo_usuario",
+        });
+
+        mostrarNotificacion("¡Nuevo usuario registrado y saldo asentado!");
       }
       setIsFormModalOpen(false);
     } catch (error) {
@@ -186,6 +221,36 @@ export default function AdminUsuariosTab() {
       );
     } finally {
       setGuardando(false);
+    }
+  };
+
+  // Descarga de reporte CSV de historial de pagos (Autorizado para Administradores)
+  const handleDescargarCSV = async () => {
+    if (currentUser?.rol && currentUser.rol !== "admin") {
+      mostrarNotificacion(
+        "Acceso denegado: Se requiere rol de Administrador para descargar este informe.",
+        true,
+      );
+      return;
+    }
+
+    setDescargandoCSV(true);
+    try {
+      const registros = await obtenerHistorialPagosAdmin();
+      if (!registros || registros.length === 0) {
+        mostrarNotificacion(
+          "Aún no hay transacciones en el historial de pagos para exportar.",
+          true,
+        );
+        return;
+      }
+      exportarHistorialPagosCSV(registros);
+      mostrarNotificacion("¡Reporte de pagos en formato CSV descargado exitosamente!");
+    } catch (error) {
+      console.error("Error al exportar historial de pagos:", error);
+      mostrarNotificacion("Error al generar el reporte CSV.", true);
+    } finally {
+      setDescargandoCSV(false);
     }
   };
 
@@ -329,26 +394,57 @@ export default function AdminUsuariosTab() {
           </h1>
         </div>
 
-        <button
-          onClick={handleAbrirCrear}
-          style={{
-            backgroundColor: "#253B59",
-            color: "#FFFFFF",
-            borderRadius: "9999px",
-            padding: "0.875rem 1.75rem",
-            border: "none",
-            fontWeight: "600",
-            fontSize: "0.95rem",
-            cursor: "pointer",
-            boxShadow: "0 4px 14px rgba(37, 59, 89, 0.25)",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            transition: "background-color 0.2s ease, box-shadow 0.2s ease",
-          }}
-        >
-          <span>👤➕</span> Nuevo Usuario
-        </button>
+        <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+          {/* Botón Descargar Reporte CSV (exclusivo admin) */}
+          <button
+            type="button"
+            onClick={handleDescargarCSV}
+            disabled={descargandoCSV}
+            aria-label="Descargar historial de pagos en formato CSV"
+            style={{
+              backgroundColor: "#FFFFFF",
+              color: "#253B59",
+              borderRadius: "9999px",
+              padding: "0.875rem 1.4rem",
+              border: "1.5px solid #CED0F2",
+              fontWeight: "700",
+              fontSize: "0.95rem",
+              cursor: descargandoCSV ? "not-allowed" : "pointer",
+              boxShadow: "0 2px 8px rgba(37, 59, 89, 0.08)",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              minHeight: "44px",
+              transition: "all 0.2s ease",
+              opacity: descargandoCSV ? 0.7 : 1,
+            }}
+          >
+            <span>{descargandoCSV ? "⏳" : "📊"}</span>
+            <span>{descargandoCSV ? "Generando CSV..." : "Descargar Pagos CSV"}</span>
+          </button>
+
+          <button
+            onClick={handleAbrirCrear}
+            style={{
+              backgroundColor: "#253B59",
+              color: "#FFFFFF",
+              borderRadius: "9999px",
+              padding: "0.875rem 1.75rem",
+              border: "none",
+              fontWeight: "600",
+              fontSize: "0.95rem",
+              cursor: "pointer",
+              boxShadow: "0 4px 14px rgba(37, 59, 89, 0.25)",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              minHeight: "44px",
+              transition: "background-color 0.2s ease, box-shadow 0.2s ease",
+            }}
+          >
+            <span>👤➕</span> Nuevo Usuario
+          </button>
+        </div>
       </div>
 
       {/* KPI Cards Grilla Adaptable */}
@@ -1330,6 +1426,86 @@ export default function AdminUsuariosTab() {
                   </select>
                 </div>
               </div>
+
+              {/* Vista previa en vivo del cálculo automático de tarifa y cobro */}
+              {(() => {
+                const cAnteriores = usuarioEditando ? (usuarioEditando.clases_pactadas ?? 0) : 0;
+                const cNuevas = Number(formData.clases_pactadas) || 0;
+                const cAgregadas = Math.max(0, cNuevas - cAnteriores);
+
+                const tAnteriores = usuarioEditando ? (usuarioEditando.sesion_terapia ?? 0) : 0;
+                const tNuevas = Number(formData.sesion_terapia) || 0;
+                const tAgregadas = Math.max(0, tNuevas - tAnteriores);
+
+                const cTarifa = cAgregadas > 0 ? cAgregadas : (cNuevas > 0 ? cNuevas : 0);
+                const tTarifa = tAgregadas > 0 ? tAgregadas : (tNuevas > 0 ? tNuevas : 0);
+
+                const calculo = calcularTarifaAutomatica(cTarifa, tTarifa);
+
+                return (
+                  <div
+                    style={{
+                      backgroundColor: calculo.monto > 0 ? "#F0FDF4" : "#F8FAFC",
+                      border: `1.5px solid ${calculo.monto > 0 ? "#86EFAC" : "#E2E8F0"}`,
+                      borderRadius: "14px",
+                      padding: "1rem 1.25rem",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "0.4rem",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        flexWrap: "wrap",
+                        gap: "0.5rem",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: "0.88rem",
+                          fontWeight: "700",
+                          color: "#253B59",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.4rem",
+                        }}
+                      >
+                        💳 Cálculo Automático de Tarifa:
+                      </span>
+                      <span
+                        style={{
+                          fontSize: "1.25rem",
+                          fontWeight: "800",
+                          color: calculo.monto > 0 ? "#15803D" : "#64748B",
+                        }}
+                      >
+                        {formatearMonedaCLP(calculo.monto)}
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "0.82rem",
+                        color: "#475569",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        flexWrap: "wrap",
+                        gap: "0.5rem",
+                      }}
+                    >
+                      <span>
+                        Plan detectado: <strong>{calculo.detalle}</strong>
+                      </span>
+                      <span style={{ fontSize: "0.78rem", color: "#64748B" }}>
+                        (Se registrará automáticamente en Firestore)
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Botones */}
               <div
