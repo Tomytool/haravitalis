@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import imagenStudio from "/terapias_holisticas.png";
-import qrTerapias from "/contacto_orlando.jpeg";
+import qrTerapias from "/qr-orlando.png";
 import { suscribirTerapiasActivas } from "../firebase/terapiasService";
 
 export default function TerapiasPage({
@@ -431,9 +431,7 @@ export default function TerapiasPage({
               <h3 className="form-card-title">
                 Escanea este Código QR para Solicitar Asesoramiento
               </h3>
-              <div
-                className="qr-container"
-              >
+              <div className="qr-container">
                 <img
                   src={qrTerapias}
                   alt="Código QR para solicitar asesoramiento"

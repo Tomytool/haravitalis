@@ -1,10 +1,14 @@
-import imagenStudio from '/pilates-studio.jpg';
-import imagenElena from '/instructor_elena.jpg';
-import imagenCarlos from '/instructor_carlos.jpg';
-import imagenSofia from '/instructor_sofia.jpg';
-import imagenOrlando from '/contacto_orlando.jpeg';
+import imagenStudio from "/pilates-studio.jpg";
+import imagenElena from "/instructor_elena.jpg";
+import imagenCarlos from "/instructor_carlos.jpg";
+import imagenSofia from "/instructor_sofia.jpg";
+import imagenOrlando from "/contacto_orlando.jpeg";
 
-export default function QuienesSomosPage({ onNavigateToAuth, onNavigateToBooking, currentUser }) {
+export default function QuienesSomosPage({
+  onNavigateToAuth,
+  onNavigateToBooking,
+  currentUser,
+}) {
   const handleCtaClick = () => {
     if (currentUser) {
       onNavigateToBooking();
@@ -21,7 +25,11 @@ export default function QuienesSomosPage({ onNavigateToAuth, onNavigateToBooking
       categoria: "pilates",
       imagen: imagenElena,
       bio: "Especialista en alineación corporal y control de centro (Hara). Cuenta con más de 7 años de experiencia guiando sesiones personalizadas de Reformer.",
-      especialidades: ["Reformer Essentials", "Corrección Postural", "Alineación Articular"]
+      especialidades: [
+        "Reformer Essentials",
+        "Corrección Postural",
+        "Alineación Articular",
+      ],
     },
     {
       id: "carlos",
@@ -30,7 +38,11 @@ export default function QuienesSomosPage({ onNavigateToAuth, onNavigateToBooking
       categoria: "pilates",
       imagen: imagenCarlos,
       bio: "Enfocado en el desarrollo de la resistencia muscular y la fluidez del movimiento sin sobrecarga articular ni estrés mecánico.",
-      especialidades: ["Flow & Strength", "Advanced Reformer", "Resistencia Adaptable"]
+      especialidades: [
+        "Flow & Strength",
+        "Advanced Reformer",
+        "Resistencia Adaptable",
+      ],
     },
     {
       id: "sofia",
@@ -39,7 +51,11 @@ export default function QuienesSomosPage({ onNavigateToAuth, onNavigateToBooking
       categoria: "pilates",
       imagen: imagenSofia,
       bio: "Apasionada por la reeducación postural global y el fortalecimiento consciente del núcleo para prevenir lesiones cotidianas.",
-      especialidades: ["Postural Pilates", "Pilates Mat & Core", "Flexibilidad Asistida"]
+      especialidades: [
+        "Postural Pilates",
+        "Pilates Mat & Core",
+        "Flexibilidad Asistida",
+      ],
     },
     {
       id: "orlando",
@@ -47,19 +63,25 @@ export default function QuienesSomosPage({ onNavigateToAuth, onNavigateToBooking
       rol: "Encargado de Terapias Integrativas & MTC",
       categoria: "terapias",
       imagen: imagenOrlando,
+      objectPosition: "center top",
       bio: "Especialista acreditado en evaluación energética de meridianos, regulación del Qi y liberación miofascial en sinergia con la práctica de Pilates.",
-      especialidades: ["Acupuntura", "Ventosaterapia (Cupping)", "Masaje Tui Na"]
-    }
+      especialidades: [
+        "Acupuntura",
+        "Ventosaterapia (Cupping)",
+        "Masaje Tui Na",
+      ],
+    },
   ];
 
   return (
     <div className="page-wrapper page-quienes-somos">
       <section className="page-hero">
         <div className="page-hero-content">
-          <span className="badge-pill-subtle">Sobre Nosotros</span>
           <h1 className="page-title">¿Quiénes somos en Hara Vitalis?</h1>
           <p className="page-lead">
-            Somos un estudio especializado en movimiento consciente, corrección biomecánica y bienestar integral a través del sistema Pilates Reformer.
+            Somos un estudio especializado en movimiento consciente, corrección
+            biomecánica y bienestar integral a través del sistema Pilates
+            Reformer.
           </p>
         </div>
       </section>
@@ -69,61 +91,119 @@ export default function QuienesSomosPage({ onNavigateToAuth, onNavigateToBooking
           <div className="text-block">
             <h2>Nuestra Filosofía</h2>
             <p>
-              En <strong>Hara Vitalis</strong> creemos que el movimiento no solo tonifica el cuerpo, sino que restaura el equilibrio entre la mente y el espíritu. Nuestro nombre combina "Hara" (el centro de energía vital del cuerpo en la filosofía oriental) y "Vitalis" (la fuerza de la vida y el bienestar renovado).
+              En <strong>Hara Vitalis</strong> creemos que el movimiento no solo
+              tonifica el cuerpo, sino que restaura el equilibrio entre la mente
+              y el espíritu. Nuestro nombre combina "Hara" (el centro de energía
+              vital del cuerpo en la filosofía oriental) y "Vitalis" (la fuerza
+              de la vida y el bienestar renovado).
             </p>
             <p>
-              A través del Pilates Reformer guiamos a nuestros alumnos en secuencias precisas, biomecánicamente seguras y adaptadas a la anatomía de cada individuo, garantizando resultados sostenibles sin estrés articular.
+              A través del Pilates Reformer guiamos a nuestros alumnos en
+              secuencias precisas, biomecánicamente seguras y adaptadas a la
+              anatomía de cada individuo, garantizando resultados sostenibles
+              sin estrés articular.
             </p>
           </div>
           <div className="image-block">
-            <img src={imagenStudio} alt="Estudio Hara Vitalis" className="rounded-image shadow-lg" />
+            <img
+              src={imagenStudio}
+              alt="Estudio Hara Vitalis"
+              className="rounded-image shadow-lg"
+            />
           </div>
         </div>
 
         <section className="values-section margin-top-xl">
-          <h2 className="text-center margin-bottom-lg">Nuestros Pilares Fundamentales</h2>
+          <h2 className="text-center margin-bottom-lg">
+            Nuestros Pilares Fundamentales
+          </h2>
           <div className="grid-3-cols">
             <div className="info-card">
               <div className="card-icon-badge">🎯</div>
               <h3>Precisión Biomédica</h3>
-              <p>Clases estructuradas bajo principios biomecánicos para corregir la postura, prevenir lesiones y optimizar el rendimiento corporal.</p>
+              <p>
+                Clases estructuradas bajo principios biomecánicos para corregir
+                la postura, prevenir lesiones y optimizar el rendimiento
+                corporal.
+              </p>
             </div>
             <div className="info-card">
               <div className="card-icon-badge">🌿</div>
               <h3>Bienestar Integral</h3>
-              <p>Un espacio cálido y sereno diseñado para desconectar del estrés diario y reconectar con la respiración y el control consciente.</p>
+              <p>
+                Un espacio cálido y sereno diseñado para desconectar del estrés
+                diario y reconectar con la respiración y el control consciente.
+              </p>
             </div>
             <div className="info-card">
               <div className="card-icon-badge">🤝</div>
               <h3>Atención Personalizada</h3>
-              <p>Grupos reducidos e instructores certificados que adaptan la intensidad de la resistencia para cada nivel físico.</p>
+              <p>
+                Grupos reducidos e instructores certificados que adaptan la
+                intensidad de la resistencia para cada nivel físico.
+              </p>
             </div>
           </div>
         </section>
 
         {/* Sección Nuestro Equipo de Especialistas */}
         <section className="team-section">
-          <div className="section-header-center" style={{ textAlign: "center", marginBottom: "1.5rem" }}>
-            <span className="badge-pill-subtle" style={{ marginBottom: "0.75rem", display: "inline-block" }}>
+          <div
+            className="section-header-center"
+            style={{ textAlign: "center", marginBottom: "1.5rem" }}
+          >
+            <span
+              className="badge-pill-subtle"
+              style={{ marginBottom: "0.75rem", display: "inline-block" }}
+            >
               NUESTRO EQUIPO DE ESPECIALISTAS
             </span>
-            <h2 style={{ fontSize: "2rem", fontWeight: "700", color: "#253B59", marginBottom: "0.5rem" }}>
+            <h2
+              style={{
+                fontSize: "2rem",
+                fontWeight: "700",
+                color: "#253B59",
+                marginBottom: "0.5rem",
+              }}
+            >
               Profesores y Terapeutas a tu Servicio
             </h2>
-            <p style={{ fontSize: "1rem", color: "#475569", maxWidth: "680px", margin: "0 auto" }}>
-              Contamos con instructores certificados en Pilates Reformer y especialistas en Medicina Tradicional China dedicados a potenciar tu salud física y balance bioenergético.
+            <p
+              style={{
+                fontSize: "1rem",
+                color: "#475569",
+                maxWidth: "680px",
+                margin: "0 auto",
+              }}
+            >
+              Contamos con instructores certificados en Pilates Reformer y
+              especialistas en Medicina Tradicional China dedicados a potenciar
+              tu salud física y balance bioenergético.
             </p>
           </div>
 
           <div className="team-grid">
             {equipoEspecialistas.map((persona) => (
               <div key={persona.id} className="team-card">
-                <span className={`team-card-badge ${persona.categoria === 'terapias' ? 'badge-terapias' : 'badge-pilates'}`}>
-                  {persona.categoria === 'terapias' ? '🌿 Terapias Holísticas' : '🧘‍♀️ Pilates Reformer'}
+                <span
+                  className={`team-card-badge ${persona.categoria === "terapias" ? "badge-terapias" : "badge-pilates"}`}
+                >
+                  {persona.categoria === "terapias"
+                    ? "🌿 Terapias Holísticas"
+                    : "🧘‍♀️ Pilates Reformer"}
                 </span>
-                
+
                 <div className="team-avatar-wrapper">
-                  <img src={persona.imagen} alt={`Foto de ${persona.nombre}`} className="team-avatar-img" />
+                  <img
+                    src={persona.imagen}
+                    alt={`Foto de ${persona.nombre}`}
+                    className="team-avatar-img"
+                    style={
+                      persona.objectPosition
+                        ? { objectPosition: persona.objectPosition }
+                        : undefined
+                    }
+                  />
                 </div>
 
                 <h3 className="team-card-title">{persona.nombre}</h3>
@@ -144,15 +224,36 @@ export default function QuienesSomosPage({ onNavigateToAuth, onNavigateToBooking
 
         {/* Ubicación del Estudio */}
         <section className="location-section margin-top-xl">
-          <div className="section-header-center" style={{ textAlign: "center", marginBottom: "2rem" }}>
-            <span className="badge-pill-subtle" style={{ marginBottom: "0.75rem", display: "inline-block" }}>
+          <div
+            className="section-header-center"
+            style={{ textAlign: "center", marginBottom: "2rem" }}
+          >
+            <span
+              className="badge-pill-subtle"
+              style={{ marginBottom: "0.75rem", display: "inline-block" }}
+            >
               NUESTRA UBICACIÓN
             </span>
-            <h2 style={{ fontSize: "1.85rem", fontWeight: "700", color: "#111827", marginBottom: "0.5rem" }}>
+            <h2
+              style={{
+                fontSize: "1.85rem",
+                fontWeight: "700",
+                color: "#111827",
+                marginBottom: "0.5rem",
+              }}
+            >
               Encuéntranos en Villa Alemana
             </h2>
-            <p style={{ fontSize: "1rem", color: "#475569", maxWidth: "600px", margin: "0 auto" }}>
-              Av. Valparaíso 2650, Villa Alemana, Valparaíso. Te esperamos en un espacio sereno y equipado para tu bienestar integral.
+            <p
+              style={{
+                fontSize: "1rem",
+                color: "#475569",
+                maxWidth: "600px",
+                margin: "0 auto",
+              }}
+            >
+              Av. Valparaíso 2650, Villa Alemana, Valparaíso. Te esperamos en un
+              espacio sereno y equipado para tu bienestar integral.
             </p>
           </div>
 
@@ -181,7 +282,10 @@ export default function QuienesSomosPage({ onNavigateToAuth, onNavigateToBooking
 
         <div className="cta-box margin-top-xl">
           <h2>¿Listo para vivir la experiencia Reformer?</h2>
-          <p>Únete a nuestra comunidad y reserva tu primera clase de evaluación hoy mismo.</p>
+          <p>
+            Únete a nuestra comunidad y reserva tu primera clase de evaluación
+            hoy mismo.
+          </p>
           <button onClick={handleCtaClick} className="btn-primary-large">
             {currentUser ? "Reservar mi Clase" : "Registrarme y Reservar"}
           </button>
