@@ -27,6 +27,9 @@ export default function AdminUsuariosTab({ currentUser }) {
   const [filtroRol, setFiltroRol] = useState("todos");
   const [filtroEstado, setFiltroEstado] = useState("todos");
 
+  // Ordenamiento
+  const [sortConfig, setSortConfig] = useState({ key: "nombre", direction: "asc" });
+
   // Modales
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [usuarioEditando, setUsuarioEditando] = useState(null); // null = crear nuevo
@@ -48,6 +51,7 @@ export default function AdminUsuariosTab({ currentUser }) {
 
   const [guardando, setGuardando] = useState(false);
   const [descargandoCSV, setDescargandoCSV] = useState(false);
+  const [descargandoUsuariosCSV, setDescargandoUsuariosCSV] = useState(false);
   const [notification, setNotification] = useState({
     message: "",
     error: false,
@@ -141,6 +145,10 @@ export default function AdminUsuariosTab({ currentUser }) {
 
   // Modificación rápida de clases pactadas (+1 / -1)
   const handleModificarClasesPactadas = async (usuarioId, delta) => {
+    if (currentUser?.rol === "instructor") {
+      mostrarNotificacion("Acceso denegado: El perfil instructor solo tiene permisos de lectura.", true);
+      return;
+    }
     try {
       await modificarClasesPactadasAdmin(usuarioId, delta);
       mostrarNotificacion(
@@ -154,6 +162,10 @@ export default function AdminUsuariosTab({ currentUser }) {
 
   // Modificación rápida de sesiones de terapia (+1 / -1)
   const handleModificarSesionesTerapia = async (usuarioId, delta) => {
+    if (currentUser?.rol === "instructor") {
+      mostrarNotificacion("Acceso denegado: El perfil instructor solo tiene permisos de lectura.", true);
+      return;
+    }
     try {
       await modificarSesionesTerapiaAdmin(usuarioId, delta);
       mostrarNotificacion(
@@ -168,6 +180,10 @@ export default function AdminUsuariosTab({ currentUser }) {
   // Guardar (Crear o Actualizar) y registrar historial de pago automático
   const handleSubmitForm = async (e) => {
     e.preventDefault();
+    if (currentUser?.rol === "instructor") {
+      mostrarNotificacion("Acceso denegado: El perfil instructor solo tiene permisos de lectura.", true);
+      return;
+    }
     if (!formData.nombre.trim() || !formData.email.trim()) {
       mostrarNotificacion(
         "Por favor completa el nombre y el correo electrónico.",
@@ -195,7 +211,9 @@ export default function AdminUsuariosTab({ currentUser }) {
           tipoOperacion: "modificar_usuario",
         });
 
-        mostrarNotificacion("¡Datos del usuario y registro de pago guardados con éxito!");
+        mostrarNotificacion(
+          "¡Datos del usuario y registro de pago guardados con éxito!",
+        );
       } else {
         const nuevoId = await crearUsuarioAdmin(formData);
 
@@ -245,7 +263,9 @@ export default function AdminUsuariosTab({ currentUser }) {
         return;
       }
       exportarHistorialPagosCSV(registros);
-      mostrarNotificacion("¡Reporte de pagos en formato CSV descargado exitosamente!");
+      mostrarNotificacion(
+        "¡Reporte de pagos en formato CSV descargado exitosamente!",
+      );
     } catch (error) {
       console.error("Error al exportar historial de pagos:", error);
       mostrarNotificacion("Error al generar el reporte CSV.", true);
@@ -257,6 +277,11 @@ export default function AdminUsuariosTab({ currentUser }) {
   // Confirmar Eliminación de Usuario
   const handleConfirmarEliminar = async () => {
     if (!confirmDeleteUser) return;
+    if (currentUser?.rol === "instructor") {
+      mostrarNotificacion("Acceso denegado: El perfil instructor solo tiene permisos de lectura.", true);
+      setConfirmDeleteUser(null);
+      return;
+    }
     try {
       await eliminarUsuarioAdmin(confirmDeleteUser.id);
       mostrarNotificacion(
@@ -272,6 +297,10 @@ export default function AdminUsuariosTab({ currentUser }) {
 
   // Cancelar reserva de una clase desde el modal de inscripciones
   const handleCancelarReserva = async (inscripcion) => {
+    if (currentUser?.rol === "instructor") {
+      mostrarNotificacion("Acceso denegado: El perfil instructor solo tiene permisos de lectura.", true);
+      return;
+    }
     try {
       await cancelarInscripcionAdmin(
         inscripcion.id,
@@ -299,6 +328,101 @@ export default function AdminUsuariosTab({ currentUser }) {
 
     return coincideTexto && coincideRol && coincideEstado;
   });
+
+  // Ordenamiento de usuarios
+  const usuariosOrdenados = [...usuariosFiltrados].sort((a, b) => {
+    let valorA = a[sortConfig.key];
+    let valorB = b[sortConfig.key];
+
+    // Caso especial: reservas
+    if (sortConfig.key === "reservas") {
+      valorA = inscripciones.filter((ins) => ins.usuario_id === a.id && ins.estado === "confirmada").length;
+      valorB = inscripciones.filter((ins) => ins.usuario_id === b.id && ins.estado === "confirmada").length;
+    }
+
+    if (valorA == null) valorA = "";
+    if (valorB == null) valorB = "";
+
+    if (typeof valorA === "string" && typeof valorB === "string") {
+      const compare = valorA.localeCompare(valorB);
+      return sortConfig.direction === "asc" ? compare : -compare;
+    }
+
+    if (valorA < valorB) return sortConfig.direction === "asc" ? -1 : 1;
+    if (valorA > valorB) return sortConfig.direction === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  const requestSort = (key) => {
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortIcon = (columnName) => {
+    if (sortConfig.key !== columnName) {
+      return <span style={{ opacity: 0.3, marginLeft: "4px", fontSize: "0.85em" }}>↕</span>;
+    }
+    return sortConfig.direction === "asc" ? (
+      <span style={{ marginLeft: "4px", fontSize: "0.85em", color: "#1D4ED8" }}>↑</span>
+    ) : (
+      <span style={{ marginLeft: "4px", fontSize: "0.85em", color: "#1D4ED8" }}>↓</span>
+    );
+  };
+
+  // Descarga de reporte CSV de usuarios filtrados
+  const handleDescargarUsuariosCSV = () => {
+    setDescargandoUsuariosCSV(true);
+    try {
+      if (usuariosOrdenados.length === 0) {
+        mostrarNotificacion("No hay usuarios para exportar con los filtros actuales.", true);
+        return;
+      }
+
+      // Función de escape para CSV (manejo de comas y comillas en los strings)
+      const escaparCsv = (texto) => {
+        if (!texto) return '""';
+        const stringTexto = String(texto);
+        if (stringTexto.includes(',') || stringTexto.includes('"') || stringTexto.includes('\n')) {
+          return `"${stringTexto.replace(/"/g, '""')}"`;
+        }
+        return stringTexto;
+      };
+
+      const cabeceras = ["Nombre", "Correo Electrónico", "Teléfono", "Rol", "Estado"];
+      
+      const filas = usuariosOrdenados.map(usr => [
+        escaparCsv(usr.nombre),
+        escaparCsv(usr.email),
+        escaparCsv(usr.telefono || "Sin teléfono"),
+        escaparCsv(usr.rol || "cliente"),
+        escaparCsv(usr.estado_cuenta || "activo")
+      ].join(","));
+
+      const contenidoCSV = [cabeceras.join(","), ...filas].join("\n");
+      
+      // Agregar BOM para que Excel reconozca correctamente los caracteres especiales y tildes
+      const blob = new Blob(["\uFEFF" + contenidoCSV], { type: "text/csv;charset=utf-8;" });
+      
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `Reporte_Usuarios_${new Date().toISOString().split("T")[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      mostrarNotificacion("¡Reporte de usuarios exportado exitosamente!");
+    } catch (error) {
+      console.error("Error exportando CSV de usuarios:", error);
+      mostrarNotificacion("Error al generar el archivo CSV.", true);
+    } finally {
+      setDescargandoUsuariosCSV(false);
+    }
+  };
 
   // Métricas rápidas
   const totalUsuarios = usuarios.length;
@@ -390,7 +514,20 @@ export default function AdminUsuariosTab({ currentUser }) {
         </div>
 
         <div className="admin-header-actions">
-          {/* Botón Descargar Reporte CSV (exclusivo admin) */}
+          {/* Botón Descargar Usuarios CSV */}
+          <button
+            type="button"
+            onClick={handleDescargarUsuariosCSV}
+            disabled={descargandoUsuariosCSV}
+            aria-label="Descargar lista de usuarios en formato CSV"
+            className="admin-btn-action admin-btn-action--secondary"
+            style={{ opacity: descargandoUsuariosCSV ? 0.7 : 1 }}
+          >
+            <span>{descargandoUsuariosCSV ? "⏳" : "👥"}</span>
+            <span>{descargandoUsuariosCSV ? "Generando..." : "Usuarios CSV"}</span>
+          </button>
+
+          {/* Botón Descargar Reporte CSV Pagos (exclusivo admin) */}
           <button
             type="button"
             onClick={handleDescargarCSV}
@@ -403,14 +540,16 @@ export default function AdminUsuariosTab({ currentUser }) {
             <span>{descargandoCSV ? "Generando CSV..." : "Pagos CSV"}</span>
           </button>
 
-          <button
-            type="button"
-            onClick={handleAbrirCrear}
-            className="admin-btn-action admin-btn-action--primary"
-          >
-            <span>👤➕</span>
-            <span>Nuevo Usuario</span>
-          </button>
+          {currentUser?.rol !== "instructor" && (
+            <button
+              type="button"
+              onClick={handleAbrirCrear}
+              className="admin-btn-action admin-btn-action--primary"
+            >
+              <span>👤➕</span>
+              <span>Nuevo Usuario</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -469,16 +608,65 @@ export default function AdminUsuariosTab({ currentUser }) {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "1fr 1fr",
+            gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
             gap: "0.5rem",
             width: "100%",
           }}
         >
+          {/* Ordenamiento Mobile/Filtro */}
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}
+          >
+            <label
+              htmlFor="admin-usuarios-sort"
+              style={{
+                fontSize: "0.8rem",
+                color: "#64748B",
+                fontWeight: "600",
+              }}
+            >
+              Ordenar por:
+            </label>
+            <select
+              id="admin-usuarios-sort"
+              aria-label="Ordenar resultados"
+              value={`${sortConfig.key}-${sortConfig.direction}`}
+              onChange={(e) => {
+                const [key, direction] = e.target.value.split("-");
+                setSortConfig({ key, direction });
+              }}
+              className="admin-input-mobile"
+              style={{
+                padding: "0.55rem 0.75rem",
+                borderRadius: "10px",
+                border: "1px solid #CBD5E1",
+                backgroundColor: "#FFFFFF",
+                color: "#253B59",
+                fontWeight: "600",
+                minHeight: "42px",
+              }}
+            >
+              <option value="nombre-asc">Nombre (A-Z)</option>
+              <option value="nombre-desc">Nombre (Z-A)</option>
+              <option value="clases_pactadas-desc">Clases (Mayor a Menor)</option>
+              <option value="sesion_terapia-desc">Terapias (Mayor a Menor)</option>
+              <option value="reservas-desc">Reservas (Mayor a Menor)</option>
+              <option value="rol-asc">Rol</option>
+              <option value="estado_cuenta-asc">Estado</option>
+            </select>
+          </div>
+
           {/* Filtro Rol */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}
+          >
             <label
               htmlFor="admin-usuarios-filtro-rol"
-              style={{ fontSize: "0.8rem", color: "#64748B", fontWeight: "600" }}
+              style={{
+                fontSize: "0.8rem",
+                color: "#64748B",
+                fontWeight: "600",
+              }}
             >
               Rol:
             </label>
@@ -501,22 +689,29 @@ export default function AdminUsuariosTab({ currentUser }) {
               <option value="todos">Todos los roles</option>
               <option value="cliente">Cliente</option>
               <option value="admin">Admin</option>
+              <option value="instructor">Instructor</option>
             </select>
           </div>
 
           {/* Filtro Estado */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}
+          >
             <label
               htmlFor="admin-usuarios-filtro-estado"
-              style={{ fontSize: "0.8rem", color: "#64748B", fontWeight: "600" }}
+              style={{
+                fontSize: "0.8rem",
+                color: "#64748B",
+                fontWeight: "600",
+              }}
             >
               Estado:
             </label>
             <select
               id="admin-usuarios-filtro-estado"
-            aria-label="Filtrar por estado"
-            value={filtroEstado}
-            onChange={(e) => setFiltroEstado(e.target.value)}
+              aria-label="Filtrar por estado"
+              value={filtroEstado}
+              onChange={(e) => setFiltroEstado(e.target.value)}
               className="admin-input-mobile"
               style={{
                 padding: "0.55rem 0.75rem",
@@ -553,7 +748,7 @@ export default function AdminUsuariosTab({ currentUser }) {
           >
             Cargando lista de usuarios...
           </div>
-        ) : usuariosFiltrados.length === 0 ? (
+        ) : usuariosOrdenados.length === 0 ? (
           <div
             style={{ padding: "3rem", textAlign: "center", color: "#64748B" }}
           >
@@ -578,20 +773,34 @@ export default function AdminUsuariosTab({ currentUser }) {
                       color: "#253B59",
                     }}
                   >
-                    <th style={{ padding: "1rem" }}>Usuario</th>
-                    <th style={{ padding: "1rem" }}>Contacto</th>
-                    <th style={{ padding: "1rem" }}>Rol</th>
-                    <th style={{ padding: "1rem" }}>Estado Cuenta</th>
-                    <th style={{ padding: "1rem" }}>Clases Pactadas</th>
-                    <th style={{ padding: "1rem" }}>Sesiones Terapia</th>
-                    <th style={{ padding: "1rem" }}>Reservas Activas</th>
+                    <th style={{ padding: "1rem", cursor: "pointer", userSelect: "none" }} onClick={() => requestSort("nombre")}>
+                      Usuario {getSortIcon("nombre")}
+                    </th>
+                    <th style={{ padding: "1rem", cursor: "pointer", userSelect: "none" }} onClick={() => requestSort("email")}>
+                      Contacto {getSortIcon("email")}
+                    </th>
+                    <th style={{ padding: "1rem", cursor: "pointer", userSelect: "none" }} onClick={() => requestSort("rol")}>
+                      Rol {getSortIcon("rol")}
+                    </th>
+                    <th style={{ padding: "1rem", cursor: "pointer", userSelect: "none" }} onClick={() => requestSort("estado_cuenta")}>
+                      Estado {getSortIcon("estado_cuenta")}
+                    </th>
+                    <th style={{ padding: "1rem", cursor: "pointer", userSelect: "none" }} onClick={() => requestSort("clases_pactadas")}>
+                      Clases {getSortIcon("clases_pactadas")}
+                    </th>
+                    <th style={{ padding: "1rem", cursor: "pointer", userSelect: "none" }} onClick={() => requestSort("sesion_terapia")}>
+                      Terapias {getSortIcon("sesion_terapia")}
+                    </th>
+                    <th style={{ padding: "1rem", cursor: "pointer", userSelect: "none" }} onClick={() => requestSort("reservas")}>
+                      Reservas {getSortIcon("reservas")}
+                    </th>
                     <th style={{ padding: "1rem", textAlign: "right" }}>
                       Acciones
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {usuariosFiltrados.map((usr) => {
+                  {usuariosOrdenados.map((usr) => {
                     const userInscripciones = inscripciones.filter(
                       (ins) =>
                         ins.usuario_id === usr.id &&
@@ -615,7 +824,9 @@ export default function AdminUsuariosTab({ currentUser }) {
                     const rolColor =
                       usr.rol === "admin"
                         ? { bg: "#DBEAFE", text: "#1E40AF" }
-                        : { bg: "#F1F5F9", text: "#475569" };
+                        : usr.rol === "instructor"
+                          ? { bg: "#E0E7FF", text: "#4338CA" }
+                          : { bg: "#F1F5F9", text: "#475569" };
 
                     const clasesPactadasNum = usr.clases_pactadas ?? 0;
                     const sesionTerapiaNum = usr.sesion_terapia ?? 0;
@@ -782,37 +993,45 @@ export default function AdminUsuariosTab({ currentUser }) {
                               gap: "0.5rem",
                             }}
                           >
-                            <button
-                              onClick={() => handleAbrirEditar(usr)}
-                              style={{
-                                backgroundColor: "#CED0F2",
-                                color: "#253B59",
-                                border: "none",
-                                borderRadius: "8px",
-                                padding: "0.4rem 0.8rem",
-                                fontWeight: "600",
-                                fontSize: "0.85rem",
-                                cursor: "pointer",
-                              }}
-                            >
-                              ✏️ Editar
-                            </button>
+                            {currentUser?.rol !== "instructor" ? (
+                              <>
+                                <button
+                                  onClick={() => handleAbrirEditar(usr)}
+                                  style={{
+                                    backgroundColor: "#CED0F2",
+                                    color: "#253B59",
+                                    border: "none",
+                                    borderRadius: "8px",
+                                    padding: "0.4rem 0.8rem",
+                                    fontWeight: "600",
+                                    fontSize: "0.85rem",
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  ✏️ Editar
+                                </button>
 
-                            <button
-                              onClick={() => setConfirmDeleteUser(usr)}
-                              style={{
-                                backgroundColor: "#FEE2E2",
-                                color: "#991B1B",
-                                border: "none",
-                                borderRadius: "8px",
-                                padding: "0.4rem 0.8rem",
-                                fontWeight: "600",
-                                fontSize: "0.85rem",
-                                cursor: "pointer",
-                              }}
-                            >
-                              🗑️ Eliminar
-                            </button>
+                                <button
+                                  onClick={() => setConfirmDeleteUser(usr)}
+                                  style={{
+                                    backgroundColor: "#FEE2E2",
+                                    color: "#991B1B",
+                                    border: "none",
+                                    borderRadius: "8px",
+                                    padding: "0.4rem 0.8rem",
+                                    fontWeight: "600",
+                                    fontSize: "0.85rem",
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  🗑️ Eliminar
+                                </button>
+                              </>
+                            ) : (
+                              <span style={{ color: "#64748B", fontSize: "0.8rem", fontStyle: "italic", paddingTop: "0.4rem" }}>
+                                Sólo lectura
+                              </span>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -824,7 +1043,7 @@ export default function AdminUsuariosTab({ currentUser }) {
 
             {/* 2. VISTA TARJETAS (MOBILE PORTRAIT / LANDSCAPE) */}
             <div className="admin-cards-mobile">
-              {usuariosFiltrados.map((usr) => {
+              {usuariosOrdenados.map((usr) => {
                 const userInscripciones = inscripciones.filter(
                   (ins) =>
                     ins.usuario_id === usr.id && ins.estado === "confirmada",
@@ -847,7 +1066,9 @@ export default function AdminUsuariosTab({ currentUser }) {
                 const rolColor =
                   usr.rol === "admin"
                     ? { bg: "#DBEAFE", text: "#1E40AF" }
-                    : { bg: "#F1F5F9", text: "#475569" };
+                    : usr.rol === "instructor"
+                      ? { bg: "#E0E7FF", text: "#4338CA" }
+                      : { bg: "#F1F5F9", text: "#475569" };
 
                 const clasesPactadasNum = usr.clases_pactadas ?? 0;
 
@@ -972,39 +1193,43 @@ export default function AdminUsuariosTab({ currentUser }) {
                     </div>
 
                     <div className="admin-card-actions">
-                      <button
-                        type="button"
-                        onClick={() => handleAbrirEditar(usr)}
-                        style={{
-                          backgroundColor: "#CED0F2",
-                          color: "#253B59",
-                          border: "none",
-                          borderRadius: "10px",
-                          padding: "0.6rem 1rem",
-                          fontWeight: "600",
-                          fontSize: "0.875rem",
-                          cursor: "pointer",
-                        }}
-                      >
-                        ✏️ Editar Usuario
-                      </button>
+                      {currentUser?.rol !== "instructor" && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleAbrirEditar(usr)}
+                            style={{
+                              backgroundColor: "#CED0F2",
+                              color: "#253B59",
+                              border: "none",
+                              borderRadius: "10px",
+                              padding: "0.6rem 1rem",
+                              fontWeight: "600",
+                              fontSize: "0.875rem",
+                              cursor: "pointer",
+                            }}
+                          >
+                            ✏️ Editar Usuario
+                          </button>
 
-                      <button
-                        type="button"
-                        onClick={() => setConfirmDeleteUser(usr)}
-                        style={{
-                          backgroundColor: "#FEE2E2",
-                          color: "#991B1B",
-                          border: "none",
-                          borderRadius: "10px",
-                          padding: "0.6rem 1rem",
-                          fontWeight: "600",
-                          fontSize: "0.875rem",
-                          cursor: "pointer",
-                        }}
-                      >
-                        🗑️ Eliminar
-                      </button>
+                          <button
+                            type="button"
+                            onClick={() => setConfirmDeleteUser(usr)}
+                            style={{
+                              backgroundColor: "#FEE2E2",
+                              color: "#991B1B",
+                              border: "none",
+                              borderRadius: "10px",
+                              padding: "0.6rem 1rem",
+                              fontWeight: "600",
+                              fontSize: "0.875rem",
+                              cursor: "pointer",
+                            }}
+                          >
+                            🗑️ Eliminar
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 );
@@ -1237,6 +1462,7 @@ export default function AdminUsuariosTab({ currentUser }) {
                   >
                     <option value="cliente">cliente</option>
                     <option value="admin">admin</option>
+                    <option value="instructor">instructor</option>
                   </select>
                 </div>
               </div>
@@ -1274,23 +1500,30 @@ export default function AdminUsuariosTab({ currentUser }) {
 
               {/* Vista previa en vivo del cálculo automático de tarifa y cobro */}
               {(() => {
-                const cAnteriores = usuarioEditando ? (usuarioEditando.clases_pactadas ?? 0) : 0;
+                const cAnteriores = usuarioEditando
+                  ? (usuarioEditando.clases_pactadas ?? 0)
+                  : 0;
                 const cNuevas = Number(formData.clases_pactadas) || 0;
                 const cAgregadas = Math.max(0, cNuevas - cAnteriores);
 
-                const tAnteriores = usuarioEditando ? (usuarioEditando.sesion_terapia ?? 0) : 0;
+                const tAnteriores = usuarioEditando
+                  ? (usuarioEditando.sesion_terapia ?? 0)
+                  : 0;
                 const tNuevas = Number(formData.sesion_terapia) || 0;
                 const tAgregadas = Math.max(0, tNuevas - tAnteriores);
 
-                const cTarifa = cAgregadas > 0 ? cAgregadas : (cNuevas > 0 ? cNuevas : 0);
-                const tTarifa = tAgregadas > 0 ? tAgregadas : (tNuevas > 0 ? tNuevas : 0);
+                const cTarifa =
+                  cAgregadas > 0 ? cAgregadas : cNuevas > 0 ? cNuevas : 0;
+                const tTarifa =
+                  tAgregadas > 0 ? tAgregadas : tNuevas > 0 ? tNuevas : 0;
 
                 const calculo = calcularTarifaAutomatica(cTarifa, tTarifa);
 
                 return (
                   <div
                     style={{
-                      backgroundColor: calculo.monto > 0 ? "#F0FDF4" : "#F8FAFC",
+                      backgroundColor:
+                        calculo.monto > 0 ? "#F0FDF4" : "#F8FAFC",
                       border: `1.5px solid ${calculo.monto > 0 ? "#86EFAC" : "#E2E8F0"}`,
                       borderRadius: "14px",
                       padding: "0.85rem 1rem",
@@ -1529,27 +1762,29 @@ export default function AdminUsuariosTab({ currentUser }) {
                         </div>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => handleCancelarReserva(ins)}
-                        style={{
-                          backgroundColor: "#FEE2E2",
-                          color: "#991B1B",
-                          border: "none",
-                          borderRadius: "8px",
-                          padding: "0.6rem 1rem",
-                          fontWeight: "600",
-                          fontSize: "0.85rem",
-                          cursor: "pointer",
-                          minHeight: "44px",
-                          width: "100%",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        Cancelar Reserva
-                      </button>
+                      {currentUser?.rol !== "instructor" && (
+                        <button
+                          type="button"
+                          onClick={() => handleCancelarReserva(ins)}
+                          style={{
+                            backgroundColor: "#FEE2E2",
+                            color: "#991B1B",
+                            border: "none",
+                            borderRadius: "8px",
+                            padding: "0.6rem 1rem",
+                            fontWeight: "600",
+                            fontSize: "0.85rem",
+                            cursor: "pointer",
+                            minHeight: "44px",
+                            width: "100%",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          Cancelar Reserva
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -1589,7 +1824,8 @@ export default function AdminUsuariosTab({ currentUser }) {
                 lineHeight: 1.4,
               }}
             >
-              Esta acción eliminará permanentemente al usuario, liberando los cupos correspondientes en las clases.
+              Esta acción eliminará permanentemente al usuario, liberando los
+              cupos correspondientes en las clases.
             </p>
             <div className="admin-modal-actions">
               <button
