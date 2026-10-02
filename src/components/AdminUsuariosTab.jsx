@@ -52,6 +52,7 @@ export default function AdminUsuariosTab({ currentUser }) {
   const [guardando, setGuardando] = useState(false);
   const [descargandoCSV, setDescargandoCSV] = useState(false);
   const [descargandoUsuariosCSV, setDescargandoUsuariosCSV] = useState(false);
+  const [descargandoReservasCSV, setDescargandoReservasCSV] = useState(false);
   const [notification, setNotification] = useState({
     message: "",
     error: false,
@@ -424,6 +425,71 @@ export default function AdminUsuariosTab({ currentUser }) {
     }
   };
 
+  // Descarga de reporte CSV del historial de reservas (clases y terapias)
+  const handleDescargarReservasCSV = () => {
+    setDescargandoReservasCSV(true);
+    try {
+      if (!inscripciones || inscripciones.length === 0) {
+        mostrarNotificacion("No hay registros de reservas en el sistema.", true);
+        return;
+      }
+
+      // Función de escape para CSV
+      const escaparCsv = (texto) => {
+        if (!texto) return '""';
+        const stringTexto = String(texto);
+        if (stringTexto.includes(',') || stringTexto.includes('"') || stringTexto.includes('\n')) {
+          return `"${stringTexto.replace(/"/g, '""')}"`;
+        }
+        return stringTexto;
+      };
+
+      const cabeceras = ["Servicio", "Instructor", "Fecha", "Nombre Alumno", "Estado Reserva"];
+      
+      const filas = inscripciones.map(ins => {
+        // Buscar el nombre del usuario en el estado actual
+        const usuario = usuarios.find(u => u.id === ins.usuario_id);
+        const nombreUsuario = usuario ? usuario.nombre : "Usuario Eliminado/Desconocido";
+
+        // Formatear la fecha usando la misma lógica existente
+        let fechaFormat = "Sin fecha";
+        if (ins.fecha_clase) {
+          const d = ins.fecha_clase.toDate ? ins.fecha_clase.toDate() : new Date(ins.fecha_clase);
+          if (!isNaN(d.getTime())) {
+            fechaFormat = d.toLocaleDateString("es-CL", { day: "2-digit", month: "2-digit", year: "numeric" });
+          }
+        }
+
+        return [
+          escaparCsv(ins.tipo_servicio || "Clase"),
+          escaparCsv(ins.instructor || "Staff"),
+          escaparCsv(fechaFormat),
+          escaparCsv(nombreUsuario),
+          escaparCsv(ins.estado || "confirmada")
+        ].join(",");
+      });
+
+      const contenidoCSV = [cabeceras.join(","), ...filas].join("\n");
+      
+      const blob = new Blob(["\uFEFF" + contenidoCSV], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `Historial_Reservas_${new Date().toISOString().split("T")[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      mostrarNotificacion("¡Historial de reservas exportado exitosamente!");
+    } catch (error) {
+      console.error("Error exportando CSV de reservas:", error);
+      mostrarNotificacion("Error al generar el archivo CSV.", true);
+    } finally {
+      setDescargandoReservasCSV(false);
+    }
+  };
+
   // Métricas rápidas
   const totalUsuarios = usuarios.length;
   const totalActivos = usuarios.filter(
@@ -514,6 +580,19 @@ export default function AdminUsuariosTab({ currentUser }) {
         </div>
 
         <div className="admin-header-actions">
+          {/* Botón Descargar Reservas CSV */}
+          <button
+            type="button"
+            onClick={handleDescargarReservasCSV}
+            disabled={descargandoReservasCSV}
+            aria-label="Descargar historial de reservas en formato CSV"
+            className="admin-btn-action admin-btn-action--secondary"
+            style={{ opacity: descargandoReservasCSV ? 0.7 : 1 }}
+          >
+            <span>{descargandoReservasCSV ? "⏳" : "🗓️"}</span>
+            <span>{descargandoReservasCSV ? "Generando..." : "Reservas CSV"}</span>
+          </button>
+
           {/* Botón Descargar Usuarios CSV */}
           <button
             type="button"
