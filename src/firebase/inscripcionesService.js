@@ -1,6 +1,7 @@
 import {
   collection,
   doc,
+  setDoc,
   runTransaction,
   query,
   where,
@@ -281,4 +282,36 @@ export function suscribirMisInscripciones(usuarioId, callback) {
     }
   );
 }
+
+/**
+ * Registra o actualiza la asistencia ("si" | "no") de un alumno en la colección inscripciones.
+ */
+export async function registrarAsistenciaInscripcion({
+  inscripcionId,
+  claseId,
+  usuarioId,
+  asistencia,
+  registradoPor,
+}) {
+  const targetId = inscripcionId || `${claseId}_${usuarioId}`;
+  const inscripcionRef = doc(db, "inscripciones", targetId);
+
+  await setDoc(
+    inscripcionRef,
+    {
+      clase_id: claseId,
+      usuario_id: usuarioId,
+      asistencia: asistencia,
+      fecha_asistencia: serverTimestamp(),
+      registrado_por: registradoPor || "staff",
+    },
+    { merge: true }
+  );
+
+  return {
+    success: true,
+    message: `Asistencia registrada como '${asistencia === "si" ? "Sí" : "No"}'.`,
+  };
+}
+
 

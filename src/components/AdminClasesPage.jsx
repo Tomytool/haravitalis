@@ -22,7 +22,7 @@ export default function AdminClasesPage({ currentUser }) {
   // Estado del formulario con los 9 campos solicitados
   const [formData, setFormData] = useState({
     tipo_servicio: "Pilates Reformer",
-    instructor: "Camila Soto",
+    instructor: "Francisco Peña",
     cupo_maximo: 5,
     cupos_disponibles: 5,
     estado: "activa",
@@ -299,7 +299,10 @@ export default function AdminClasesPage({ currentUser }) {
   return (
     <div className="admin-page-container">
       {/* Selector de Pestañas Principal de Administrador */}
-      <nav className="admin-tabs-nav" aria-label="Secciones del panel de administración">
+      <nav
+        className="admin-tabs-nav"
+        aria-label="Secciones del panel de administración"
+      >
         <button
           type="button"
           onClick={() => setTabActiva("clases")}

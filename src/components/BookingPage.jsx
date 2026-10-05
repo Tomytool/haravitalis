@@ -8,6 +8,7 @@ import {
   reservarTerapia,
   suscribirMisInscripciones,
   cancelarReservaCliente,
+  registrarAsistenciaInscripcion,
 } from "../firebase/inscripcionesService";
 import {
   suscribirTodasLasInscripcionesAdmin,
@@ -230,13 +231,17 @@ export default function BookingPage({ currentUser }) {
     return () => unsubscribe();
   }, [currentUser]);
 
-  // Modo Administrador: escuchar inscripciones y mapa de usuarios para mostrar asistencia
+  // Modo Staff (Admin / Instructor): escuchar inscripciones y mapa de usuarios para mostrar asistencia
   const esAdmin = currentUser?.rol === "admin" || currentUser?.isAdmin === true;
+  const esInstructor = currentUser?.rol === "instructor";
+  const esStaff = esAdmin || esInstructor;
+
   const [todasLasInscripciones, setTodasLasInscripciones] = useState([]);
   const [usuariosMap, setUsuariosMap] = useState({});
+  const [loadingAsistenciaKey, setLoadingAsistenciaKey] = useState(null);
 
   useEffect(() => {
-    if (!esAdmin) return;
+    if (!esStaff) return;
 
     const unsubInscripciones = suscribirTodasLasInscripcionesAdmin(
       (listaInscripciones) => {
@@ -256,11 +261,11 @@ export default function BookingPage({ currentUser }) {
       unsubInscripciones();
       unsubUsuarios();
     };
-  }, [esAdmin]);
+  }, [esStaff]);
 
   // Helper para obtener la lista de personas inscritas a una clase o terapia específica
   const obtenerInscritosParaItem = (itemId, inscritosIds = []) => {
-    if (!esAdmin) return [];
+    if (!esStaff) return [];
 
     const inscripcionesItem = todasLasInscripciones.filter(
       (ins) => ins.clase_id === itemId && ins.estado === "confirmada",
@@ -273,20 +278,55 @@ export default function BookingPage({ currentUser }) {
         nombre:
           usuariosMap[ins.usuario_id] || ins.nombre_usuario || "Usuario",
         email: ins.email || "",
+        asistencia: ins.asistencia || null,
       }));
     }
 
     if (inscritosIds && inscritosIds.length > 0) {
-      return inscritosIds.map((uid) => ({
-        id: uid,
-        usuarioId: uid,
-        nombre: usuariosMap[uid] || "Usuario",
-        email: "",
-      }));
+      return inscritosIds.map((uid) => {
+        const insEncontrada = todasLasInscripciones.find(
+          (i) => i.clase_id === itemId && i.usuario_id === uid,
+        );
+        return {
+          id: insEncontrada?.id || `${itemId}_${uid}`,
+          usuarioId: uid,
+          nombre: usuariosMap[uid] || "Usuario",
+          email: "",
+          asistencia: insEncontrada?.asistencia || null,
+        };
+      });
     }
 
     return [];
   };
+
+  // Manejar el registro de asistencia (Sí / No)
+  const handleMarcarAsistencia = async (claseId, usuarioId, inscripcionId, valorAsistencia) => {
+    const key = `${claseId}_${usuarioId}`;
+    setLoadingAsistenciaKey(key);
+    try {
+      const resp = await registrarAsistenciaInscripcion({
+        inscripcionId,
+        claseId,
+        usuarioId,
+        asistencia: valorAsistencia,
+        registradoPor: currentUser?.uid || currentUser?.email || "staff",
+      });
+      setNotification({
+        message: resp.message,
+        error: false,
+      });
+    } catch (err) {
+      console.error("Error al registrar asistencia:", err);
+      setNotification({
+        message: "Error al registrar la asistencia: " + (err.message || "Error desconocido"),
+        error: true,
+      });
+    } finally {
+      setLoadingAsistenciaKey(null);
+    }
+  };
+
 
   // Manejar reserva de Clases de Pilates Reformer
   const handleReservarClase = async (clase) => {
@@ -835,10 +875,11 @@ export default function BookingPage({ currentUser }) {
                         (1000 * 60 * 60)
                       : 0;
                     const sePuedeAnular = horasHastaInicio >= 15;
+                    const permiteAsistencia = !fechaInicioObj || horasHastaInicio <= 1;
 
                     const horaInicioStr = formatearHora(clase.fecha_inicio);
                     const horaFinStr = formatearHora(clase.fecha_fin);
-                    const inscritosClase = esAdmin
+                    const inscritosClase = esStaff
                       ? obtenerInscritosParaItem(clase.id, clase.inscritos_ids)
                       : [];
 
@@ -873,12 +914,12 @@ export default function BookingPage({ currentUser }) {
                               </span>
                             </div>
 
-                            {/* Panel Exclusivo de Administrador: Alumnos con Reserva */}
-                            {esAdmin && (
+                            {/* Panel Exclusivo de Staff (Admin e Instructor): Alumnos con Reserva y Asistencia */}
+                            {esStaff && (
                               <div className="admin-roster-box">
                                 <div className="admin-roster-header">
                                   <span className="admin-roster-badge">
-                                    🛡️ Admin
+                                    {esAdmin ? "🛡️ Admin" : "📋 Instructor"}
                                   </span>
                                   <span className="admin-roster-count">
                                     Inscritos: <strong>{inscritosClase.length}</strong>
@@ -886,27 +927,60 @@ export default function BookingPage({ currentUser }) {
                                       ? ` / ${clase.cupos_totales}`
                                       : ""}
                                   </span>
+                                  {!permiteAsistencia && (
+                                    <span className="asistencia-time-notice" title="Los botones de asistencia se activan 1 hora antes de la clase">
+                                      ⏳ Asistencia disponible 1h antes
+                                    </span>
+                                  )}
                                 </div>
                                 {inscritosClase.length > 0 ? (
                                   <div className="admin-roster-list">
-                                    {inscritosClase.map((alumno, idx) => (
-                                      <span
-                                        key={alumno.id || idx}
-                                        className="admin-alumno-chip"
-                                        title={
-                                          alumno.email
-                                            ? `${alumno.nombre} (${alumno.email})`
-                                            : alumno.nombre
-                                        }
-                                      >
-                                        <span className="admin-alumno-avatar">
-                                          {alumno.nombre.charAt(0).toUpperCase()}
-                                        </span>
-                                        <span className="admin-alumno-nombre">
-                                          {alumno.nombre}
-                                        </span>
-                                      </span>
-                                    ))}
+                                    {inscritosClase.map((alumno, idx) => {
+                                      const keyLoading = `${clase.id}_${alumno.usuarioId}`;
+                                      const isLoadingThis = loadingAsistenciaKey === keyLoading;
+                                      return (
+                                        <div
+                                          key={alumno.id || idx}
+                                          className={`admin-alumno-chip ${alumno.asistencia === "si" ? "asistencia-si" : alumno.asistencia === "no" ? "asistencia-no" : ""}`}
+                                          title={
+                                            alumno.email
+                                              ? `${alumno.nombre} (${alumno.email})`
+                                              : alumno.nombre
+                                          }
+                                        >
+                                          <span className="admin-alumno-avatar">
+                                            {alumno.nombre.charAt(0).toUpperCase()}
+                                          </span>
+                                          <span className="admin-alumno-nombre">
+                                            {alumno.nombre}
+                                          </span>
+
+                                          {/* Botones de Asistencia Sí / No (Solo visible 1 hora antes de la clase) */}
+                                          {permiteAsistencia && (
+                                            <div className="asistencia-buttons-container">
+                                              <button
+                                                type="button"
+                                                disabled={isLoadingThis}
+                                                onClick={() => handleMarcarAsistencia(clase.id, alumno.usuarioId, alumno.id, "si")}
+                                                className={`asistencia-btn asistencia-btn-si ${alumno.asistencia === "si" ? "active" : ""}`}
+                                                title="Marcar Asistió (Sí)"
+                                              >
+                                                {isLoadingThis && alumno.asistencia !== "si" ? "..." : "✓ Sí"}
+                                              </button>
+                                              <button
+                                                type="button"
+                                                disabled={isLoadingThis}
+                                                onClick={() => handleMarcarAsistencia(clase.id, alumno.usuarioId, alumno.id, "no")}
+                                                className={`asistencia-btn asistencia-btn-no ${alumno.asistencia === "no" ? "active" : ""}`}
+                                                title="Marcar Faltó (No)"
+                                              >
+                                                {isLoadingThis && alumno.asistencia !== "no" ? "..." : "✕ No"}
+                                              </button>
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                 ) : (
                                   <span className="admin-roster-empty">
@@ -1061,10 +1135,11 @@ export default function BookingPage({ currentUser }) {
                         (1000 * 60 * 60)
                       : 0;
                     const sePuedeAnular = horasHastaInicio >= 15;
+                    const permiteAsistencia = !fechaInicioObj || horasHastaInicio <= 1;
 
                     const horaInicioStr = formatearHora(terapia.fecha_inicio);
                     const horaFinStr = formatearHora(terapia.fecha_fin);
-                    const inscritosTerapia = esAdmin
+                    const inscritosTerapia = esStaff
                       ? obtenerInscritosParaItem(terapia.id, terapia.inscritos_ids)
                       : [];
 
@@ -1149,12 +1224,12 @@ export default function BookingPage({ currentUser }) {
                               </span>
                             </div>
 
-                            {/* Panel Exclusivo de Administrador: Paciente / Alumno con Reserva */}
-                            {esAdmin && (
+                            {/* Panel Exclusivo de Staff: Paciente / Alumno con Reserva y Asistencia */}
+                            {esStaff && (
                               <div className="admin-roster-box admin-roster-terapia">
                                 <div className="admin-roster-header">
                                   <span className="admin-roster-badge badge-admin-terapia">
-                                    🛡️ Admin
+                                    {esAdmin ? "🛡️ Admin" : "📋 Instructor"}
                                   </span>
                                   <span className="admin-roster-count">
                                     Paciente reservado: <strong>{inscritosTerapia.length}</strong>
@@ -1162,27 +1237,60 @@ export default function BookingPage({ currentUser }) {
                                       ? ` / ${terapia.cupos_totales}`
                                       : ` / ${terapia.cupos_disponibles ?? 1}`}
                                   </span>
+                                  {!permiteAsistencia && (
+                                    <span className="asistencia-time-notice" title="Los botones de asistencia se activan 1 hora antes de la sesión">
+                                      ⏳ Asistencia disponible 1h antes
+                                    </span>
+                                  )}
                                 </div>
                                 {inscritosTerapia.length > 0 ? (
                                   <div className="admin-roster-list">
-                                    {inscritosTerapia.map((paciente, idx) => (
-                                      <span
-                                        key={paciente.id || idx}
-                                        className="admin-alumno-chip chip-terapia"
-                                        title={
-                                          paciente.email
-                                            ? `${paciente.nombre} (${paciente.email})`
-                                            : paciente.nombre
-                                        }
-                                      >
-                                        <span className="admin-alumno-avatar avatar-terapia">
-                                          {paciente.nombre.charAt(0).toUpperCase()}
-                                        </span>
-                                        <span className="admin-alumno-nombre">
-                                          {paciente.nombre}
-                                        </span>
-                                      </span>
-                                    ))}
+                                    {inscritosTerapia.map((paciente, idx) => {
+                                      const keyLoading = `${terapia.id}_${paciente.usuarioId}`;
+                                      const isLoadingThis = loadingAsistenciaKey === keyLoading;
+                                      return (
+                                        <div
+                                          key={paciente.id || idx}
+                                          className={`admin-alumno-chip chip-terapia ${paciente.asistencia === "si" ? "asistencia-si" : paciente.asistencia === "no" ? "asistencia-no" : ""}`}
+                                          title={
+                                            paciente.email
+                                              ? `${paciente.nombre} (${paciente.email})`
+                                              : paciente.nombre
+                                          }
+                                        >
+                                          <span className="admin-alumno-avatar avatar-terapia">
+                                            {paciente.nombre.charAt(0).toUpperCase()}
+                                          </span>
+                                          <span className="admin-alumno-nombre">
+                                            {paciente.nombre}
+                                          </span>
+
+                                          {/* Botones de Asistencia Sí / No (Solo visible 1 hora antes de la sesión) */}
+                                          {permiteAsistencia && (
+                                            <div className="asistencia-buttons-container">
+                                              <button
+                                                type="button"
+                                                disabled={isLoadingThis}
+                                                onClick={() => handleMarcarAsistencia(terapia.id, paciente.usuarioId, paciente.id, "si")}
+                                                className={`asistencia-btn asistencia-btn-si ${paciente.asistencia === "si" ? "active" : ""}`}
+                                                title="Marcar Asistió (Sí)"
+                                              >
+                                                {isLoadingThis && paciente.asistencia !== "si" ? "..." : "✓ Sí"}
+                                              </button>
+                                              <button
+                                                type="button"
+                                                disabled={isLoadingThis}
+                                                onClick={() => handleMarcarAsistencia(terapia.id, paciente.usuarioId, paciente.id, "no")}
+                                                className={`asistencia-btn asistencia-btn-no ${paciente.asistencia === "no" ? "active" : ""}`}
+                                                title="Marcar Faltó (No)"
+                                              >
+                                                {isLoadingThis && paciente.asistencia !== "no" ? "..." : "✕ No"}
+                                              </button>
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                 ) : (
                                   <span className="admin-roster-empty">

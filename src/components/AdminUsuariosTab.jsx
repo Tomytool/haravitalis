@@ -444,7 +444,7 @@ export default function AdminUsuariosTab({ currentUser }) {
         return stringTexto;
       };
 
-      const cabeceras = ["Servicio", "Instructor", "Fecha", "Nombre Alumno", "Estado Reserva"];
+      const cabeceras = ["Servicio", "Instructor", "Fecha", "Nombre Alumno", "Estado Reserva", "Asistencia"];
       
       const filas = inscripciones.map(ins => {
         // Buscar el nombre del usuario en el estado actual
@@ -460,12 +460,19 @@ export default function AdminUsuariosTab({ currentUser }) {
           }
         }
 
+        const asistenciaFormat = ins.asistencia === "si"
+          ? "Sí (Asistió)"
+          : ins.asistencia === "no"
+            ? "No (Ausente)"
+            : "Sin registrar";
+
         return [
           escaparCsv(ins.tipo_servicio || "Clase"),
           escaparCsv(ins.instructor || "Staff"),
           escaparCsv(fechaFormat),
           escaparCsv(nombreUsuario),
-          escaparCsv(ins.estado || "confirmada")
+          escaparCsv(ins.estado || "confirmada"),
+          escaparCsv(asistenciaFormat)
         ].join(",");
       });
 

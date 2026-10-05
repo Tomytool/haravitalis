@@ -5929,6 +5929,86 @@ h1, h2, h3, h4, h5, h6 {
   line-height: 1.2;
 }
 
+/* Estilos de botones e indicadores de Asistencia */
+.admin-alumno-chip.asistencia-si {
+  background-color: #F0FDF4;
+  border-color: #86EFAC;
+}
+
+.admin-alumno-chip.asistencia-no {
+  background-color: #FEF2F2;
+  border-color: #FCA5A5;
+}
+
+.asistencia-buttons-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: 0.35rem;
+}
+
+.asistencia-btn {
+  border: 1px solid #CBD5E1;
+  background-color: #F8FAFC;
+  color: #475569;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.15rem 0.4rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1;
+  user-select: none;
+}
+
+.asistencia-btn:hover:not(:disabled) {
+  transform: scale(1.05);
+}
+
+.asistencia-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.asistencia-btn-si.active {
+  background-color: #16A34A;
+  color: #FFFFFF;
+  border-color: #15803D;
+  box-shadow: 0 1px 3px rgba(22, 163, 74, 0.3);
+}
+
+.asistencia-btn-si:hover:not(.active):not(:disabled) {
+  background-color: #DCFCE7;
+  color: #15803D;
+  border-color: #86EFAC;
+}
+
+.asistencia-btn-no.active {
+  background-color: #DC2626;
+  color: #FFFFFF;
+  border-color: #B91C1C;
+  box-shadow: 0 1px 3px rgba(220, 38, 38, 0.3);
+}
+
+.asistencia-btn-no:hover:not(.active):not(:disabled) {
+  background-color: #FEE2E2;
+  color: #991B1B;
+  border-color: #FCA5A5;
+}
+
+.asistencia-time-notice {
+  font-size: 0.72rem;
+  color: #64748B;
+  background-color: #F1F5F9;
+  border: 1px dashed #CBD5E1;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  margin-left: auto;
+  font-weight: 500;
+}
+
+
+
 .admin-roster-empty {
   font-size: 0.75rem;
   color: #94A3B8;
