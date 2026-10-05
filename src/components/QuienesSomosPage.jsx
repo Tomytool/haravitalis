@@ -1,7 +1,7 @@
 import imagenStudio from "/pilates-studio.jpg";
-import imagenElena from "/instructor_elena.jpg";
-import imagenCarlos from "/instructor_carlos.jpg";
-import imagenSofia from "/instructor_sofia.jpg";
+import imagenMarcela from "/instructor_marcela.jpg";
+import imagenFrancisco from "/instructor_francisco.jpg";
+import imagenCarolina from "/instructor_carolina.jpg";
 import imagenOrlando from "/contacto_orlando.jpeg";
 
 export default function QuienesSomosPage({
@@ -19,24 +19,11 @@ export default function QuienesSomosPage({
 
   const equipoEspecialistas = [
     {
-      id: "elena",
-      nombre: "Elena M.",
-      rol: "Instructora Senior de Reformer & Biomecánica",
-      categoria: "pilates",
-      imagen: imagenElena,
-      bio: "Especialista en alineación corporal y control de centro (Hara). Cuenta con más de 7 años de experiencia guiando sesiones personalizadas de Reformer.",
-      especialidades: [
-        "Reformer Essentials",
-        "Corrección Postural",
-        "Alineación Articular",
-      ],
-    },
-    {
-      id: "carlos",
-      nombre: "Carlos G.",
+      id: "francisco",
+      nombre: "Francisco Peña",
       rol: "Instructor de Reformer Flow & Fuerza Consciente",
       categoria: "pilates",
-      imagen: imagenCarlos,
+      imagen: imagenFrancisco,
       bio: "Enfocado en el desarrollo de la resistencia muscular y la fluidez del movimiento sin sobrecarga articular ni estrés mecánico.",
       especialidades: [
         "Flow & Strength",
@@ -45,11 +32,25 @@ export default function QuienesSomosPage({
       ],
     },
     {
-      id: "sofia",
-      nombre: "Sofía R.",
+      id: "marcela",
+      nombre: "Marcela Rendic",
+      rol: "Instructora Senior de Reformer & Biomecánica",
+      categoria: "pilates",
+      imagen: imagenMarcela,
+      bio: "Especialista en alineación corporal y control de centro (Hara). Cuenta con más de 7 años de experiencia guiando sesiones personalizadas de Reformer.",
+      especialidades: [
+        "Reformer Essentials",
+        "Corrección Postural",
+        "Alineación Articular",
+      ],
+    },
+
+    {
+      id: "carolina",
+      nombre: "Carolina Escobilla",
       rol: "Instructora de Pilates Postural & Reeducación Física",
       categoria: "pilates",
-      imagen: imagenSofia,
+      imagen: imagenCarolina,
       bio: "Apasionada por la reeducación postural global y el fortalecimiento consciente del núcleo para prevenir lesiones cotidianas.",
       especialidades: [
         "Postural Pilates",
@@ -59,7 +60,7 @@ export default function QuienesSomosPage({
     },
     {
       id: "orlando",
-      nombre: "Orlando S.",
+      nombre: "Orlando Avila",
       rol: "Encargado de Terapias Integrativas & MTC",
       categoria: "terapias",
       imagen: imagenOrlando,
