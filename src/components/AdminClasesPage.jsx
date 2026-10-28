@@ -7,6 +7,22 @@ import {
 } from "../firebase/clasesService";
 import AdminUsuariosTab from "./AdminUsuariosTab";
 import AdminTerapiasTab from "./AdminTerapiasTab";
+import AdminCargaMasivaModal from "./AdminCargaMasivaModal";
+import AdminPagination from "./AdminPagination";
+
+// Función pura auxiliar para obtener el timestamp numérico en milisegundos de una fecha de Firestore o Date
+function obtenerTimestampFecha(val) {
+  if (!val) return 0;
+  if (typeof val.toDate === "function") {
+    const d = val.toDate();
+    return isNaN(d.getTime()) ? 0 : d.getTime();
+  }
+  if (typeof val.seconds === "number") {
+    return val.seconds * 1000;
+  }
+  const d = new Date(val);
+  return isNaN(d.getTime()) ? 0 : d.getTime();
+}
 
 export default function AdminClasesPage({ currentUser }) {
   const [tabActiva, setTabActiva] = useState("clases"); // 'clases' | 'terapias' | 'usuarios'
@@ -14,9 +30,12 @@ export default function AdminClasesPage({ currentUser }) {
   const [cargando, setCargando] = useState(true);
   const [busqueda, setBusqueda] = useState("");
   const [filtroEstado, setFiltroEstado] = useState("todas");
+  const [ordenFecha, setOrdenFecha] = useState("asc"); // 'asc' (menor a mayor) | 'desc' (mayor a menor)
+  const [paginaActual, setPaginaActual] = useState(1);
 
   // Modal de formulario (Crear / Editar)
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCargaMasivaOpen, setIsCargaMasivaOpen] = useState(false);
   const [claseEditando, setClaseEditando] = useState(null); // null = crear nueva
 
   // Estado del formulario con los 9 campos solicitados
@@ -42,7 +61,7 @@ export default function AdminClasesPage({ currentUser }) {
 
   // Bloqueo de scroll en el body al abrir cualquier modal
   useEffect(() => {
-    if (isModalOpen || confirmDeleteId !== null) {
+    if (isModalOpen || confirmDeleteId !== null || isCargaMasivaOpen) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
@@ -50,7 +69,7 @@ export default function AdminClasesPage({ currentUser }) {
     return () => {
       document.body.style.overflow = "";
     };
-  }, [isModalOpen, confirmDeleteId]);
+  }, [isModalOpen, confirmDeleteId, isCargaMasivaOpen]);
 
   // Cierre con la tecla Escape
   useEffect(() => {
@@ -135,7 +154,7 @@ export default function AdminClasesPage({ currentUser }) {
     setClaseEditando(null);
     setFormData({
       tipo_servicio: "Pilates Reformer",
-      instructor: "Camila Soto",
+      instructor: "",
       cupo_maximo: 5,
       cupos_disponibles: 5,
       estado: "activa",
@@ -286,6 +305,12 @@ export default function AdminClasesPage({ currentUser }) {
     );
   }
 
+  // Alternar ordenamiento por fecha (menor a mayor / mayor a menor) y reiniciar paginación
+  const handleToggleOrdenFecha = () => {
+    setOrdenFecha((prev) => (prev === "asc" ? "desc" : "asc"));
+    setPaginaActual(1);
+  };
+
   // Filtrado de clases
   const clasesFiltradas = clases.filter((c) => {
     const coincideTexto =
@@ -295,6 +320,19 @@ export default function AdminClasesPage({ currentUser }) {
       filtroEstado === "todas" || c.estado === filtroEstado;
     return coincideTexto && coincideEstado;
   });
+
+  // Ordenamiento inmutable por fecha_inicio (por defecto 'asc': de menor a mayor)
+  const clasesOrdenadas = clasesFiltradas.toSorted((a, b) => {
+    const tiempoA = obtenerTimestampFecha(a.fecha_inicio);
+    const tiempoB = obtenerTimestampFecha(b.fecha_inicio);
+    return ordenFecha === "asc" ? tiempoA - tiempoB : tiempoB - tiempoA;
+  });
+
+  // Segmentación a 10 clases por página
+  const clasesPaginadas = clasesOrdenadas.slice(
+    (paginaActual - 1) * 10,
+    paginaActual * 10
+  );
 
   return (
     <div className="admin-page-container">
@@ -406,7 +444,30 @@ export default function AdminClasesPage({ currentUser }) {
               </h1>
             </div>
 
-            <div className="admin-header-actions">
+            <div className="admin-header-actions" style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+              <button
+                type="button"
+                onClick={() => setIsCargaMasivaOpen(true)}
+                className="admin-btn-action"
+                style={{
+                  backgroundColor: "#CED0F2",
+                  color: "#253B59",
+                  border: "none",
+                  borderRadius: "9999px",
+                  padding: "0.6rem 1.25rem",
+                  fontWeight: "700",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  cursor: "pointer",
+                  boxShadow: "0 2px 8px rgba(37, 59, 89, 0.12)",
+                  minHeight: "44px",
+                }}
+              >
+                <span>📊</span>
+                <span>Carga Masiva Excel</span>
+              </button>
+
               <button
                 type="button"
                 onClick={handleAbrirCrear}
@@ -418,7 +479,7 @@ export default function AdminClasesPage({ currentUser }) {
             </div>
           </div>
 
-          {/* Barra de Búsqueda y Filtros */}
+          {/* Barra de Búsqueda, Filtros y Ordenamiento */}
           <div className="admin-filter-bar">
             <div style={{ width: "100%" }}>
               <input
@@ -426,24 +487,52 @@ export default function AdminClasesPage({ currentUser }) {
                 placeholder="🔍 Buscar por instructor o servicio..."
                 aria-label="Buscar clases por instructor o servicio"
                 value={busqueda}
-                onChange={(e) => setBusqueda(e.target.value)}
+                onChange={(e) => {
+                  setBusqueda(e.target.value);
+                  setPaginaActual(1);
+                }}
                 className="admin-filter-input"
               />
             </div>
 
-            <div className="admin-filter-chips">
-              {["todas", "activa", "inactiva", "completada", "cancelada"].map(
-                (est) => (
-                  <button
-                    key={est}
-                    type="button"
-                    onClick={() => setFiltroEstado(est)}
-                    className={`admin-filter-chip ${filtroEstado === est ? "admin-filter-chip--active" : "admin-filter-chip--inactive"}`}
-                  >
-                    {est}
-                  </button>
-                ),
-              )}
+            <div className="admin-filter-controls-row">
+              <div className="admin-filter-chips">
+                {["todas", "activa", "inactiva", "completada", "cancelada"].map(
+                  (est) => (
+                    <button
+                      key={est}
+                      type="button"
+                      onClick={() => {
+                        setFiltroEstado(est);
+                        setPaginaActual(1);
+                      }}
+                      className={`admin-filter-chip ${filtroEstado === est ? "admin-filter-chip--active" : "admin-filter-chip--inactive"}`}
+                    >
+                      {est}
+                    </button>
+                  ),
+                )}
+              </div>
+
+              <div className="admin-sort-control">
+                <button
+                  type="button"
+                  onClick={handleToggleOrdenFecha}
+                  className="admin-sort-btn"
+                  aria-label={`Ordenar por fecha: actualmente de ${ordenFecha === "asc" ? "menor a mayor" : "mayor a menor"}. Clic para cambiar orden.`}
+                >
+                  <span aria-hidden="true">📅</span>
+                  <span>
+                    Fecha:{" "}
+                    <strong>
+                      {ordenFecha === "asc" ? "Menor a mayor" : "Mayor a menor"}
+                    </strong>
+                  </span>
+                  <span className="admin-sort-btn__icon" aria-hidden="true">
+                    {ordenFecha === "asc" ? "↑" : "↓"}
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -502,8 +591,30 @@ export default function AdminClasesPage({ currentUser }) {
                         <th style={{ padding: "1rem" }}>
                           Servicio & Instructor
                         </th>
-                        <th style={{ padding: "1rem" }}>
-                          Horario (Inicio - Fin)
+                        <th
+                          style={{ padding: "1rem" }}
+                          aria-sort={
+                            ordenFecha === "asc" ? "ascending" : "descending"
+                          }
+                        >
+                          <button
+                            type="button"
+                            onClick={handleToggleOrdenFecha}
+                            className="admin-th-sort-btn"
+                            title={
+                              ordenFecha === "asc"
+                                ? "Ordenado de menor a mayor fecha (clic para invertir)"
+                                : "Ordenado de mayor a menor fecha (clic para invertir)"
+                            }
+                          >
+                            <span>Horario (Inicio - Fin)</span>
+                            <span
+                              className="admin-th-sort-btn__badge"
+                              aria-hidden="true"
+                            >
+                              {ordenFecha === "asc" ? "↑ Asc" : "↓ Desc"}
+                            </span>
+                          </button>
                         </th>
                         <th style={{ padding: "1rem" }}>Cupos</th>
                         <th style={{ padding: "1rem" }}>Estado</th>
@@ -514,7 +625,7 @@ export default function AdminClasesPage({ currentUser }) {
                       </tr>
                     </thead>
                     <tbody>
-                      {clasesFiltradas.map((c) => {
+                      {clasesPaginadas.map((c) => {
                         const estadoColor =
                           c.estado === "activa"
                             ? { bg: "#DCFCE7", text: "#15803D" }
@@ -659,7 +770,7 @@ export default function AdminClasesPage({ currentUser }) {
 
                 {/* 2. VISTA TARJETAS (MOBILE PORTRAIT / LANDSCAPE) */}
                 <div className="admin-cards-mobile">
-                  {clasesFiltradas.map((c) => {
+                  {clasesPaginadas.map((c) => {
                     const estadoColor =
                       c.estado === "activa"
                         ? { bg: "#DCFCE7", text: "#15803D" }
@@ -775,6 +886,15 @@ export default function AdminClasesPage({ currentUser }) {
                     );
                   })}
                 </div>
+
+                {/* Controles de Paginación de 10 Clases */}
+                <AdminPagination
+                  paginaActual={paginaActual}
+                  totalElementos={clasesFiltradas.length}
+                  elementosPorPagina={10}
+                  onCambiarPagina={(nuevaPagina) => setPaginaActual(nuevaPagina)}
+                  etiquetaItem="clases"
+                />
               </>
             )}
           </div>
@@ -834,6 +954,73 @@ export default function AdminClasesPage({ currentUser }) {
                     gap: "1.1rem",
                   }}
                 >
+                  {/* Banner de acceso a Carga Masiva vía Excel dentro del formulario Crear Nueva Clase */}
+                  {!claseEditando && (
+                    <div
+                      style={{
+                        backgroundColor: "#F8FAFC",
+                        border: "1px dashed #CBD5E1",
+                        borderRadius: "14px",
+                        padding: "0.85rem 1.15rem",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        flexWrap: "wrap",
+                        gap: "0.75rem",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+                        <span style={{ fontSize: "1.35rem" }}>📊</span>
+                        <div>
+                          <p
+                            style={{
+                              margin: 0,
+                              fontWeight: "700",
+                              fontSize: "0.875rem",
+                              color: "#253B59",
+                            }}
+                          >
+                            ¿Tienes varias clases por registrar?
+                          </p>
+                          <p
+                            style={{
+                              margin: 0,
+                              fontSize: "0.775rem",
+                              color: "#64748B",
+                            }}
+                          >
+                            Carga un archivo Excel con la plantilla oficial y súbelas en lote a Firebase.
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsModalOpen(false);
+                          setIsCargaMasivaOpen(true);
+                        }}
+                        style={{
+                          backgroundColor: "#253B59",
+                          color: "#FFFFFF",
+                          border: "none",
+                          borderRadius: "9999px",
+                          padding: "0.55rem 1.15rem",
+                          fontSize: "0.825rem",
+                          fontWeight: "700",
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "0.45rem",
+                          minHeight: "38px",
+                          boxShadow: "0 2px 8px rgba(37, 59, 89, 0.2)",
+                        }}
+                      >
+                        <span>📂</span>
+                        <span>Cargar desde Excel</span>
+                      </button>
+                    </div>
+                  )}
+
                   {/* 1. Tipo de Servicio & 2. Instructor */}
                   <div className="admin-form-grid-2">
                     <div>
@@ -883,9 +1070,8 @@ export default function AdminClasesPage({ currentUser }) {
                       >
                         Instructor
                       </label>
-                      <input
+                      <select
                         id="admin-instructor"
-                        type="text"
                         required
                         value={formData.instructor}
                         onChange={(e) =>
@@ -899,9 +1085,20 @@ export default function AdminClasesPage({ currentUser }) {
                           padding: "0.75rem",
                           borderRadius: "10px",
                           border: "1px solid #CBD5E1",
+                          backgroundColor: "#FFFFFF",
+                          color: "#253B59",
+                          fontSize: "0.875rem",
+                          minHeight: "44px",
+                          cursor: "pointer",
                         }}
-                        placeholder="ej. Camila Soto"
-                      />
+                      >
+                        <option value="" disabled>
+                          Selecciona un instructor...
+                        </option>
+                        <option value="Francisco Peña">Francisco Peña</option>
+                        <option value="Carolina Escobillana">Carolina Escobillana</option>
+                        <option value="Marcela Rendic">Marcela Rendic</option>
+                      </select>
                     </div>
                   </div>
 
@@ -1340,6 +1537,19 @@ export default function AdminClasesPage({ currentUser }) {
               </div>
             </div>
           )}
+
+          {/* Modal de Carga Masiva desde Excel */}
+          <AdminCargaMasivaModal
+            isOpen={isCargaMasivaOpen}
+            onClose={() => setIsCargaMasivaOpen(false)}
+            onClasesCargadas={(total) => {
+              setNotification({
+                message: `¡Se cargaron ${total} clases exitosamente a Firebase!`,
+                error: false,
+              });
+              setTimeout(() => setNotification({ message: "", error: false }), 4000);
+            }}
+          />
         </>
       )}
     </div>

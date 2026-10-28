@@ -9,7 +9,8 @@ import {
   addDoc,
   updateDoc,
   deleteDoc,
-  Timestamp
+  Timestamp,
+  writeBatch
 } from "firebase/firestore";
 import { db } from "./config";
 
@@ -42,11 +43,11 @@ export function suscribirClasesPorFecha(fechaInicio, fechaFin, callback) {
 }
 
 /**
- * Escucha todas las clases registradas en Firestore (para el panel de Administración CRUD).
+ * Escucha todas las clases registradas en Firestore ordenadas por fecha de menor a mayor (para el panel de Administración CRUD).
  */
 export function suscribirTodasLasClasesAdmin(callback) {
   const clasesRef = collection(db, "clases");
-  const q = query(clasesRef, orderBy("fecha_inicio", "desc"));
+  const q = query(clasesRef, orderBy("fecha_inicio", "asc"));
 
   return onSnapshot(
     q,
@@ -148,5 +149,57 @@ export async function obtenerClases() {
   const q = query(clasesRef, orderBy("fecha_inicio", "asc"));
   const snapshot = await getDocs(q);
   return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+}
+
+/**
+ * Crea múltiples clases en Firestore de forma masiva utilizando writeBatch en bloques de hasta 450 elementos.
+ * @param {Array<Object>} listaClases - Lista de clases a guardar
+ * @returns {Promise<{ totalCreadas: number, errores: Array<string> }>}
+ */
+export async function crearClasesMasivasAdmin(listaClases) {
+  if (!Array.isArray(listaClases) || listaClases.length === 0) {
+    return { totalCreadas: 0, errores: ["No se encontraron clases válidas para registrar."] };
+  }
+
+  const BATCH_SIZE = 450; // Límite seguro dentro del tope de 500 de Firestore
+  let totalCreadas = 0;
+  const clasesRef = collection(db, "clases");
+  const errores = [];
+
+  for (let i = 0; i < listaClases.length; i += BATCH_SIZE) {
+    const chunk = listaClases.slice(i, i + BATCH_SIZE);
+    const batch = writeBatch(db);
+
+    for (const datosClase of chunk) {
+      const nuevoDocRef = doc(clasesRef);
+      const cupoMax = Number(datosClase.cupo_maximo) || 5;
+      const inscritos = Array.isArray(datosClase.inscritos_ids) ? datosClase.inscritos_ids : [];
+      const cuposDisp = datosClase.cupos_disponibles !== undefined && datosClase.cupos_disponibles !== ""
+        ? Number(datosClase.cupos_disponibles)
+        : Math.max(0, cupoMax - inscritos.length);
+
+      batch.set(nuevoDocRef, {
+        tipo_servicio: datosClase.tipo_servicio || "Pilates Reformer",
+        instructor: datosClase.instructor || "Instructor Asignado",
+        cupo_maximo: cupoMax,
+        cupos_disponibles: cuposDisp,
+        estado: datosClase.estado || "activa",
+        fecha_inicio: toFirestoreTimestamp(datosClase.fecha_inicio),
+        fecha_fin: toFirestoreTimestamp(datosClase.fecha_fin),
+        visible_desde: toFirestoreTimestamp(datosClase.visible_desde || datosClase.fecha_inicio),
+        inscritos_ids: inscritos
+      });
+    }
+
+    try {
+      await batch.commit();
+      totalCreadas += chunk.length;
+    } catch (err) {
+      console.error("Error al ejecutar el lote de clases en Firestore:", err);
+      errores.push(`Error en el bloque ${Math.floor(i / BATCH_SIZE) + 1}: ${err.message}`);
+    }
+  }
+
+  return { totalCreadas, errores };
 }
 

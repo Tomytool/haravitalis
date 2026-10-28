@@ -5,12 +5,14 @@ import {
   actualizarTerapiaAdmin,
   eliminarTerapiaAdmin,
 } from "../firebase/terapiasService";
+import AdminPagination from "./AdminPagination";
 
 export default function AdminTerapiasTab() {
   const [terapias, setTerapias] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [busqueda, setBusqueda] = useState("");
   const [filtroEstado, setFiltroEstado] = useState("todas");
+  const [paginaActual, setPaginaActual] = useState(1);
 
   // Modal de formulario (Crear / Editar)
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -180,6 +182,17 @@ export default function AdminTerapiasTab() {
     return coincideTexto && coincideEstado;
   });
 
+  // Reiniciar a la primera página al cambiar filtros
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [busqueda, filtroEstado]);
+
+  // Segmentación a 10 terapias por página
+  const terapiasPaginadas = terapiasFiltradas.slice(
+    (paginaActual - 1) * 10,
+    paginaActual * 10
+  );
+
   return (
     <div style={{ marginTop: "0.5rem" }}>
       {/* Toast Notification */}
@@ -346,7 +359,7 @@ export default function AdminTerapiasTab() {
                   </tr>
                 </thead>
                 <tbody>
-                  {terapiasFiltradas.map((t) => (
+                  {terapiasPaginadas.map((t) => (
                     <tr key={t.id} style={{ borderBottom: "1px solid #F1F5F9" }}>
                       <td style={{ padding: "1rem" }}>
                         <div style={{ fontWeight: "700", color: "#253B59" }}>
@@ -443,7 +456,7 @@ export default function AdminTerapiasTab() {
 
             {/* 2. VISTA TARJETAS (MOBILE 320PX PORTRAIT) */}
             <div className="admin-cards-mobile">
-              {terapiasFiltradas.map((t) => {
+              {terapiasPaginadas.map((t) => {
                 const estadoColor =
                   t.estado === "activa"
                     ? { bg: "#DCFCE7", text: "#15803D" }
@@ -529,6 +542,15 @@ export default function AdminTerapiasTab() {
                 );
               })}
             </div>
+
+            {/* Controles de Paginación de 10 Terapias */}
+            <AdminPagination
+              paginaActual={paginaActual}
+              totalElementos={terapiasFiltradas.length}
+              elementosPorPagina={10}
+              onCambiarPagina={(nuevaPagina) => setPaginaActual(nuevaPagina)}
+              etiquetaItem="terapias"
+            />
           </>
         )}
       </div>

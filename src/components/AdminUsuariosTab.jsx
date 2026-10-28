@@ -16,6 +16,7 @@ import {
   calcularTarifaAutomatica,
   formatearMonedaCLP,
 } from "../firebase/pagosService";
+import AdminPagination from "./AdminPagination";
 
 export default function AdminUsuariosTab({ currentUser }) {
   const [usuarios, setUsuarios] = useState([]);
@@ -26,6 +27,7 @@ export default function AdminUsuariosTab({ currentUser }) {
   const [busqueda, setBusqueda] = useState("");
   const [filtroRol, setFiltroRol] = useState("todos");
   const [filtroEstado, setFiltroEstado] = useState("todos");
+  const [paginaActual, setPaginaActual] = useState(1);
 
   // Ordenamiento
   const [sortConfig, setSortConfig] = useState({ key: "nombre", direction: "asc" });
@@ -353,6 +355,17 @@ export default function AdminUsuariosTab({ currentUser }) {
     if (valorA > valorB) return sortConfig.direction === "asc" ? 1 : -1;
     return 0;
   });
+
+  // Reiniciar a la primera página al cambiar filtros u ordenamiento
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [busqueda, filtroRol, filtroEstado, sortConfig]);
+
+  // Segmentación a 10 usuarios por página
+  const usuariosPaginados = usuariosOrdenados.slice(
+    (paginaActual - 1) * 10,
+    paginaActual * 10
+  );
 
   const requestSort = (key) => {
     let direction = "asc";
@@ -886,7 +899,7 @@ export default function AdminUsuariosTab({ currentUser }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {usuariosOrdenados.map((usr) => {
+                  {usuariosPaginados.map((usr) => {
                     const userInscripciones = inscripciones.filter(
                       (ins) =>
                         ins.usuario_id === usr.id &&
@@ -1129,7 +1142,7 @@ export default function AdminUsuariosTab({ currentUser }) {
 
             {/* 2. VISTA TARJETAS (MOBILE PORTRAIT / LANDSCAPE) */}
             <div className="admin-cards-mobile">
-              {usuariosOrdenados.map((usr) => {
+              {usuariosPaginados.map((usr) => {
                 const userInscripciones = inscripciones.filter(
                   (ins) =>
                     ins.usuario_id === usr.id && ins.estado === "confirmada",
@@ -1321,6 +1334,15 @@ export default function AdminUsuariosTab({ currentUser }) {
                 );
               })}
             </div>
+
+            {/* Controles de Paginación de 10 Usuarios */}
+            <AdminPagination
+              paginaActual={paginaActual}
+              totalElementos={usuariosOrdenados.length}
+              elementosPorPagina={10}
+              onCambiarPagina={(nuevaPagina) => setPaginaActual(nuevaPagina)}
+              etiquetaItem="usuarios"
+            />
           </>
         )}
       </div>

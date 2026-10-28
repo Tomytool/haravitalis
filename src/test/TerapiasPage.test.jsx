@@ -3,6 +3,10 @@ import userEvent from "@testing-library/user-event";
 import { describe, test, expect, vi } from "vitest";
 import TerapiasPage from "../components/TerapiasPage";
 
+// Mock de imágenes estáticas para el entorno de test en Node/Vitest
+vi.mock("/terapias_holisticas.png", () => ({ default: "terapias_holisticas.png" }));
+vi.mock("/qr-orlando.png", () => ({ default: "qr-orlando.png" }));
+
 // Mock Firebase service subscription to prevent network calls in unit tests
 vi.mock("../firebase/terapiasService", () => ({
   suscribirTerapiasActivas: (callback) => {
