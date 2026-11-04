@@ -87,17 +87,25 @@ export async function actualizarUsuarioAdmin(usuarioId, datosUsuario) {
 
 /**
  * Incrementa o decrementa directamente la cantidad de clases pactadas de un usuario.
+ * Retorna los saldos anterior y nuevo para trazabilidad y auditoría.
  */
 export async function modificarClasesPactadasAdmin(usuarioId, delta) {
   const userRef = doc(db, "usuarios", usuarioId);
-  await runTransaction(db, async (transaction) => {
+  return await runTransaction(db, async (transaction) => {
     const userDoc = await transaction.get(userRef);
     let actuales = 0;
+    let userData = {};
     if (userDoc.exists()) {
-      actuales = userDoc.data().clases_pactadas ?? 0;
+      userData = userDoc.data();
+      actuales = userData.clases_pactadas ?? 0;
     }
     const nuevoTotal = Math.max(0, actuales + delta);
     transaction.set(userRef, { clases_pactadas: nuevoTotal }, { merge: true });
+    return {
+      usuario: { id: usuarioId, ...userData },
+      saldoAnterior: actuales,
+      saldoNuevo: nuevoTotal,
+    };
   });
 }
 

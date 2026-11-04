@@ -153,7 +153,18 @@ export default function AdminUsuariosTab({ currentUser }) {
       return;
     }
     try {
-      await modificarClasesPactadasAdmin(usuarioId, delta);
+      const res = await modificarClasesPactadasAdmin(usuarioId, delta);
+      if (res && res.usuario) {
+        await registrarHistorialPagoAdmin({
+          usuario: res.usuario,
+          admin: currentUser,
+          saldoAnteriorClases: res.saldoAnterior,
+          saldoNuevoClases: res.saldoNuevo,
+          saldoAnteriorTerapias: res.usuario.sesion_terapia ?? 0,
+          saldoNuevoTerapias: res.usuario.sesion_terapia ?? 0,
+          tipoOperacion: delta > 0 ? "aumento_clases_admin" : "disminucion_clases_admin",
+        });
+      }
       mostrarNotificacion(
         `Clases pactadas actualizadas correctamente (${delta > 0 ? "+1" : "-1"}).`,
       );
@@ -1016,13 +1027,42 @@ export default function AdminUsuariosTab({ currentUser }) {
                             style={{
                               display: "inline-flex",
                               alignItems: "center",
-                              gap: "0.4rem",
+                              gap: "0.35rem",
                               backgroundColor: "#F8FAFC",
                               padding: "0.25rem 0.5rem",
                               borderRadius: "10px",
                               border: "1px solid #E2E8F0",
                             }}
                           >
+                            {currentUser?.rol !== "instructor" && (
+                              <button
+                                type="button"
+                                onClick={() => handleModificarClasesPactadas(usr.id, -1)}
+                                disabled={clasesPactadasNum <= 0}
+                                title={clasesPactadasNum <= 0 ? "No se puede disminuir más" : "Disminuir 1 clase"}
+                                aria-label={`Disminuir clases de ${usr.nombre}`}
+                                className="admin-btn-step-count"
+                                style={{
+                                  width: "24px",
+                                  height: "24px",
+                                  borderRadius: "6px",
+                                  border: "1px solid #CBD5E1",
+                                  backgroundColor: clasesPactadasNum <= 0 ? "#F1F5F9" : "#FFFFFF",
+                                  color: clasesPactadasNum <= 0 ? "#94A3B8" : "#991B1B",
+                                  fontWeight: "800",
+                                  fontSize: "0.95rem",
+                                  cursor: clasesPactadasNum <= 0 ? "not-allowed" : "pointer",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  padding: 0,
+                                  lineHeight: 1,
+                                  transition: "all 0.15s ease",
+                                }}
+                              >
+                                −
+                              </button>
+                            )}
                             <span
                               style={{
                                 fontWeight: "800",
@@ -1035,6 +1075,34 @@ export default function AdminUsuariosTab({ currentUser }) {
                             >
                               {clasesPactadasNum}
                             </span>
+                            {currentUser?.rol !== "instructor" && (
+                              <button
+                                type="button"
+                                onClick={() => handleModificarClasesPactadas(usr.id, 1)}
+                                title="Aumentar 1 clase"
+                                aria-label={`Aumentar clases de ${usr.nombre}`}
+                                className="admin-btn-step-count"
+                                style={{
+                                  width: "24px",
+                                  height: "24px",
+                                  borderRadius: "6px",
+                                  border: "1px solid #CBD5E1",
+                                  backgroundColor: "#FFFFFF",
+                                  color: "#15803D",
+                                  fontWeight: "800",
+                                  fontSize: "0.95rem",
+                                  cursor: "pointer",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  padding: 0,
+                                  lineHeight: 1,
+                                  transition: "all 0.15s ease",
+                                }}
+                              >
+                                +
+                              </button>
+                            )}
                           </div>
                         </td>
 
@@ -1257,15 +1325,82 @@ export default function AdminUsuariosTab({ currentUser }) {
                         <span style={{ color: "#64748B" }}>
                           📋 Clases Pactadas:
                         </span>
-                        <span
+                        <div
                           style={{
-                            fontWeight: "800",
-                            color:
-                              clasesPactadasNum > 0 ? "#15803D" : "#B91C1C",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "0.45rem",
+                            backgroundColor: "#F8FAFC",
+                            padding: "0.2rem 0.5rem",
+                            borderRadius: "8px",
+                            border: "1px solid #E2E8F0",
                           }}
                         >
-                          {clasesPactadasNum} clase(s)
-                        </span>
+                          {currentUser?.rol !== "instructor" && (
+                            <button
+                              type="button"
+                              onClick={() => handleModificarClasesPactadas(usr.id, -1)}
+                              disabled={clasesPactadasNum <= 0}
+                              title={clasesPactadasNum <= 0 ? "No se puede disminuir más" : "Disminuir 1 clase"}
+                              aria-label={`Disminuir clases de ${usr.nombre}`}
+                              style={{
+                                width: "28px",
+                                height: "28px",
+                                borderRadius: "6px",
+                                border: "1px solid #CBD5E1",
+                                backgroundColor: clasesPactadasNum <= 0 ? "#F1F5F9" : "#FFFFFF",
+                                color: clasesPactadasNum <= 0 ? "#94A3B8" : "#991B1B",
+                                fontWeight: "800",
+                                fontSize: "1rem",
+                                cursor: clasesPactadasNum <= 0 ? "not-allowed" : "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                padding: 0,
+                                lineHeight: 1,
+                              }}
+                            >
+                              −
+                            </button>
+                          )}
+                          <span
+                            style={{
+                              fontWeight: "800",
+                              color:
+                                clasesPactadasNum > 0 ? "#15803D" : "#B91C1C",
+                              minWidth: "24px",
+                              textAlign: "center",
+                            }}
+                          >
+                            {clasesPactadasNum}
+                          </span>
+                          {currentUser?.rol !== "instructor" && (
+                            <button
+                              type="button"
+                              onClick={() => handleModificarClasesPactadas(usr.id, 1)}
+                              title="Aumentar 1 clase"
+                              aria-label={`Aumentar clases de ${usr.nombre}`}
+                              style={{
+                                width: "28px",
+                                height: "28px",
+                                borderRadius: "6px",
+                                border: "1px solid #CBD5E1",
+                                backgroundColor: "#FFFFFF",
+                                color: "#15803D",
+                                fontWeight: "800",
+                                fontSize: "1rem",
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                padding: 0,
+                                lineHeight: 1,
+                              }}
+                            >
+                              +
+                            </button>
+                          )}
+                        </div>
                       </div>
 
                       <div className="admin-card-row">
@@ -1493,24 +1628,74 @@ export default function AdminUsuariosTab({ currentUser }) {
                   >
                     Clases Pactadas
                   </label>
-                  <select
-                    id="user-form-clases"
-                    value={formData.clases_pactadas}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        clases_pactadas: Number(e.target.value),
-                      })
-                    }
-                    className="admin-input-mobile"
-                    style={{ backgroundColor: "#FFFFFF" }}
-                  >
-                    {[0, 1, 2, 4, 8, 12, 16, 20, 24].map((num) => (
-                      <option key={num} value={num}>
-                        {num} clase(s)
-                      </option>
-                    ))}
-                  </select>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          clases_pactadas: Math.max(0, (Number(prev.clases_pactadas) || 0) - 1),
+                        }))
+                      }
+                      disabled={Number(formData.clases_pactadas) <= 0}
+                      title="Disminuir 1 clase"
+                      aria-label="Disminuir 1 clase"
+                      style={{
+                        padding: "0.55rem 0.75rem",
+                        borderRadius: "8px",
+                        border: "1px solid #CBD5E1",
+                        backgroundColor: Number(formData.clases_pactadas) <= 0 ? "#F1F5F9" : "#FFFFFF",
+                        color: Number(formData.clases_pactadas) <= 0 ? "#94A3B8" : "#991B1B",
+                        fontWeight: "800",
+                        fontSize: "0.95rem",
+                        cursor: Number(formData.clases_pactadas) <= 0 ? "not-allowed" : "pointer",
+                      }}
+                    >
+                      −
+                    </button>
+                    <input
+                      id="user-form-clases"
+                      type="number"
+                      min="0"
+                      value={formData.clases_pactadas}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          clases_pactadas: Math.max(0, Number(e.target.value) || 0),
+                        })
+                      }
+                      className="admin-input-mobile"
+                      style={{
+                        backgroundColor: "#FFFFFF",
+                        textAlign: "center",
+                        fontWeight: "700",
+                        minHeight: "42px",
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          clases_pactadas: (Number(prev.clases_pactadas) || 0) + 1,
+                        }))
+                      }
+                      title="Aumentar 1 clase"
+                      aria-label="Aumentar 1 clase"
+                      style={{
+                        padding: "0.55rem 0.75rem",
+                        borderRadius: "8px",
+                        border: "1px solid #CBD5E1",
+                        backgroundColor: "#FFFFFF",
+                        color: "#15803D",
+                        fontWeight: "800",
+                        fontSize: "0.95rem",
+                        cursor: "pointer",
+                      }}
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
 
                 <div>

@@ -9,6 +9,7 @@ import {
   suscribirMisInscripciones,
   cancelarReservaCliente,
   registrarAsistenciaInscripcion,
+  inscribirUsuarioClaseAdmin,
 } from "../firebase/inscripcionesService";
 import {
   suscribirTodasLasInscripcionesAdmin,
@@ -238,7 +239,38 @@ export default function BookingPage({ currentUser }) {
 
   const [todasLasInscripciones, setTodasLasInscripciones] = useState([]);
   const [usuariosMap, setUsuariosMap] = useState({});
+  const [usuariosLista, setUsuariosLista] = useState([]);
   const [loadingAsistenciaKey, setLoadingAsistenciaKey] = useState(null);
+
+  // Estados para el Modal de Agregar Alumno a una Clase por el Administrador
+  const [claseModalInscribir, setClaseModalInscribir] = useState(null);
+  const [busquedaAlumnoModal, setBusquedaAlumnoModal] = useState("");
+  const [alumnoSeleccionadoId, setAlumnoSeleccionadoId] = useState("");
+  const [descontarSaldoModal, setDescontarSaldoModal] = useState(true);
+  const [guardandoInscripcionAdmin, setGuardandoInscripcionAdmin] = useState(false);
+
+  // Bloqueo de scroll en el body al abrir el modal de inscripción
+  useEffect(() => {
+    if (claseModalInscribir) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [claseModalInscribir]);
+
+  // Cerrar modal con tecla Escape
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && claseModalInscribir) {
+        setClaseModalInscribir(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [claseModalInscribir]);
 
   useEffect(() => {
     if (!esStaff) return;
@@ -250,6 +282,7 @@ export default function BookingPage({ currentUser }) {
     );
 
     const unsubUsuarios = suscribirTodosLosUsuariosAdmin((listaUsuarios) => {
+      setUsuariosLista(listaUsuarios);
       const mapa = {};
       listaUsuarios.forEach((u) => {
         mapa[u.id] = u.nombre || u.email || "Usuario";
@@ -262,6 +295,86 @@ export default function BookingPage({ currentUser }) {
       unsubUsuarios();
     };
   }, [esStaff]);
+
+  // Manejador para abrir el modal de inscripción de alumno a una clase
+  const handleAbrirModalAgregarAlumno = (clase) => {
+    setClaseModalInscribir(clase);
+    setBusquedaAlumnoModal("");
+    setAlumnoSeleccionadoId("");
+    setDescontarSaldoModal(true);
+  };
+
+  // Manejador para confirmar la inscripción del alumno en la clase
+  const handleConfirmarInscribirAlumnoAdmin = async () => {
+    if (!claseModalInscribir || !alumnoSeleccionadoId) {
+      setNotification({
+        message: "Por favor selecciona un alumno para inscribir en la clase.",
+        error: true,
+      });
+      return;
+    }
+
+    const alumno = usuariosLista.find((u) => u.id === alumnoSeleccionadoId);
+    if (!alumno) {
+      setNotification({
+        message: "No se encontró el alumno seleccionado.",
+        error: true,
+      });
+      return;
+    }
+
+    setGuardandoInscripcionAdmin(true);
+    try {
+      const resp = await inscribirUsuarioClaseAdmin({
+        claseId: claseModalInscribir.id,
+        usuarioId: alumno.id,
+        nombreUsuario: alumno.nombre || alumno.email,
+        descontarClase: descontarSaldoModal,
+        adminUid: currentUser?.uid || "admin",
+      });
+
+      setNotification({
+        message: resp.message || `Alumno "${alumno.nombre}" inscrito exitosamente en la clase.`,
+        error: false,
+      });
+      setClaseModalInscribir(null);
+    } catch (err) {
+      console.error("Error al inscribir alumno por admin:", err);
+      setNotification({
+        message: "Error al inscribir alumno: " + (err.message || "Error desconocido"),
+        error: true,
+      });
+    } finally {
+      setGuardandoInscripcionAdmin(false);
+      setTimeout(() => setNotification({ message: "", error: false }), 4500);
+    }
+  };
+
+  // Lista memorizada de alumnos elegibles para inscribir en la clase seleccionada
+  const alumnosElegibles = useMemo(() => {
+    if (!claseModalInscribir || !usuariosLista) return [];
+    const inscritosSet = new Set(claseModalInscribir.inscritos_ids || []);
+    const texto = busquedaAlumnoModal.toLowerCase().trim();
+
+    return usuariosLista
+      .filter((u) => !inscritosSet.has(u.id))
+      .filter((u) => {
+        if (!texto) return true;
+        const nombre = (u.nombre || "").toLowerCase();
+        const email = (u.email || "").toLowerCase();
+        const telefono = (u.telefono || "").toLowerCase();
+        return (
+          nombre.includes(texto) ||
+          email.includes(texto) ||
+          telefono.includes(texto)
+        );
+      });
+  }, [claseModalInscribir, usuariosLista, busquedaAlumnoModal]);
+
+  const alumnoSeleccionado = useMemo(() => {
+    if (!alumnoSeleccionadoId || !usuariosLista) return null;
+    return usuariosLista.find((u) => u.id === alumnoSeleccionadoId) || null;
+  }, [alumnoSeleccionadoId, usuariosLista]);
 
   // Helper para obtener la lista de personas inscritas a una clase o terapia específica
   const obtenerInscritosParaItem = (itemId, inscritosIds = []) => {
@@ -918,19 +1031,40 @@ export default function BookingPage({ currentUser }) {
                             {esStaff && (
                               <div className="admin-roster-box">
                                 <div className="admin-roster-header">
-                                  <span className="admin-roster-badge">
-                                    {esAdmin ? "🛡️ Admin" : "📋 Instructor"}
-                                  </span>
-                                  <span className="admin-roster-count">
-                                    Inscritos: <strong>{inscritosClase.length}</strong>
-                                    {clase.cupos_totales
-                                      ? ` / ${clase.cupos_totales}`
-                                      : ""}
-                                  </span>
-                                  {!permiteAsistencia && (
-                                    <span className="asistencia-time-notice" title="Los botones de asistencia se activan 1 hora antes de la clase">
-                                      ⏳ Asistencia disponible 1h antes
+                                  <div className="admin-roster-header-left">
+                                    <span className="admin-roster-badge">
+                                      {esAdmin ? "🛡️ Admin" : "📋 Instructor"}
                                     </span>
+                                    <span className="admin-roster-count">
+                                      Inscritos: <strong>{inscritosClase.length}</strong>
+                                      {clase.cupos_totales
+                                        ? ` / ${clase.cupos_totales}`
+                                        : ""}
+                                    </span>
+                                    {!permiteAsistencia && (
+                                      <span className="asistencia-time-notice" title="Los botones de asistencia se activan 1 hora antes de la clase">
+                                        ⏳ Asistencia disponible 1h antes
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {/* Botón exclusivo para Administrador: Agregar usuario a la clase */}
+                                  {esAdmin && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleAbrirModalAgregarAlumno(clase)}
+                                      disabled={sinCupos || esInactiva}
+                                      className="btn-admin-add-roster"
+                                      title={
+                                        esInactiva
+                                          ? "Clase inactiva o caducada (no disponible para inscripciones)"
+                                          : sinCupos
+                                            ? "Clase completa (sin cupos disponibles)"
+                                            : "Inscribir un usuario en esta clase"
+                                      }
+                                    >
+                                      <span>+</span> Inscribir Alumno
+                                    </button>
                                   )}
                                 </div>
                                 {inscritosClase.length > 0 ? (
@@ -1387,6 +1521,529 @@ export default function BookingPage({ currentUser }) {
           )}
         </main>
       </div>
+
+      {/* Modal para que el Administrador Inscriba un Alumno a una Clase */}
+      {claseModalInscribir && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-inscribir-titulo"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(37, 59, 89, 0.65)",
+            backdropFilter: "blur(5px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1300,
+            padding: "1rem",
+            animation: "fadeIn 0.2s ease-out",
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !guardandoInscripcionAdmin) {
+              setClaseModalInscribir(null);
+            }
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "#FFFFFF",
+              borderRadius: "20px",
+              maxWidth: "520px",
+              width: "100%",
+              maxHeight: "90vh",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+              boxShadow: "0 25px 50px -12px rgba(37, 59, 89, 0.3)",
+              border: "1px solid #CED0F2",
+            }}
+          >
+            {/* Cabecera del Modal */}
+            <div
+              style={{
+                padding: "1.25rem 1.5rem",
+                borderBottom: "1px solid #E2E8F0",
+                display: "flex",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                backgroundColor: "#F8FAFC",
+              }}
+            >
+              <div>
+                <span
+                  style={{
+                    display: "inline-block",
+                    padding: "0.2rem 0.55rem",
+                    borderRadius: "9999px",
+                    backgroundColor: "#DBEAFE",
+                    color: "#1E40AF",
+                    fontWeight: "700",
+                    fontSize: "0.75rem",
+                    textTransform: "uppercase",
+                    marginBottom: "0.35rem",
+                  }}
+                >
+                  🛡️ Panel Administrador
+                </span>
+                <h2
+                  id="modal-inscribir-titulo"
+                  style={{
+                    fontSize: "1.25rem",
+                    fontWeight: "700",
+                    color: "#253B59",
+                    margin: 0,
+                  }}
+                >
+                  Inscribir Alumno a la Clase
+                </h2>
+                <div
+                  style={{
+                    fontSize: "0.825rem",
+                    color: "#64748B",
+                    marginTop: "0.25rem",
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: "0.5rem",
+                    alignItems: "center",
+                  }}
+                >
+                  <span>
+                    ⏰ {formatearHora(claseModalInscribir.fecha_inicio)} -{" "}
+                    {formatearHora(claseModalInscribir.fecha_fin)}
+                  </span>
+                  <span>•</span>
+                  <span>👤 {claseModalInscribir.instructor || "Camila Soto"}</span>
+                  <span>•</span>
+                  <span
+                    style={{
+                      color:
+                        claseModalInscribir.cupos_disponibles > 0
+                          ? "#15803D"
+                          : "#B91C1C",
+                      fontWeight: "700",
+                    }}
+                  >
+                    {claseModalInscribir.cupos_disponibles} cupo(s) disponible(s)
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setClaseModalInscribir(null)}
+                disabled={guardandoInscripcionAdmin}
+                aria-label="Cerrar ventana modal"
+                style={{
+                  background: "none",
+                  border: "none",
+                  fontSize: "1.4rem",
+                  cursor: "pointer",
+                  color: "#64748B",
+                  padding: "0.25rem",
+                  lineHeight: 1,
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Contenido del Modal */}
+            <div
+              style={{
+                padding: "1.25rem 1.5rem",
+                overflowY: "auto",
+                display: "flex",
+                flexDirection: "column",
+                gap: "1rem",
+              }}
+            >
+              {/* Buscador */}
+              <div>
+                <label
+                  htmlFor="buscador-alumnos-clase"
+                  style={{
+                    display: "block",
+                    fontSize: "0.85rem",
+                    fontWeight: "600",
+                    color: "#253B59",
+                    marginBottom: "0.4rem",
+                  }}
+                >
+                  Buscar Alumno:
+                </label>
+                <div style={{ position: "relative" }}>
+                  <input
+                    id="buscador-alumnos-clase"
+                    type="text"
+                    value={busquedaAlumnoModal}
+                    onChange={(e) => setBusquedaAlumnoModal(e.target.value)}
+                    placeholder="Buscar por nombre o correo electrónico..."
+                    className="admin-input-mobile"
+                    style={{
+                      paddingLeft: "2.25rem",
+                      backgroundColor: "#F8FAFC",
+                      minHeight: "42px",
+                      width: "100%",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                  <span
+                    style={{
+                      position: "absolute",
+                      left: "0.75rem",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      color: "#94A3B8",
+                      fontSize: "0.95rem",
+                    }}
+                  >
+                    🔍
+                  </span>
+                  {busquedaAlumnoModal && (
+                    <button
+                      type="button"
+                      onClick={() => setBusquedaAlumnoModal("")}
+                      style={{
+                        position: "absolute",
+                        right: "0.75rem",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        background: "none",
+                        border: "none",
+                        color: "#94A3B8",
+                        cursor: "pointer",
+                        fontWeight: "700",
+                      }}
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Lista de Alumnos Elegibles */}
+              <div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: "0.4rem",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: "0.8rem",
+                      fontWeight: "700",
+                      color: "#64748B",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.03em",
+                    }}
+                  >
+                    Selecciona un Alumno ({alumnosElegibles.length})
+                  </span>
+                  {alumnoSeleccionado && (
+                    <span
+                      style={{
+                        fontSize: "0.75rem",
+                        color: "#1D4ED8",
+                        fontWeight: "600",
+                      }}
+                    >
+                      ✓ 1 seleccionado
+                    </span>
+                  )}
+                </div>
+
+                <div
+                  style={{
+                    maxHeight: "220px",
+                    overflowY: "auto",
+                    border: "1px solid #E2E8F0",
+                    borderRadius: "12px",
+                    backgroundColor: "#F8FAFC",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.35rem",
+                    padding: "0.5rem",
+                  }}
+                >
+                  {alumnosElegibles.length === 0 ? (
+                    <div
+                      style={{
+                        padding: "1.5rem",
+                        textAlign: "center",
+                        color: "#94A3B8",
+                        fontSize: "0.85rem",
+                      }}
+                    >
+                      {busquedaAlumnoModal
+                        ? "No se encontraron alumnos que coincidan con la búsqueda."
+                        : "No hay más alumnos disponibles para inscribir (todos están inscritos)."}
+                    </div>
+                  ) : (
+                    alumnosElegibles.map((u) => {
+                      const isSelected = alumnoSeleccionadoId === u.id;
+                      const saldo = u.clases_pactadas ?? 0;
+                      const iniciales = (u.nombre || "U")
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase()
+                        .slice(0, 2);
+
+                      return (
+                        <div
+                          key={u.id}
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => setAlumnoSeleccionadoId(u.id)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              setAlumnoSeleccionadoId(u.id);
+                            }
+                          }}
+                          style={{
+                            padding: "0.6rem 0.8rem",
+                            borderRadius: "10px",
+                            backgroundColor: isSelected ? "#EFF6FF" : "#FFFFFF",
+                            border: isSelected
+                              ? "2px solid #1D4ED8"
+                              : "1px solid #CBD5E1",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            gap: "0.75rem",
+                            transition: "all 0.15s ease",
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "0.6rem",
+                              minWidth: 0,
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: "34px",
+                                height: "34px",
+                                borderRadius: "50%",
+                                backgroundColor: isSelected
+                                  ? "#1D4ED8"
+                                  : "#CED0F2",
+                                color: isSelected ? "#FFFFFF" : "#253B59",
+                                fontWeight: "700",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: "0.8rem",
+                                flexShrink: 0,
+                              }}
+                            >
+                              {iniciales}
+                            </div>
+                            <div style={{ minWidth: 0 }}>
+                              <div
+                                style={{
+                                  fontWeight: "700",
+                                  fontSize: "0.875rem",
+                                  color: "#253B59",
+                                  whiteSpace: "nowrap",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                }}
+                              >
+                                {u.nombre}
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: "0.75rem",
+                                  color: "#64748B",
+                                  whiteSpace: "nowrap",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                }}
+                              >
+                                {u.email}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "flex-end",
+                              gap: "0.15rem",
+                              flexShrink: 0,
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: "0.75rem",
+                                fontWeight: "700",
+                                padding: "0.15rem 0.45rem",
+                                borderRadius: "9999px",
+                                backgroundColor:
+                                  saldo > 0 ? "#DCFCE7" : "#FEF3C7",
+                                color: saldo > 0 ? "#15803D" : "#B45309",
+                              }}
+                            >
+                              {saldo} clase(s)
+                            </span>
+                            {isSelected && (
+                              <span
+                                style={{
+                                  fontSize: "0.7rem",
+                                  color: "#1D4ED8",
+                                  fontWeight: "700",
+                                }}
+                              >
+                                Seleccionado
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+
+              {/* Opciones de Saldo */}
+              {alumnoSeleccionado && (
+                <div
+                  style={{
+                    backgroundColor: "#F1F5F9",
+                    padding: "0.75rem 1rem",
+                    borderRadius: "12px",
+                    border: "1px solid #CBD5E1",
+                  }}
+                >
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.6rem",
+                      cursor: "pointer",
+                      fontSize: "0.85rem",
+                      fontWeight: "600",
+                      color: "#253B59",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={descontarSaldoModal}
+                      onChange={(e) => setDescontarSaldoModal(e.target.checked)}
+                      style={{
+                        width: "18px",
+                        height: "18px",
+                        accentColor: "#1D4ED8",
+                        cursor: "pointer",
+                      }}
+                    />
+                    <span>
+                      Descontar 1 clase pactada del saldo del alumno
+                    </span>
+                  </label>
+
+                  {(alumnoSeleccionado.clases_pactadas ?? 0) <= 0 && (
+                    <p
+                      style={{
+                        margin: "0.35rem 0 0 1.7rem",
+                        fontSize: "0.75rem",
+                        color: "#B45309",
+                        fontWeight: "600",
+                      }}
+                    >
+                      ⚠️ El alumno tiene 0 clases pactadas. La inscripción se
+                      efectuará como cortesía administrativa sin descontar saldo.
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Pie del Modal */}
+            <div
+              style={{
+                padding: "1rem 1.5rem",
+                borderTop: "1px solid #E2E8F0",
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "0.75rem",
+                backgroundColor: "#F8FAFC",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setClaseModalInscribir(null)}
+                disabled={guardandoInscripcionAdmin}
+                style={{
+                  padding: "0.6rem 1.1rem",
+                  borderRadius: "10px",
+                  border: "1px solid #CBD5E1",
+                  backgroundColor: "#FFFFFF",
+                  color: "#64748B",
+                  fontWeight: "600",
+                  fontSize: "0.875rem",
+                  cursor: "pointer",
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmarInscribirAlumnoAdmin}
+                disabled={!alumnoSeleccionadoId || guardandoInscripcionAdmin}
+                style={{
+                  padding: "0.6rem 1.25rem",
+                  borderRadius: "10px",
+                  border: "none",
+                  backgroundColor:
+                    !alumnoSeleccionadoId || guardandoInscripcionAdmin
+                      ? "#94A3B8"
+                      : "#253B59",
+                  color: "#FFFFFF",
+                  fontWeight: "700",
+                  fontSize: "0.875rem",
+                  cursor:
+                    !alumnoSeleccionadoId || guardandoInscripcionAdmin
+                      ? "not-allowed"
+                      : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  boxShadow:
+                    !alumnoSeleccionadoId || guardandoInscripcionAdmin
+                      ? "none"
+                      : "0 4px 12px rgba(37, 59, 89, 0.25)",
+                }}
+              >
+                {guardandoInscripcionAdmin ? (
+                  <>
+                    <span>⏳</span>
+                    <span>Inscribiendo...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>✓</span>
+                    <span>Confirmar Inscripción</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

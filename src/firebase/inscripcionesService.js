@@ -314,4 +314,98 @@ export async function registrarAsistenciaInscripcion({
   };
 }
 
+/**
+ * Inscribe a un usuario directamente en una clase desde el rol de Administrador.
+ * Realizado mediante una transacción atómica que:
+ * 1. Verifica existencia de la clase y disponibilidad de cupos.
+ * 2. Valida que el alumno no esté previamente inscrito en la clase.
+ * 3. Actualiza cupos_disponibles e inscritos_ids en la clase.
+ * 4. Descuenta opcionalmente 1 clase pactada del usuario si posee saldo.
+ * 5. Crea la inscripción en la colección "inscripciones" con estado "confirmada".
+ */
+export async function inscribirUsuarioClaseAdmin({
+  claseId,
+  usuarioId,
+  nombreUsuario,
+  descontarClase = true,
+  adminUid = "admin",
+}) {
+  const inscripcionId = `${claseId}_${usuarioId}`;
+  const inscripcionRef = doc(db, "inscripciones", inscripcionId);
+  const claseRef = doc(db, "clases", claseId);
+  const usuarioRef = doc(db, "usuarios", usuarioId);
+
+  await runTransaction(db, async (transaction) => {
+    // 1. Obtener la clase
+    const claseDoc = await transaction.get(claseRef);
+    if (!claseDoc.exists()) {
+      throw new Error("La clase especificada no existe.");
+    }
+    const claseData = claseDoc.data();
+
+    // 2. Validar inscripción existente
+    const inscripcionDoc = await transaction.get(inscripcionRef);
+    if (inscripcionDoc.exists() && inscripcionDoc.data().estado === "confirmada") {
+      throw new Error("El alumno ya se encuentra inscrito en esta clase.");
+    }
+
+    const inscritosActuales = claseData.inscritos_ids || [];
+    if (inscritosActuales.includes(usuarioId)) {
+      throw new Error("El alumno ya figura en la lista de inscritos de esta clase.");
+    }
+
+    // 3. Validar cupos
+    if ((claseData.cupos_disponibles ?? 0) <= 0) {
+      throw new Error("No hay cupos disponibles para esta clase.");
+    }
+
+    // 4. Obtener usuario
+    const usuarioDoc = await transaction.get(usuarioRef);
+    let clasesPactadasActuales = 0;
+    let nombreFinal = nombreUsuario;
+    if (usuarioDoc.exists()) {
+      const uData = usuarioDoc.data();
+      clasesPactadasActuales = uData.clases_pactadas ?? 0;
+      if (!nombreFinal) {
+        nombreFinal = uData.nombre || uData.email || "Alumno";
+      }
+    }
+
+    // 5. Actualizar la clase
+    const nuevosInscritos = [...inscritosActuales, usuarioId];
+    const nuevosCupos = Math.max(0, (claseData.cupos_disponibles ?? 1) - 1);
+
+    transaction.update(claseRef, {
+      cupos_disponibles: nuevosCupos,
+      inscritos_ids: nuevosInscritos,
+    });
+
+    // 6. Descontar clase pactada si aplica
+    if (descontarClase && clasesPactadasActuales > 0) {
+      transaction.set(
+        usuarioRef,
+        { clases_pactadas: clasesPactadasActuales - 1 },
+        { merge: true }
+      );
+    }
+
+    // 7. Crear el documento de inscripción
+    transaction.set(inscripcionRef, {
+      clase_id: claseId,
+      usuario_id: usuarioId,
+      nombre_usuario: nombreFinal || "Alumno",
+      fecha_reserva: serverTimestamp(),
+      fecha_clase: claseData.fecha_inicio || serverTimestamp(),
+      tipo_servicio: claseData.tipo_servicio || "Pilates Reformer",
+      instructor: claseData.instructor || "Instructor",
+      estado: "confirmada",
+      inscrito_por_admin: true,
+      admin_uid: adminUid,
+    });
+  });
+
+  return { success: true, message: "Alumno inscrito exitosamente en la clase." };
+}
+
+
 
