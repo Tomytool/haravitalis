@@ -407,5 +407,98 @@ export async function inscribirUsuarioClaseAdmin({
   return { success: true, message: "Alumno inscrito exitosamente en la clase." };
 }
 
+/**
+ * Elimina a un cliente de una clase o sesión de terapia desde el rol de Administrador,
+ * sin importar si se cumplen las condiciones de cancelación de cliente (sin límite de 15 horas
+ * ni restricción por estado caducado/inactivo).
+ * Realizado mediante una transacción atómica en Firestore que:
+ * 1. Libera el cupo y remueve al usuario de inscritos_ids en la clase o terapia.
+ * 2. Marca la inscripción en la colección "inscripciones" como "cancelada" (si existe).
+ * 3. Restituye 1 clase pactada o sesión de terapia al saldo del usuario si devolverSaldo es true.
+ */
+export async function eliminarUsuarioClaseAdmin({
+  inscripcionId,
+  claseId,
+  usuarioId,
+  devolverSaldo = true,
+  esTerapia = false,
+  adminUid = "admin",
+}) {
+  const targetInscripcionId =
+    inscripcionId ||
+    (esTerapia ? `terapia_${claseId}_${usuarioId}` : `${claseId}_${usuarioId}`);
+  const inscripcionRef = doc(db, "inscripciones", targetInscripcionId);
+  const coleccionServicio = esTerapia ? "terapias" : "clases";
+  const servicioRef = doc(db, coleccionServicio, claseId);
+  const usuarioRef = doc(db, "usuarios", usuarioId);
+
+  await runTransaction(db, async (transaction) => {
+    // 1. LECTURAS (todas las lecturas antes de cualquier escritura)
+    const inscripcionDoc = await transaction.get(inscripcionRef);
+    const servicioDoc = await transaction.get(servicioRef);
+    const usuarioDoc = await transaction.get(usuarioRef);
+
+    if (!servicioDoc.exists() && !inscripcionDoc.exists()) {
+      throw new Error("No se encontró la clase ni el registro de inscripción.");
+    }
+
+    // 2. ESCRITURAS
+    // A. Actualizar el servicio (clase o terapia): remover usuarioId de inscritos_ids y liberar cupo
+    if (servicioDoc.exists()) {
+      const servicioData = servicioDoc.data();
+      const inscritosActuales = servicioData.inscritos_ids || [];
+      const estabaInscrito = inscritosActuales.includes(usuarioId);
+      const nuevosInscritos = inscritosActuales.filter((uid) => uid !== usuarioId);
+      const cupoMaximo = servicioData.cupo_maximo ?? servicioData.cupos_totales;
+      const cuposActuales = servicioData.cupos_disponibles ?? 0;
+      const incremento = estabaInscrito || inscripcionDoc.exists() ? 1 : 0;
+      const nuevosCupos = cupoMaximo
+        ? Math.min(cupoMaximo, cuposActuales + incremento)
+        : cuposActuales + incremento;
+
+      transaction.update(servicioRef, {
+        cupos_disponibles: nuevosCupos,
+        inscritos_ids: nuevosInscritos,
+      });
+    }
+
+    // B. Marcar la inscripción como cancelada por administrador
+    if (inscripcionDoc.exists()) {
+      transaction.update(inscripcionRef, {
+        estado: "cancelada",
+        cancelado_por_admin: true,
+        admin_cancelacion_uid: adminUid,
+        fecha_cancelacion: serverTimestamp(),
+      });
+    }
+
+    // C. Reintegrar 1 unidad al saldo del usuario (clases_pactadas o sesion_terapia)
+    if (devolverSaldo && usuarioDoc.exists()) {
+      const userData = usuarioDoc.data();
+      if (esTerapia) {
+        const terapiasActuales = userData.sesion_terapia ?? 0;
+        transaction.set(
+          usuarioRef,
+          { sesion_terapia: terapiasActuales + 1 },
+          { merge: true }
+        );
+      } else {
+        const clasesActuales = userData.clases_pactadas ?? 0;
+        transaction.set(
+          usuarioRef,
+          { clases_pactadas: clasesActuales + 1 },
+          { merge: true }
+        );
+      }
+    }
+  });
+
+  return {
+    success: true,
+    message: "Cliente eliminado de la clase exitosamente y cupo liberado.",
+  };
+}
+
+
 
 

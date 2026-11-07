@@ -6,8 +6,6 @@ import {
   eliminarUsuarioAdmin,
   suscribirTodasLasInscripcionesAdmin,
   cancelarInscripcionAdmin,
-  modificarClasesPactadasAdmin,
-  modificarSesionesTerapiaAdmin,
 } from "../firebase/usuariosService";
 import {
   registrarHistorialPagoAdmin,
@@ -144,51 +142,6 @@ export default function AdminUsuariosTab({ currentUser }) {
       sesion_terapia: usr.sesion_terapia ?? 0,
     });
     setIsFormModalOpen(true);
-  };
-
-  // Modificación rápida de clases pactadas (+1 / -1)
-  const handleModificarClasesPactadas = async (usuarioId, delta) => {
-    if (currentUser?.rol === "instructor") {
-      mostrarNotificacion("Acceso denegado: El perfil instructor solo tiene permisos de lectura.", true);
-      return;
-    }
-    try {
-      const res = await modificarClasesPactadasAdmin(usuarioId, delta);
-      if (res && res.usuario) {
-        await registrarHistorialPagoAdmin({
-          usuario: res.usuario,
-          admin: currentUser,
-          saldoAnteriorClases: res.saldoAnterior,
-          saldoNuevoClases: res.saldoNuevo,
-          saldoAnteriorTerapias: res.usuario.sesion_terapia ?? 0,
-          saldoNuevoTerapias: res.usuario.sesion_terapia ?? 0,
-          tipoOperacion: delta > 0 ? "aumento_clases_admin" : "disminucion_clases_admin",
-        });
-      }
-      mostrarNotificacion(
-        `Clases pactadas actualizadas correctamente (${delta > 0 ? "+1" : "-1"}).`,
-      );
-    } catch (err) {
-      console.error("Error al modificar clases pactadas:", err);
-      mostrarNotificacion("Error al modificar clases pactadas.", true);
-    }
-  };
-
-  // Modificación rápida de sesiones de terapia (+1 / -1)
-  const handleModificarSesionesTerapia = async (usuarioId, delta) => {
-    if (currentUser?.rol === "instructor") {
-      mostrarNotificacion("Acceso denegado: El perfil instructor solo tiene permisos de lectura.", true);
-      return;
-    }
-    try {
-      await modificarSesionesTerapiaAdmin(usuarioId, delta);
-      mostrarNotificacion(
-        `Sesiones de terapia actualizadas correctamente (${delta > 0 ? "+1" : "-1"}).`,
-      );
-    } catch (err) {
-      console.error("Error al modificar sesiones de terapia:", err);
-      mostrarNotificacion("Error al modificar sesiones de terapia.", true);
-    }
   };
 
   // Guardar (Crear o Actualizar) y registrar historial de pago automático
@@ -1021,7 +974,7 @@ export default function AdminUsuariosTab({ currentUser }) {
                           </span>
                         </td>
 
-                        {/* Columna Clases Pactadas con ajustadores rápidos +- */}
+                        {/* Columna Clases Pactadas */}
                         <td style={{ padding: "1rem" }}>
                           <div
                             style={{
@@ -1034,35 +987,6 @@ export default function AdminUsuariosTab({ currentUser }) {
                               border: "1px solid #E2E8F0",
                             }}
                           >
-                            {currentUser?.rol !== "instructor" && (
-                              <button
-                                type="button"
-                                onClick={() => handleModificarClasesPactadas(usr.id, -1)}
-                                disabled={clasesPactadasNum <= 0}
-                                title={clasesPactadasNum <= 0 ? "No se puede disminuir más" : "Disminuir 1 clase"}
-                                aria-label={`Disminuir clases de ${usr.nombre}`}
-                                className="admin-btn-step-count"
-                                style={{
-                                  width: "24px",
-                                  height: "24px",
-                                  borderRadius: "6px",
-                                  border: "1px solid #CBD5E1",
-                                  backgroundColor: clasesPactadasNum <= 0 ? "#F1F5F9" : "#FFFFFF",
-                                  color: clasesPactadasNum <= 0 ? "#94A3B8" : "#991B1B",
-                                  fontWeight: "800",
-                                  fontSize: "0.95rem",
-                                  cursor: clasesPactadasNum <= 0 ? "not-allowed" : "pointer",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  padding: 0,
-                                  lineHeight: 1,
-                                  transition: "all 0.15s ease",
-                                }}
-                              >
-                                −
-                              </button>
-                            )}
                             <span
                               style={{
                                 fontWeight: "800",
@@ -1075,34 +999,6 @@ export default function AdminUsuariosTab({ currentUser }) {
                             >
                               {clasesPactadasNum}
                             </span>
-                            {currentUser?.rol !== "instructor" && (
-                              <button
-                                type="button"
-                                onClick={() => handleModificarClasesPactadas(usr.id, 1)}
-                                title="Aumentar 1 clase"
-                                aria-label={`Aumentar clases de ${usr.nombre}`}
-                                className="admin-btn-step-count"
-                                style={{
-                                  width: "24px",
-                                  height: "24px",
-                                  borderRadius: "6px",
-                                  border: "1px solid #CBD5E1",
-                                  backgroundColor: "#FFFFFF",
-                                  color: "#15803D",
-                                  fontWeight: "800",
-                                  fontSize: "0.95rem",
-                                  cursor: "pointer",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  padding: 0,
-                                  lineHeight: 1,
-                                  transition: "all 0.15s ease",
-                                }}
-                              >
-                                +
-                              </button>
-                            )}
                           </div>
                         </td>
 
@@ -1336,33 +1232,6 @@ export default function AdminUsuariosTab({ currentUser }) {
                             border: "1px solid #E2E8F0",
                           }}
                         >
-                          {currentUser?.rol !== "instructor" && (
-                            <button
-                              type="button"
-                              onClick={() => handleModificarClasesPactadas(usr.id, -1)}
-                              disabled={clasesPactadasNum <= 0}
-                              title={clasesPactadasNum <= 0 ? "No se puede disminuir más" : "Disminuir 1 clase"}
-                              aria-label={`Disminuir clases de ${usr.nombre}`}
-                              style={{
-                                width: "28px",
-                                height: "28px",
-                                borderRadius: "6px",
-                                border: "1px solid #CBD5E1",
-                                backgroundColor: clasesPactadasNum <= 0 ? "#F1F5F9" : "#FFFFFF",
-                                color: clasesPactadasNum <= 0 ? "#94A3B8" : "#991B1B",
-                                fontWeight: "800",
-                                fontSize: "1rem",
-                                cursor: clasesPactadasNum <= 0 ? "not-allowed" : "pointer",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                padding: 0,
-                                lineHeight: 1,
-                              }}
-                            >
-                              −
-                            </button>
-                          )}
                           <span
                             style={{
                               fontWeight: "800",
@@ -1374,32 +1243,6 @@ export default function AdminUsuariosTab({ currentUser }) {
                           >
                             {clasesPactadasNum}
                           </span>
-                          {currentUser?.rol !== "instructor" && (
-                            <button
-                              type="button"
-                              onClick={() => handleModificarClasesPactadas(usr.id, 1)}
-                              title="Aumentar 1 clase"
-                              aria-label={`Aumentar clases de ${usr.nombre}`}
-                              style={{
-                                width: "28px",
-                                height: "28px",
-                                borderRadius: "6px",
-                                border: "1px solid #CBD5E1",
-                                backgroundColor: "#FFFFFF",
-                                color: "#15803D",
-                                fontWeight: "800",
-                                fontSize: "1rem",
-                                cursor: "pointer",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                padding: 0,
-                                lineHeight: 1,
-                              }}
-                            >
-                              +
-                            </button>
-                          )}
                         </div>
                       </div>
 

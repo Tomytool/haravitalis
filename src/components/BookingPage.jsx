@@ -10,6 +10,7 @@ import {
   cancelarReservaCliente,
   registrarAsistenciaInscripcion,
   inscribirUsuarioClaseAdmin,
+  eliminarUsuarioClaseAdmin,
 } from "../firebase/inscripcionesService";
 import {
   suscribirTodasLasInscripcionesAdmin,
@@ -241,6 +242,7 @@ export default function BookingPage({ currentUser }) {
   const [usuariosMap, setUsuariosMap] = useState({});
   const [usuariosLista, setUsuariosLista] = useState([]);
   const [loadingAsistenciaKey, setLoadingAsistenciaKey] = useState(null);
+  const [removingAlumnoKey, setRemovingAlumnoKey] = useState(null);
 
   // Estados para el Modal de Agregar Alumno a una Clase por el Administrador
   const [claseModalInscribir, setClaseModalInscribir] = useState(null);
@@ -440,6 +442,36 @@ export default function BookingPage({ currentUser }) {
     }
   };
 
+  // Manejar eliminación de un alumno/cliente de una clase o sesión por parte del Administrador (sin restricción de 15h)
+  const handleEliminarAlumnoClaseAdmin = async (itemId, alumno, esTerapia = false) => {
+    if (!esAdmin) return;
+    const key = `${itemId}_${alumno.usuarioId}`;
+    setRemovingAlumnoKey(key);
+    try {
+      await eliminarUsuarioClaseAdmin({
+        inscripcionId: alumno.id,
+        claseId: itemId,
+        usuarioId: alumno.usuarioId,
+        devolverSaldo: true,
+        esTerapia,
+        adminUid: currentUser?.uid || "admin",
+      });
+      setNotification({
+        message: `Se eliminó a "${alumno.nombre}" de la ${esTerapia ? "sesión" : "clase"} y se restituyó su saldo.`,
+        error: false,
+      });
+    } catch (err) {
+      console.error("Error al eliminar alumno de la clase por admin:", err);
+      setNotification({
+        message: "Error al eliminar alumno: " + (err.message || "Error desconocido"),
+        error: true,
+      });
+    } finally {
+      setRemovingAlumnoKey(null);
+      setTimeout(() => setNotification({ message: "", error: false }), 4500);
+    }
+  };
+
 
   // Manejar reserva de Clases de Pilates Reformer
   const handleReservarClase = async (clase) => {
@@ -556,11 +588,22 @@ export default function BookingPage({ currentUser }) {
     }
 
     try {
-      await cancelarReservaCliente({
-        inscripcionId,
-        claseId: item.id,
-        usuarioId: currentUser.uid,
-      });
+      if (esAdmin) {
+        await eliminarUsuarioClaseAdmin({
+          inscripcionId,
+          claseId: item.id,
+          usuarioId: currentUser.uid,
+          devolverSaldo: true,
+          esTerapia,
+          adminUid: currentUser.uid,
+        });
+      } else {
+        await cancelarReservaCliente({
+          inscripcionId,
+          claseId: item.id,
+          usuarioId: currentUser.uid,
+        });
+      }
 
       setNotification({
         message: `Reserva anulada con éxito. Se ha devuelto 1 ${esTerapia ? "sesión de terapia" : "clase pactada"} a tu saldo personal.`,
@@ -600,11 +643,22 @@ export default function BookingPage({ currentUser }) {
     setNotification({ message: "", error: false });
 
     try {
-      await cancelarReservaCliente({
-        inscripcionId: reserva.id,
-        claseId: reserva.clase_id,
-        usuarioId: currentUser.uid,
-      });
+      if (esAdmin) {
+        await eliminarUsuarioClaseAdmin({
+          inscripcionId: reserva.id,
+          claseId: reserva.clase_id,
+          usuarioId: currentUser.uid,
+          devolverSaldo: true,
+          esTerapia,
+          adminUid: currentUser.uid,
+        });
+      } else {
+        await cancelarReservaCliente({
+          inscripcionId: reserva.id,
+          claseId: reserva.clase_id,
+          usuarioId: currentUser.uid,
+        });
+      }
 
       setNotification({
         message: "Reserva anulada con éxito y saldo restituido.",
@@ -987,7 +1041,7 @@ export default function BookingPage({ currentUser }) {
                       ? (fechaInicioObj.getTime() - ahora.getTime()) /
                         (1000 * 60 * 60)
                       : 0;
-                    const sePuedeAnular = horasHastaInicio >= 15;
+                    const sePuedeAnular = esAdmin || horasHastaInicio >= 15;
                     const permiteAsistencia = !fechaInicioObj || horasHastaInicio <= 1;
 
                     const horaInicioStr = formatearHora(clase.fecha_inicio);
@@ -1072,6 +1126,7 @@ export default function BookingPage({ currentUser }) {
                                     {inscritosClase.map((alumno, idx) => {
                                       const keyLoading = `${clase.id}_${alumno.usuarioId}`;
                                       const isLoadingThis = loadingAsistenciaKey === keyLoading;
+                                      const isRemovingThis = removingAlumnoKey === keyLoading;
                                       return (
                                         <div
                                           key={alumno.id || idx}
@@ -1094,7 +1149,7 @@ export default function BookingPage({ currentUser }) {
                                             <div className="asistencia-buttons-container">
                                               <button
                                                 type="button"
-                                                disabled={isLoadingThis}
+                                                disabled={isLoadingThis || isRemovingThis}
                                                 onClick={() => handleMarcarAsistencia(clase.id, alumno.usuarioId, alumno.id, "si")}
                                                 className={`asistencia-btn asistencia-btn-si ${alumno.asistencia === "si" ? "active" : ""}`}
                                                 title="Marcar Asistió (Sí)"
@@ -1103,7 +1158,7 @@ export default function BookingPage({ currentUser }) {
                                               </button>
                                               <button
                                                 type="button"
-                                                disabled={isLoadingThis}
+                                                disabled={isLoadingThis || isRemovingThis}
                                                 onClick={() => handleMarcarAsistencia(clase.id, alumno.usuarioId, alumno.id, "no")}
                                                 className={`asistencia-btn asistencia-btn-no ${alumno.asistencia === "no" ? "active" : ""}`}
                                                 title="Marcar Faltó (No)"
@@ -1111,6 +1166,26 @@ export default function BookingPage({ currentUser }) {
                                                 {isLoadingThis && alumno.asistencia !== "no" ? "..." : "✕ No"}
                                               </button>
                                             </div>
+                                          )}
+
+                                          {/* Botón exclusivo para Administrador: Eliminar alumno de la clase sin restricción de tiempo */}
+                                          {esAdmin && (
+                                            <button
+                                              type="button"
+                                              disabled={isRemovingThis}
+                                              onClick={() =>
+                                                handleEliminarAlumnoClaseAdmin(
+                                                  clase.id,
+                                                  alumno,
+                                                  false,
+                                                )
+                                              }
+                                              className="admin-alumno-remove-btn"
+                                              title={`Eliminar a ${alumno.nombre} de la clase (sin restricción de horario)`}
+                                              aria-label={`Eliminar a ${alumno.nombre} de la clase`}
+                                            >
+                                              {isRemovingThis ? "⏳" : "✕"}
+                                            </button>
                                           )}
                                         </div>
                                       );
@@ -1268,7 +1343,7 @@ export default function BookingPage({ currentUser }) {
                       ? (fechaInicioObj.getTime() - ahora.getTime()) /
                         (1000 * 60 * 60)
                       : 0;
-                    const sePuedeAnular = horasHastaInicio >= 15;
+                    const sePuedeAnular = esAdmin || horasHastaInicio >= 15;
                     const permiteAsistencia = !fechaInicioObj || horasHastaInicio <= 1;
 
                     const horaInicioStr = formatearHora(terapia.fecha_inicio);
@@ -1382,6 +1457,7 @@ export default function BookingPage({ currentUser }) {
                                     {inscritosTerapia.map((paciente, idx) => {
                                       const keyLoading = `${terapia.id}_${paciente.usuarioId}`;
                                       const isLoadingThis = loadingAsistenciaKey === keyLoading;
+                                      const isRemovingThis = removingAlumnoKey === keyLoading;
                                       return (
                                         <div
                                           key={paciente.id || idx}
@@ -1404,7 +1480,7 @@ export default function BookingPage({ currentUser }) {
                                             <div className="asistencia-buttons-container">
                                               <button
                                                 type="button"
-                                                disabled={isLoadingThis}
+                                                disabled={isLoadingThis || isRemovingThis}
                                                 onClick={() => handleMarcarAsistencia(terapia.id, paciente.usuarioId, paciente.id, "si")}
                                                 className={`asistencia-btn asistencia-btn-si ${paciente.asistencia === "si" ? "active" : ""}`}
                                                 title="Marcar Asistió (Sí)"
@@ -1413,7 +1489,7 @@ export default function BookingPage({ currentUser }) {
                                               </button>
                                               <button
                                                 type="button"
-                                                disabled={isLoadingThis}
+                                                disabled={isLoadingThis || isRemovingThis}
                                                 onClick={() => handleMarcarAsistencia(terapia.id, paciente.usuarioId, paciente.id, "no")}
                                                 className={`asistencia-btn asistencia-btn-no ${paciente.asistencia === "no" ? "active" : ""}`}
                                                 title="Marcar Faltó (No)"
@@ -1421,6 +1497,26 @@ export default function BookingPage({ currentUser }) {
                                                 {isLoadingThis && paciente.asistencia !== "no" ? "..." : "✕ No"}
                                               </button>
                                             </div>
+                                          )}
+
+                                          {/* Botón exclusivo para Administrador: Eliminar paciente de la terapia sin restricción de tiempo */}
+                                          {esAdmin && (
+                                            <button
+                                              type="button"
+                                              disabled={isRemovingThis}
+                                              onClick={() =>
+                                                handleEliminarAlumnoClaseAdmin(
+                                                  terapia.id,
+                                                  paciente,
+                                                  true,
+                                                )
+                                              }
+                                              className="admin-alumno-remove-btn"
+                                              title={`Eliminar a ${paciente.nombre} de la sesión (sin restricción de horario)`}
+                                              aria-label={`Eliminar a ${paciente.nombre} de la sesión`}
+                                            >
+                                              {isRemovingThis ? "⏳" : "✕"}
+                                            </button>
                                           )}
                                         </div>
                                       );

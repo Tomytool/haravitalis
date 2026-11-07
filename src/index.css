@@ -6232,3 +6232,48 @@ h1, h2, h3, h4, h5, h6 {
   border-color: #94A3B8;
   transform: scale(1.08);
 }
+
+/* Botón para que el Administrador elimine un cliente de la clase en cualquier momento */
+.admin-alumno-remove-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-inline-start: 0.2rem;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid #FECACA;
+  background-color: #FEF2F2;
+  color: #991B1B;
+  font-size: 0.7rem;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.admin-alumno-remove-btn:hover:not(:disabled) {
+  background-color: #DC2626;
+  border-color: #B91C1C;
+  color: #FFFFFF;
+  transform: scale(1.08);
+}
+
+.admin-alumno-remove-btn:focus-visible {
+  outline: 2px solid #DC2626;
+  outline-offset: 2px;
+}
+
+.admin-alumno-remove-btn:disabled {
+  opacity: 0.55;
+  cursor: wait;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-alumno-remove-btn {
+    transition: none;
+  }
+}

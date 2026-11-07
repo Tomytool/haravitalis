@@ -201,11 +201,13 @@ export function suscribirTodasLasInscripcionesAdmin(callback) {
 }
 
 /**
- * Cancela la reserva de un usuario en una clase (libera cupo en la clase y cambia estado de inscripción).
+ * Cancela la reserva de un usuario en una clase o terapia desde el panel de Administración
+ * sin importar restricciones horarias ni estado de la clase (libera cupo, cambia estado de inscripción
+ * y restituye el saldo al usuario).
  */
 export async function cancelarInscripcionAdmin(inscripcionId, claseId, usuarioId) {
   const inscripcionRef = doc(db, "inscripciones", inscripcionId);
-  const claseRef = doc(db, "clases", claseId);
+  const usuarioRef = usuarioId ? doc(db, "usuarios", usuarioId) : null;
 
   await runTransaction(db, async (transaction) => {
     const inscripcionDoc = await transaction.get(inscripcionRef);
@@ -213,22 +215,53 @@ export async function cancelarInscripcionAdmin(inscripcionId, claseId, usuarioId
       throw new Error("No existe el registro de inscripción.");
     }
 
-    const claseDoc = await transaction.get(claseRef);
-    if (claseDoc.exists()) {
-      const claseData = claseDoc.data();
-      const inscritosActuales = claseData.inscritos_ids || [];
-      const nuevosInscritos = inscritosActuales.filter((id) => id !== usuarioId);
-      const nuevosCupos = (claseData.cupos_disponibles || 0) + 1;
+    const inscripcionData = inscripcionDoc.data();
+    const esTerapia =
+      inscripcionId.startsWith("terapia_") ||
+      (inscripcionData.tipo_servicio || "").toLowerCase().includes("terapia");
+    const coleccionServicio = esTerapia ? "terapias" : "clases";
+    const targetClaseId = claseId || inscripcionData.clase_id;
+    const servicioRef = doc(db, coleccionServicio, targetClaseId);
 
-      transaction.update(claseRef, {
+    const servicioDoc = await transaction.get(servicioRef);
+    const usuarioDoc = usuarioRef ? await transaction.get(usuarioRef) : null;
+
+    if (servicioDoc.exists()) {
+      const servicioData = servicioDoc.data();
+      const inscritosActuales = servicioData.inscritos_ids || [];
+      const nuevosInscritos = inscritosActuales.filter((id) => id !== usuarioId);
+      const nuevosCupos = (servicioData.cupos_disponibles || 0) + 1;
+
+      transaction.update(servicioRef, {
         cupos_disponibles: nuevosCupos,
         inscritos_ids: nuevosInscritos
       });
     }
 
     transaction.update(inscripcionRef, {
-      estado: "cancelada"
+      estado: "cancelada",
+      cancelado_por_admin: true,
+      fecha_cancelacion: serverTimestamp()
     });
+
+    if (usuarioDoc && usuarioDoc.exists()) {
+      const userData = usuarioDoc.data();
+      if (esTerapia) {
+        const terapiasActuales = userData.sesion_terapia ?? 0;
+        transaction.set(
+          usuarioRef,
+          { sesion_terapia: terapiasActuales + 1 },
+          { merge: true }
+        );
+      } else {
+        const clasesActuales = userData.clases_pactadas ?? 0;
+        transaction.set(
+          usuarioRef,
+          { clases_pactadas: clasesActuales + 1 },
+          { merge: true }
+        );
+      }
+    }
   });
 
   return { success: true };
