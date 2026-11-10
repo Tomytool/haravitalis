@@ -5,6 +5,10 @@ import {
   actualizarClaseAdmin,
   eliminarClaseAdmin,
 } from "../firebase/clasesService";
+import {
+  suscribirTodosLosUsuariosAdmin,
+  suscribirTodasLasInscripcionesAdmin,
+} from "../firebase/usuariosService";
 import AdminUsuariosTab from "./AdminUsuariosTab";
 import AdminTerapiasTab from "./AdminTerapiasTab";
 import AdminCargaMasivaModal from "./AdminCargaMasivaModal";
@@ -24,6 +28,35 @@ function obtenerTimestampFecha(val) {
   return isNaN(d.getTime()) ? 0 : d.getTime();
 }
 
+// Función pura auxiliar para comprobar si un timestamp pertenece al mismo día local que una fecha de referencia
+function esMismoDiaLocal(timestampMs, fechaRef = new Date()) {
+  if (!timestampMs) return false;
+  const d = new Date(timestampMs);
+  return (
+    d.getFullYear() === fechaRef.getFullYear() &&
+    d.getMonth() === fechaRef.getMonth() &&
+    d.getDate() === fechaRef.getDate()
+  );
+}
+
+// Función pura para determinar si una clase NO es anterior a la fecha/hora actual
+// (se mantiene en la vista del CRUD si aún no ha finalizado respecto al momento actual)
+function esClaseVigenteOProxima(clase, ahora = new Date()) {
+  const tInicio = obtenerTimestampFecha(clase?.fecha_inicio);
+  if (!tInicio) return false;
+  const tFin = obtenerTimestampFecha(clase?.fecha_fin) || tInicio + 60 * 60 * 1000;
+  return tFin >= ahora.getTime();
+}
+
+// Función pura para verificar si una clase coincide exactamente con la fecha y hora actual
+function coincideConFechaYHoraActual(clase, ahora = new Date()) {
+  const tInicio = obtenerTimestampFecha(clase?.fecha_inicio);
+  if (!tInicio) return false;
+  const tFin = obtenerTimestampFecha(clase?.fecha_fin) || tInicio + 60 * 60 * 1000;
+  const ahoraMs = ahora.getTime();
+  return esMismoDiaLocal(tInicio, ahora) && ahoraMs >= tInicio && ahoraMs <= tFin;
+}
+
 export default function AdminClasesPage({ currentUser }) {
   const [tabActiva, setTabActiva] = useState("clases"); // 'clases' | 'terapias' | 'usuarios'
   const [clases, setClases] = useState([]);
@@ -31,14 +64,15 @@ export default function AdminClasesPage({ currentUser }) {
   const [busqueda, setBusqueda] = useState("");
   const [filtroEstado, setFiltroEstado] = useState("todas");
   const [ordenFecha, setOrdenFecha] = useState("asc"); // 'asc' (menor a mayor) | 'desc' (mayor a menor)
-  const [paginaActual, setPaginaActual] = useState(1);
+  // null indica que al abrir el CRUD se posiciona automáticamente en la página de la clase actual del día
+  const [paginaSeleccionada, setPaginaSeleccionada] = useState(null);
 
   // Modal de formulario (Crear / Editar)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCargaMasivaOpen, setIsCargaMasivaOpen] = useState(false);
   const [claseEditando, setClaseEditando] = useState(null); // null = crear nueva
 
-  // Estado del formulario con los 9 campos solicitados
+  // Estado del formulario con los campos de la clase
   const [formData, setFormData] = useState({
     tipo_servicio: "Pilates Reformer",
     instructor: "Francisco Peña",
@@ -51,7 +85,10 @@ export default function AdminClasesPage({ currentUser }) {
     inscritos_ids: [],
   });
 
-  const [inscritoInput, setInscritoInput] = useState("");
+  // Mapas de usuarios e inscripciones para resolver nombres de inscritos en lugar de UIDs
+  const [usuariosMap, setUsuariosMap] = useState({});
+  const [inscripcionesNombresMap, setInscripcionesNombresMap] = useState({});
+
   const [guardando, setGuardando] = useState(false);
   const [notification, setNotification] = useState({
     message: "",
@@ -101,16 +138,18 @@ export default function AdminClasesPage({ currentUser }) {
             ? new Date(clase.fecha_inicio)
             : null;
 
-        const haCaducado =
-          (fechaFinObj && fechaFinObj < ahora) ||
-          (fechaInicioObj && fechaInicioObj < ahora);
+        const haCaducado = fechaFinObj
+          ? fechaFinObj < ahora
+          : Boolean(fechaInicioObj && fechaInicioObj < ahora);
 
         if (haCaducado && clase.estado === "activa") {
           // Inactivar automáticamente en Firestore y en la interfaz
-          actualizarClaseAdmin(clase.id, {
-            ...clase,
-            estado: "inactiva",
-          }).catch((err) =>
+          Promise.resolve(
+            actualizarClaseAdmin(clase.id, {
+              ...clase,
+              estado: "inactiva",
+            }),
+          ).catch((err) =>
             console.error(
               "Error inactivando clase caducada automáticamente:",
               err,
@@ -125,8 +164,70 @@ export default function AdminClasesPage({ currentUser }) {
       setCargando(false);
     });
 
-    return () => unsubscribe();
+    const unsubUsuarios =
+      typeof suscribirTodosLosUsuariosAdmin === "function"
+        ? suscribirTodosLosUsuariosAdmin((listaUsuarios) => {
+            const mapa = {};
+            (listaUsuarios || []).forEach((u) => {
+              const uidKey = u.id || u.uid;
+              if (uidKey) {
+                mapa[uidKey] = {
+                  nombre: u.nombre || u.email || "Alumno",
+                  email: u.email || "",
+                };
+              }
+            });
+            setUsuariosMap(mapa);
+          })
+        : null;
+
+    const unsubInscripciones =
+      typeof suscribirTodasLasInscripcionesAdmin === "function"
+        ? suscribirTodasLasInscripcionesAdmin((listaInscripciones) => {
+            const mapaIns = {};
+            (listaInscripciones || []).forEach((ins) => {
+              if (ins.usuario_id && ins.nombre_usuario) {
+                mapaIns[ins.usuario_id] = ins.nombre_usuario;
+                if (ins.clase_id) {
+                  mapaIns[`${ins.clase_id}_${ins.usuario_id}`] =
+                    ins.nombre_usuario;
+                }
+              }
+            });
+            setInscripcionesNombresMap(mapaIns);
+          })
+        : null;
+
+    return () => {
+      if (typeof unsubscribe === "function") unsubscribe();
+      if (typeof unsubUsuarios === "function") unsubUsuarios();
+      if (typeof unsubInscripciones === "function") unsubInscripciones();
+    };
   }, [currentUser]);
+
+  // Auxiliar para resolver el nombre e información de un alumno inscrito a partir de su UID
+  const obtenerDatosInscrito = (uid, claseId = null) => {
+    const infoUsuario = usuariosMap[uid];
+    if (infoUsuario?.nombre) {
+      return {
+        nombre: infoUsuario.nombre,
+        email: infoUsuario.email || "",
+      };
+    }
+    const nombreInscripcion =
+      (claseId && inscripcionesNombresMap[`${claseId}_${uid}`]) ||
+      inscripcionesNombresMap[uid];
+    if (nombreInscripcion) {
+      return {
+        nombre: nombreInscripcion,
+        email: "",
+      };
+    }
+    return {
+      nombre: "Alumno registrado",
+      email: "",
+    };
+  };
 
   // Auxiliar para convertir Timestamp/Date a string ISO local (YYYY-MM-DDTHH:mm) para datetime-local input
   const dateToDatetimeLocal = (val) => {
@@ -163,7 +264,6 @@ export default function AdminClasesPage({ currentUser }) {
       visible_desde: dateToDatetimeLocal(ahora),
       inscritos_ids: [],
     });
-    setInscritoInput("");
     setIsModalOpen(true);
   };
 
@@ -183,26 +283,7 @@ export default function AdminClasesPage({ currentUser }) {
         ? [...clase.inscritos_ids]
         : [],
     });
-    setInscritoInput("");
     setIsModalOpen(true);
-  };
-
-  const handleAgregarInscrito = () => {
-    if (!inscritoInput.trim()) return;
-    const nuevoId = inscritoInput.trim();
-    if (formData.inscritos_ids.includes(nuevoId)) return;
-
-    const nuevosInscritos = [...formData.inscritos_ids, nuevoId];
-    const nuevosCupos = Math.max(
-      0,
-      formData.cupo_maximo - nuevosInscritos.length,
-    );
-    setFormData({
-      ...formData,
-      inscritos_ids: nuevosInscritos,
-      cupos_disponibles: nuevosCupos,
-    });
-    setInscritoInput("");
   };
 
   const handleRemoverInscrito = (idRemover) => {
@@ -305,14 +386,20 @@ export default function AdminClasesPage({ currentUser }) {
     );
   }
 
-  // Alternar ordenamiento por fecha (menor a mayor / mayor a menor) y reiniciar paginación
+  // Alternar ordenamiento por fecha (menor a mayor / mayor a menor) y reiniciar a la página 1
   const handleToggleOrdenFecha = () => {
     setOrdenFecha((prev) => (prev === "asc" ? "desc" : "asc"));
-    setPaginaActual(1);
+    setPaginaSeleccionada(1);
   };
 
-  // Filtrado de clases
+  const ahoraRef = new Date();
+
+  // Filtrado de clases:
+  // 1. No mostrar en la vista del CRUD las clases anteriores a la fecha/hora actual (sin borrar nada de Firebase).
+  // 2. Filtrar por búsqueda de texto y estado.
   const clasesFiltradas = clases.filter((c) => {
+    if (!esClaseVigenteOProxima(c, ahoraRef)) return false;
+
     const coincideTexto =
       (c.tipo_servicio || "").toLowerCase().includes(busqueda.toLowerCase()) ||
       (c.instructor || "").toLowerCase().includes(busqueda.toLowerCase());
@@ -321,17 +408,27 @@ export default function AdminClasesPage({ currentUser }) {
     return coincideTexto && coincideEstado;
   });
 
-  // Ordenamiento inmutable por fecha_inicio (por defecto 'asc': de menor a mayor)
-  const clasesOrdenadas = clasesFiltradas.toSorted((a, b) => {
-    const tiempoA = obtenerTimestampFecha(a.fecha_inicio);
-    const tiempoB = obtenerTimestampFecha(b.fecha_inicio);
-    return ordenFecha === "asc" ? tiempoA - tiempoB : tiempoB - tiempoA;
-  });
+  // Ordenar de menor a mayor por fecha_inicio para identificar siempre la clase más próxima a la fecha actual
+  const clasesVigentesAsc = clasesFiltradas.toSorted(
+    (a, b) =>
+      obtenerTimestampFecha(a.fecha_inicio) -
+      obtenerTimestampFecha(b.fecha_inicio),
+  );
+  const claseMasProximaId = clasesVigentesAsc[0]?.id ?? null;
+
+  // Ordenamiento inmutable según selección del usuario (por defecto 'asc': primero la más próxima a la fecha actual)
+  const clasesOrdenadas =
+    ordenFecha === "asc"
+      ? clasesVigentesAsc
+      : clasesVigentesAsc.toReversed();
+
+  const totalPaginas = Math.max(1, Math.ceil(clasesOrdenadas.length / 10));
+  const paginaActual = Math.min(totalPaginas, paginaSeleccionada ?? 1);
 
   // Segmentación a 10 clases por página
   const clasesPaginadas = clasesOrdenadas.slice(
     (paginaActual - 1) * 10,
-    paginaActual * 10
+    paginaActual * 10,
   );
 
   return (
@@ -343,7 +440,10 @@ export default function AdminClasesPage({ currentUser }) {
       >
         <button
           type="button"
-          onClick={() => setTabActiva("clases")}
+          onClick={() => {
+            setTabActiva("clases");
+            setPaginaSeleccionada(null);
+          }}
           className={`admin-tab-btn ${tabActiva === "clases" ? "admin-tab-btn--active" : "admin-tab-btn--inactive"}`}
           aria-current={tabActiva === "clases" ? "page" : undefined}
         >
@@ -489,7 +589,7 @@ export default function AdminClasesPage({ currentUser }) {
                 value={busqueda}
                 onChange={(e) => {
                   setBusqueda(e.target.value);
-                  setPaginaActual(1);
+                  setPaginaSeleccionada(1);
                 }}
                 className="admin-filter-input"
               />
@@ -504,7 +604,7 @@ export default function AdminClasesPage({ currentUser }) {
                       type="button"
                       onClick={() => {
                         setFiltroEstado(est);
-                        setPaginaActual(1);
+                        setPaginaSeleccionada(null);
                       }}
                       className={`admin-filter-chip ${filtroEstado === est ? "admin-filter-chip--active" : "admin-filter-chip--inactive"}`}
                     >
@@ -515,6 +615,19 @@ export default function AdminClasesPage({ currentUser }) {
               </div>
 
               <div className="admin-sort-control">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOrdenFecha("asc");
+                    setPaginaSeleccionada(1);
+                  }}
+                  className="admin-jump-today-btn"
+                  aria-label="Ir a la clase actual del día"
+                >
+                  <span aria-hidden="true">📍</span>
+                  <span>Clase Más Próxima</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={handleToggleOrdenFecha}
@@ -618,7 +731,7 @@ export default function AdminClasesPage({ currentUser }) {
                         </th>
                         <th style={{ padding: "1rem" }}>Cupos</th>
                         <th style={{ padding: "1rem" }}>Estado</th>
-                        <th style={{ padding: "1rem" }}>Inscritos (UIDs)</th>
+                        <th style={{ padding: "1rem" }}>Alumnos Inscritos</th>
                         <th style={{ padding: "1rem", textAlign: "right" }}>
                           Acciones
                         </th>
@@ -635,16 +748,46 @@ export default function AdminClasesPage({ currentUser }) {
                                 ? { bg: "#E0F2FE", text: "#0369A1" }
                                 : { bg: "#FEE2E2", text: "#B91C1C" };
 
+                        const tInicio = obtenerTimestampFecha(c.fecha_inicio);
+                        const esClaseDeHoy = esMismoDiaLocal(tInicio, ahoraRef);
+                        const estaEnCurso = coincideConFechaYHoraActual(
+                          c,
+                          ahoraRef,
+                        );
+                        const esMasProxima = c.id === claseMasProximaId;
+
+                        const rowClassName = estaEnCurso
+                          ? "admin-row-today admin-row-current-hour"
+                          : esClaseDeHoy || esMasProxima
+                            ? "admin-row-today"
+                            : undefined;
+
                         return (
                           <tr
                             key={c.id}
+                            className={rowClassName}
                             style={{ borderBottom: "1px solid #F1F5F9" }}
                           >
                             <td style={{ padding: "1rem" }}>
-                              <div
-                                style={{ fontWeight: "700", color: "#253B59" }}
-                              >
-                                {c.tipo_servicio}
+                              <div className="admin-service-cell">
+                                <span
+                                  style={{ fontWeight: "700", color: "#253B59" }}
+                                >
+                                  {c.tipo_servicio}
+                                </span>
+                                {(estaEnCurso || esClaseDeHoy || esMasProxima) && (
+                                  <span
+                                    className={`admin-today-badge ${estaEnCurso ? "admin-today-badge--now" : ""}`}
+                                  >
+                                    {estaEnCurso
+                                      ? "🟢 En curso ahora"
+                                      : esClaseDeHoy && esMasProxima
+                                        ? "📍 Hoy • Más próxima"
+                                        : esClaseDeHoy
+                                          ? "📍 Hoy"
+                                          : "⚡ Más próxima"}
+                                  </span>
+                                )}
                               </div>
                               <div
                                 style={{
@@ -712,7 +855,27 @@ export default function AdminClasesPage({ currentUser }) {
                               }}
                             >
                               {c.inscritos_ids && c.inscritos_ids.length > 0 ? (
-                                <span>{c.inscritos_ids.length} inscritos</span>
+                                <div className="admin-table-inscritos">
+                                  <span className="admin-table-inscritos__count">
+                                    {c.inscritos_ids.length} inscritos
+                                  </span>
+                                  <div className="admin-table-inscritos__names">
+                                    {c.inscritos_ids.map((uid) => {
+                                      const { nombre } = obtenerDatosInscrito(
+                                        uid,
+                                        c.id,
+                                      );
+                                      return (
+                                        <span
+                                          key={uid}
+                                          className="admin-table-inscritos__pill"
+                                        >
+                                          {nombre}
+                                        </span>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
                               ) : (
                                 <span style={{ fontStyle: "italic" }}>
                                   Sin alumnos
@@ -780,12 +943,41 @@ export default function AdminClasesPage({ currentUser }) {
                             ? { bg: "#E0F2FE", text: "#0369A1" }
                             : { bg: "#FEE2E2", text: "#B91C1C" };
 
+                    const tInicio = obtenerTimestampFecha(c.fecha_inicio);
+                    const esClaseDeHoy = esMismoDiaLocal(tInicio, ahoraRef);
+                    const estaEnCurso = coincideConFechaYHoraActual(
+                      c,
+                      ahoraRef,
+                    );
+                    const esMasProxima = c.id === claseMasProximaId;
+
+                    const cardClassName = estaEnCurso
+                      ? "admin-data-card admin-data-card--today admin-data-card--current-hour"
+                      : esClaseDeHoy || esMasProxima
+                        ? "admin-data-card admin-data-card--today"
+                        : "admin-data-card";
+
                     return (
-                      <div key={c.id} className="admin-data-card">
+                      <div key={c.id} className={cardClassName}>
                         <div className="admin-card-header">
                           <div>
-                            <div className="admin-card-title">
-                              {c.tipo_servicio}
+                            <div className="admin-service-cell">
+                              <span className="admin-card-title">
+                                {c.tipo_servicio}
+                              </span>
+                              {(estaEnCurso || esClaseDeHoy || esMasProxima) && (
+                                <span
+                                  className={`admin-today-badge ${estaEnCurso ? "admin-today-badge--now" : ""}`}
+                                >
+                                  {estaEnCurso
+                                    ? "🟢 En curso ahora"
+                                    : esClaseDeHoy && esMasProxima
+                                      ? "📍 Hoy • Más próxima"
+                                      : esClaseDeHoy
+                                        ? "📍 Hoy"
+                                        : "⚡ Más próxima"}
+                                </span>
+                              )}
                             </div>
                             <div className="admin-card-subtitle">
                               👤 {c.instructor}
@@ -839,9 +1031,14 @@ export default function AdminClasesPage({ currentUser }) {
                             <span style={{ color: "#64748B" }}>
                               👥 Inscritos:
                             </span>
-                            <span>
+                            <span style={{ textAlign: "right" }}>
                               {c.inscritos_ids && c.inscritos_ids.length > 0
-                                ? `${c.inscritos_ids.length} alumnos`
+                                ? c.inscritos_ids
+                                    .map(
+                                      (uid) =>
+                                        obtenerDatosInscrito(uid, c.id).nombre,
+                                    )
+                                    .join(", ")
                                 : "Sin alumnos"}
                             </span>
                           </div>
@@ -892,7 +1089,9 @@ export default function AdminClasesPage({ currentUser }) {
                   paginaActual={paginaActual}
                   totalElementos={clasesFiltradas.length}
                   elementosPorPagina={10}
-                  onCambiarPagina={(nuevaPagina) => setPaginaActual(nuevaPagina)}
+                  onCambiarPagina={(nuevaPagina) =>
+                    setPaginaSeleccionada(nuevaPagina)
+                  }
                   etiquetaItem="clases"
                 />
               </>
@@ -1239,12 +1438,7 @@ export default function AdminClasesPage({ currentUser }) {
                             fecha_inicio: e.target.value,
                           })
                         }
-                        style={{
-                          width: "100%",
-                          padding: "0.75rem",
-                          borderRadius: "10px",
-                          border: "1px solid #CBD5E1",
-                        }}
+                        className="admin-input-mobile"
                       />
                     </div>
 
@@ -1272,12 +1466,7 @@ export default function AdminClasesPage({ currentUser }) {
                             fecha_fin: e.target.value,
                           })
                         }
-                        style={{
-                          width: "100%",
-                          padding: "0.75rem",
-                          borderRadius: "10px",
-                          border: "1px solid #CBD5E1",
-                        }}
+                        className="admin-input-mobile"
                       />
                     </div>
                   </div>
@@ -1307,118 +1496,78 @@ export default function AdminClasesPage({ currentUser }) {
                           visible_desde: e.target.value,
                         })
                       }
-                      style={{
-                        width: "100%",
-                        padding: "0.75rem",
-                        borderRadius: "10px",
-                        border: "1px solid #CBD5E1",
-                      }}
+                      className="admin-input-mobile"
                     />
                   </div>
 
-                  {/* 9. Inscritos IDs (array) */}
-                  <div>
-                    <label
-                      htmlFor="admin-inscrito-uid"
-                      style={{
-                        display: "block",
-                        fontWeight: "600",
-                        fontSize: "0.875rem",
-                        color: "#253B59",
-                        marginBottom: "0.35rem",
-                      }}
-                    >
-                      Inscritos IDs (array de UIDs)
-                    </label>
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: "0.5rem",
-                        marginBottom: "0.5rem",
-                      }}
-                    >
-                      <input
-                        id="admin-inscrito-uid"
-                        type="text"
-                        placeholder="Agregar UID del usuario..."
-                        aria-label="Agregar UID del usuario"
-                        value={inscritoInput}
-                        onChange={(e) => setInscritoInput(e.target.value)}
-                        style={{
-                          flex: 1,
-                          padding: "0.6rem 0.8rem",
-                          borderRadius: "10px",
-                          border: "1px solid #CBD5E1",
-                        }}
-                      />
-                      <button
-                        type="button"
-                        onClick={handleAgregarInscrito}
-                        style={{
-                          backgroundColor: "#CED0F2",
-                          color: "#253B59",
-                          border: "none",
-                          borderRadius: "10px",
-                          padding: "0.6rem 1rem",
-                          fontWeight: "700",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Agregar
-                      </button>
+                  {/* 9. Alumnos Inscritos (Visualización por Nombre) */}
+                  <div className="admin-enrolled-section">
+                    <div className="admin-enrolled-section__header">
+                      <span className="admin-enrolled-section__title">
+                        👥 Alumnos Inscritos
+                      </span>
+                      <span className="admin-enrolled-section__badge">
+                        {formData.inscritos_ids.length} / {formData.cupo_maximo}{" "}
+                        ocupados
+                      </span>
                     </div>
 
-                    <div
-                      style={{
-                        display: "flex",
-                        flexWrap: "wrap",
-                        gap: "0.5rem",
-                      }}
-                    >
-                      {formData.inscritos_ids.map((uid) => (
-                        <span
-                          key={uid}
-                          style={{
-                            backgroundColor: "rgba(206, 208, 242, 0.5)",
-                            color: "#253B59",
-                            padding: "0.35rem 0.75rem",
-                            borderRadius: "9999px",
-                            fontSize: "0.85rem",
-                            fontWeight: "600",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "0.35rem",
-                          }}
-                        >
-                          {uid}
-                          <button
-                            type="button"
-                            onClick={() => handleRemoverInscrito(uid)}
-                            aria-label={`Remover usuario ${uid}`}
-                            style={{
-                              background: "none",
-                              border: "none",
-                              cursor: "pointer",
-                              color: "#991B1B",
-                              fontWeight: "700",
-                            }}
-                          >
-                            ✕
-                          </button>
-                        </span>
-                      ))}
-                      {formData.inscritos_ids.length === 0 && (
-                        <span
-                          style={{
-                            fontSize: "0.85rem",
-                            color: "#94A3B8",
-                            fontStyle: "italic",
-                          }}
-                        >
-                          No hay UIDs agregados manualmente.
-                        </span>
-                      )}
-                    </div>
+                    {formData.inscritos_ids.length > 0 ? (
+                      <ul
+                        className="admin-enrolled-list"
+                        aria-label="Lista de alumnos inscritos en la clase"
+                      >
+                        {formData.inscritos_ids.map((uid) => {
+                          const { nombre, email } = obtenerDatosInscrito(
+                            uid,
+                            claseEditando?.id,
+                          );
+                          const inicial = (nombre || "A")
+                            .trim()
+                            .charAt(0)
+                            .toUpperCase();
+
+                          return (
+                            <li key={uid} className="admin-enrolled-chip">
+                              <div className="admin-enrolled-chip__main">
+                                <span
+                                  className="admin-enrolled-chip__avatar"
+                                  aria-hidden="true"
+                                >
+                                  {inicial}
+                                </span>
+                                <div className="admin-enrolled-chip__info">
+                                  <span className="admin-enrolled-chip__name">
+                                    {nombre}
+                                  </span>
+                                  {email && email !== nombre && (
+                                    <span className="admin-enrolled-chip__email">
+                                      {email}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoverInscrito(uid)}
+                                className="admin-enrolled-chip__remove"
+                                aria-label={`Quitar a ${nombre} de la clase`}
+                                title={`Quitar a ${nombre} de la clase`}
+                              >
+                                <span aria-hidden="true">✕</span>
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    ) : (
+                      <div
+                        className="admin-enrolled-empty"
+                        role="status"
+                      >
+                        Sin alumnos inscritos en esta clase.
+                      </div>
+                    )}
                   </div>
 
                   {/* Botones de Acción */}
