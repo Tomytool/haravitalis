@@ -8,7 +8,12 @@ import AuthPage from "./components/AuthPage";
 import BookingPage from "./components/BookingPage";
 import AdminClasesPage from "./components/AdminClasesPage";
 import AdminDashboardPage from "./components/AdminDashboardPage";
-import { PrivacyPage, TermsPage, ContactPage, FaqPage } from "./components/InfoPages";
+import {
+  PrivacyPage,
+  TermsPage,
+  ContactPage,
+  FaqPage,
+} from "./components/InfoPages";
 import Footer from "./components/Footer";
 import { suscribirEstadoAuth, cerrarSesion } from "./firebase/authService";
 
@@ -20,7 +25,7 @@ const ES_RAMA_PRUEBAS = RAMA_GIT_ACTIVA !== "main";
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [authCargando, setAuthCargando] = useState(true);
-  
+
   // Vistas soportadas: "home" | "quienes-somos" | "terapia" | "login" | "register" | "reserva" | "admin" | "privacidad" | "terminos" | "contacto" | "faq"
   const [vistaActual, setVistaActual] = useState("home");
 
@@ -44,24 +49,24 @@ export default function App() {
 
   const handleNavigateToAuth = (isRegister = false) => {
     setVistaActual(isRegister ? "register" : "login");
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleLoginSuccess = (user) => {
     setCurrentUser(user);
-    if (user?.rol === 'admin') {
-      setVistaActual('admin');
+    if (user?.rol === "admin") {
+      setVistaActual("admin");
     } else {
-      setVistaActual('reserva');
+      setVistaActual("reserva");
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleLogout = async () => {
     try {
       setCurrentUser(null);
-      setVistaActual('home');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setVistaActual("home");
+      window.scrollTo({ top: 0, behavior: "smooth" });
       await cerrarSesion();
     } catch (error) {
       console.error("Error al cerrar sesión:", error);
@@ -70,17 +75,19 @@ export default function App() {
 
   if (authCargando) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#F7F8FC',
-        color: '#253B59',
-        fontWeight: '600',
-        fontSize: '1.1rem',
-        fontFamily: "'Plus Jakarta Sans', sans-serif"
-      }}>
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "#F7F8FC",
+          color: "#253B59",
+          fontWeight: "600",
+          fontSize: "1.1rem",
+          fontFamily: "'Plus Jakarta Sans', sans-serif",
+        }}
+      >
         Cargando Hara Vitalis Pilates...
       </div>
     );
@@ -90,52 +97,52 @@ export default function App() {
     switch (vistaActual) {
       case "quienes-somos":
         return (
-          <QuienesSomosPage 
+          <QuienesSomosPage
             onNavigateToAuth={handleNavigateToAuth}
-            onNavigateToBooking={() => setVistaActual('reserva')}
+            onNavigateToBooking={() => setVistaActual("reserva")}
             currentUser={currentUser}
           />
         );
       case "terapia":
         return (
-          <TerapiasPage 
+          <TerapiasPage
             onNavigateToAuth={handleNavigateToAuth}
-            onNavigateToBooking={() => setVistaActual('reserva')}
+            onNavigateToBooking={() => setVistaActual("reserva")}
             currentUser={currentUser}
           />
         );
       case "login":
         return (
-          <AuthPage 
+          <AuthPage
             onLoginSuccess={handleLoginSuccess}
             initialRegisterMode={false}
-            onNavigateHome={() => setVistaActual('home')}
+            onNavigateHome={() => setVistaActual("home")}
           />
         );
       case "register":
         return (
-          <AuthPage 
+          <AuthPage
             onLoginSuccess={handleLoginSuccess}
             initialRegisterMode={true}
-            onNavigateHome={() => setVistaActual('home')}
+            onNavigateHome={() => setVistaActual("home")}
           />
         );
       case "privacidad":
-        return <PrivacyPage onNavigateHome={() => setVistaActual('home')} />;
+        return <PrivacyPage onNavigateHome={() => setVistaActual("home")} />;
       case "terminos":
-        return <TermsPage onNavigateHome={() => setVistaActual('home')} />;
+        return <TermsPage onNavigateHome={() => setVistaActual("home")} />;
       case "contacto":
-        return <ContactPage onNavigateHome={() => setVistaActual('home')} />;
+        return <ContactPage onNavigateHome={() => setVistaActual("home")} />;
       case "faq":
-        return <FaqPage onNavigateHome={() => setVistaActual('home')} />;
+        return <FaqPage onNavigateHome={() => setVistaActual("home")} />;
       case "admin":
         return currentUser?.rol === "admin" ? (
           <AdminClasesPage currentUser={currentUser} />
         ) : (
-          <HomePage 
-            onNavigateToAuth={handleNavigateToAuth} 
-            onNavigateToBooking={() => setVistaActual('reserva')}
-            currentUser={currentUser} 
+          <HomePage
+            onNavigateToAuth={handleNavigateToAuth}
+            onNavigateToBooking={() => setVistaActual("reserva")}
+            currentUser={currentUser}
           />
         );
       case "dashboard":
@@ -145,29 +152,29 @@ export default function App() {
             onNavigateToClases={() => setVistaActual("admin")}
           />
         ) : (
-          <HomePage 
-            onNavigateToAuth={handleNavigateToAuth} 
-            onNavigateToBooking={() => setVistaActual('reserva')}
-            currentUser={currentUser} 
+          <HomePage
+            onNavigateToAuth={handleNavigateToAuth}
+            onNavigateToBooking={() => setVistaActual("reserva")}
+            currentUser={currentUser}
           />
         );
       case "reserva":
         return currentUser ? (
           <BookingPage currentUser={currentUser} />
         ) : (
-          <AuthPage 
+          <AuthPage
             onLoginSuccess={handleLoginSuccess}
             initialRegisterMode={true}
-            onNavigateHome={() => setVistaActual('home')}
+            onNavigateHome={() => setVistaActual("home")}
           />
         );
       case "home":
       default:
         return (
-          <HomePage 
-            onNavigateToAuth={handleNavigateToAuth} 
-            onNavigateToBooking={() => setVistaActual('reserva')}
-            currentUser={currentUser} 
+          <HomePage
+            onNavigateToAuth={handleNavigateToAuth}
+            onNavigateToBooking={() => setVistaActual("reserva")}
+            currentUser={currentUser}
           />
         );
     }
@@ -183,9 +190,7 @@ export default function App() {
         onNavigateToAuth={handleNavigateToAuth}
       />
 
-      <main className="main-content">
-        {renderContent()}
-      </main>
+      <main className="main-content">{renderContent()}</main>
 
       <Footer setVistaActual={setVistaActual} />
 
