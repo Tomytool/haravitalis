@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Alternativa B: Silencio Cromático - Mandala Somático Segmentado en Duo-Tone -->
+  <rect x="4" y="4" width="40" height="40" rx="12" fill="#CED0F2" fill-opacity="0.3" stroke="#CED0F2" stroke-width="1.5" />
+
+  <!-- Fondo de dona en lavanda suave -->
+  <circle cx="24" cy="24" r="14" stroke="#CED0F2" stroke-width="7" />
+
+  <!-- Segmentos activos destacados en Azul Noche Profundo -->
+  <path d="M24 10 A 14 14 0 0 1 38 24" stroke="#253B59" stroke-width="7" stroke-linecap="round" />
+  <circle cx="24" cy="38" r="3" fill="#253B59" />
+
+  <!-- Núcleo central de respiración -->
+  <circle cx="24" cy="24" r="7.5" fill="#FFFFFF" stroke="#253B59" stroke-width="1.75" />
+  <circle cx="24" cy="24" r="2.5" fill="#253B59" />
+</svg>

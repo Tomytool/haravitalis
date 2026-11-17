@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Alternativa B: Silencio Cromático - Duo-Tone Lavanda y Disco Articular -->
+  <rect x="4" y="4" width="40" height="40" rx="12" fill="#CED0F2" fill-opacity="0.3" stroke="#CED0F2" stroke-width="1.5" />
+  
+  <!-- Disco central de respiración completada -->
+  <circle cx="24" cy="24" r="14" fill="#CED0F2" fill-opacity="0.5" />
+  
+  <!-- Anillo de precisión biomecánica -->
+  <circle cx="24" cy="24" r="14" stroke="#253B59" stroke-width="2.5" />
+  
+  <!-- Símbolo de verificación de clase ejecutada -->
+  <path d="M17 24l5 5 10-10" stroke="#253B59" stroke-width="2.75" />
+  
+  <!-- Indicadores de los 4 cuartos de hora del reformer -->
+  <circle cx="24" cy="10" r="1.5" fill="#253B59" />
+  <circle cx="38" cy="24" r="1.5" fill="#253B59" />
+  <circle cx="24" cy="38" r="1.5" fill="#253B59" />
+  <circle cx="10" cy="24" r="1.5" fill="#253B59" />
+</svg>

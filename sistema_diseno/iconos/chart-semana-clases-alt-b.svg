@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Alternativa B: Silencio Cromático - Calendario Semanal y Ola de Fluidez -->
+  <rect x="4" y="6" width="40" height="36" rx="10" fill="#CED0F2" fill-opacity="0.3" stroke="#CED0F2" stroke-width="1.5" />
+
+  <!-- Cabecera del bloque calendario -->
+  <path d="M4 16h40" stroke="#253B59" stroke-width="2" />
+  <line x1="14" y1="3" x2="14" y2="9" stroke="#253B59" stroke-width="2.5" />
+  <line x1="34" y1="3" x2="34" y2="9" stroke="#253B59" stroke-width="2.5" />
+
+  <!-- Ola interna de movimiento en las clases de la semana -->
+  <path d="M8 32c5-8 10-12 16-6s10 4 16-8" stroke="#253B59" stroke-width="2.5" />
+  
+  <!-- Días marcados con plenitud de cupos -->
+  <circle cx="16" cy="27" r="2.5" fill="#253B59" />
+  <circle cx="28" cy="28" r="2.5" fill="#253B59" />
+  <circle cx="40" cy="18" r="3" fill="#253B59" />
+</svg>

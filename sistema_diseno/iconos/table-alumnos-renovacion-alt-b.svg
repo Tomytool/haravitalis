@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Alternativa B: Silencio Cromático - Infinito Somático y Ciclo Virtuoso en Duo-Tone -->
+  <rect x="4" y="4" width="40" height="40" rx="12" fill="#CED0F2" fill-opacity="0.3" stroke="#CED0F2" stroke-width="1.5" />
+
+  <!-- Símbolo de infinito estilizado (Continuidad de práctica de Pilates) -->
+  <path d="M16 19 C11.5 19 8 22.5 8 26 C8 29.5 11.5 33 16 33 C20 33 22 28 24 26 C26 24 28 19 32 19 C36.5 19 40 22.5 40 26 C40 29.5 36.5 33 32 33 C28 33 26 28 24 26 C22 24 20 19 16 19 Z" 
+        fill="#CED0F2" fill-opacity="0.45" stroke="#253B59" stroke-width="2.5" />
+
+  <!-- Nodo de activación / Renovación de plan pendiente -->
+  <circle cx="37" cy="14" r="5" fill="#253B59" />
+  <circle cx="37" cy="14" r="2" fill="#FFFFFF" />
+
+  <!-- Punto de energía central -->
+  <circle cx="24" cy="26" r="2.5" fill="#253B59" />
+</svg>

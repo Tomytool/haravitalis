@@ -11,6 +11,7 @@ import {
 } from "../firebase/usuariosService";
 import AdminUsuariosTab from "./AdminUsuariosTab";
 import AdminTerapiasTab from "./AdminTerapiasTab";
+import AdminDashboardPage from "./AdminDashboardPage";
 import AdminCargaMasivaModal from "./AdminCargaMasivaModal";
 import AdminPagination from "./AdminPagination";
 
@@ -49,12 +50,13 @@ function esClaseVigenteOProxima(clase, ahora = new Date()) {
 }
 
 // Función pura para verificar si una clase coincide exactamente con la fecha y hora actual
+// (está en curso: el instante actual cae entre su inicio y su fin, incluso si cruza la medianoche)
 function coincideConFechaYHoraActual(clase, ahora = new Date()) {
   const tInicio = obtenerTimestampFecha(clase?.fecha_inicio);
   if (!tInicio) return false;
   const tFin = obtenerTimestampFecha(clase?.fecha_fin) || tInicio + 60 * 60 * 1000;
   const ahoraMs = ahora.getTime();
-  return esMismoDiaLocal(tInicio, ahora) && ahoraMs >= tInicio && ahoraMs <= tFin;
+  return ahoraMs >= tInicio && ahoraMs <= tFin;
 }
 
 export default function AdminClasesPage({ currentUser }) {
@@ -470,10 +472,26 @@ export default function AdminClasesPage({ currentUser }) {
           <span>👥</span>
           <span>Usuarios</span>
         </button>
+
+        <button
+          type="button"
+          onClick={() => setTabActiva("dashboard")}
+          className={`admin-tab-btn bi-desktop-only-trigger ${tabActiva === "dashboard" ? "admin-tab-btn--active" : "admin-tab-btn--inactive"}`}
+          aria-current={tabActiva === "dashboard" ? "page" : undefined}
+        >
+          <span>📊</span>
+          <span>Dashboard</span>
+        </button>
       </nav>
 
       {/* Renderizado según la pestaña activa */}
-      {tabActiva === "usuarios" ? (
+      {tabActiva === "dashboard" ? (
+        <AdminDashboardPage
+          currentUser={currentUser}
+          embedded
+          onNavigateToClases={() => setTabActiva("clases")}
+        />
+      ) : tabActiva === "usuarios" ? (
         <AdminUsuariosTab currentUser={currentUser} />
       ) : tabActiva === "terapias" ? (
         <AdminTerapiasTab />
@@ -597,21 +615,20 @@ export default function AdminClasesPage({ currentUser }) {
 
             <div className="admin-filter-controls-row">
               <div className="admin-filter-chips">
-                {["todas", "activa", "inactiva", "completada", "cancelada"].map(
-                  (est) => (
-                    <button
-                      key={est}
-                      type="button"
-                      onClick={() => {
-                        setFiltroEstado(est);
-                        setPaginaSeleccionada(null);
-                      }}
-                      className={`admin-filter-chip ${filtroEstado === est ? "admin-filter-chip--active" : "admin-filter-chip--inactive"}`}
-                    >
-                      {est}
-                    </button>
-                  ),
-                )}
+                {["todas", "activa", "inactiva"].map((est) => (
+                  <button
+                    key={est}
+                    type="button"
+                    aria-pressed={filtroEstado === est}
+                    onClick={() => {
+                      setFiltroEstado(est);
+                      setPaginaSeleccionada(null);
+                    }}
+                    className={`admin-filter-chip ${filtroEstado === est ? "admin-filter-chip--active" : "admin-filter-chip--inactive"}`}
+                  >
+                    {est}
+                  </button>
+                ))}
               </div>
 
               <div className="admin-sort-control">

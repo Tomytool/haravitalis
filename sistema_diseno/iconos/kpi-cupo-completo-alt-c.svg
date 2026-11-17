@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Alternativa C: Equilibrio Vital - Tríada y Emblema Sagrado de Capacidad 100% -->
+  <defs>
+    <radialGradient id="grad-cupo-c" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stopColor="#16A34A" stopOpacity="0.25" />
+      <stop offset="100%" stopColor="#4E9F8E" stopOpacity="0.08" />
+    </radialGradient>
+  </defs>
+
+  <!-- Disco central de capacidad plena -->
+  <circle cx="24" cy="24" r="20" fill="url(#grad-cupo-c)" stroke="#4E9F8E" stroke-width="2" />
+
+  <!-- Corona circular de 8 sectores engranados -->
+  <circle cx="24" cy="24" r="14" stroke="#253B59" stroke-width="2.5" />
+  <circle cx="24" cy="24" r="7" fill="#4E9F8E" fill-opacity="0.2" stroke="#4E9F8E" stroke-width="2" />
+  
+  <!-- Núcleo de éxito 100% en Esmeralda -->
+  <circle cx="24" cy="24" r="3" fill="#16A34A" />
+
+  <!-- Rayos somáticos cardinales de plenitud -->
+  <line x1="24" y1="4" x2="24" y2="8" stroke="#16A34A" stroke-width="2.5" />
+  <line x1="24" y1="40" x2="24" y2="44" stroke="#16A34A" stroke-width="2.5" />
+  <line x1="4" y1="24" x2="8" y2="24" stroke="#16A34A" stroke-width="2.5" />
+  <line x1="40" y1="24" x2="44" y2="24" stroke="#16A34A" stroke-width="2.5" />
+
+  <!-- Badge de verificación "Full" -->
+  <circle cx="36" cy="36" r="6" fill="#16A34A" stroke="#FFFFFF" stroke-width="1.5" />
+  <path d="M33.5 36l1.8 1.8 3.7-3.6" stroke="#FFFFFF" stroke-width="1.5" />
+</svg>

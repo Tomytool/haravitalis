@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Alternativa C: Equilibrio Vital - Tríada con Metáfora de Guía Reformer -->
+  <defs>
+    <linearGradient id="grad-hechas-c" x1="6" y1="24" x2="42" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stopColor="#253B59" />
+      <stop offset="100%" stopColor="#4E9F8E" />
+    </linearGradient>
+  </defs>
+
+  <!-- Base de riel y marco somático de máquina Pilates -->
+  <line x1="8" y1="36" x2="40" y2="36" stroke="#CED0F2" stroke-width="3" />
+  
+  <!-- Carro móvil del Reformer completando el tope del ejercicio -->
+  <rect x="18" y="27" width="22" height="7" rx="3.5" fill="#CED0F2" fill-opacity="0.45" stroke="#253B59" stroke-width="2" />
+  
+  <!-- Resortes/Muelles en tensión armónica completada -->
+  <path d="M8 30.5h3l2-3 3 6 3-6 2 3h2" stroke="#4E9F8E" stroke-width="2" />
+
+  <!-- Arco de triunfo / Cadencia lograda en la sesión -->
+  <path d="M12 20C12 13.373 17.373 8 24 8c5.4 0 9.94 3.56 11.45 8.47" stroke="url(#grad-hechas-c)" stroke-width="2.5" />
+  <polyline points="28 17 35.5 17 35.5 9.5" stroke="#4E9F8E" stroke-width="2.25" />
+  
+  <!-- Núcleo de éxito somático -->
+  <circle cx="24" cy="18" r="2.5" fill="#4E9F8E" />
+</svg>

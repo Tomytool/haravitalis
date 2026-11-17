@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Alternativa C: Equilibrio Vital - Tríada y Medalla de Constancia Somática -->
+  <defs>
+    <radialGradient id="grad-renov-c" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stopColor="#CED0F2" stopOpacity="0.45" />
+      <stop offset="100%" stopColor="#4E9F8E" stopOpacity="0.15" />
+    </radialGradient>
+  </defs>
+
+  <!-- Cinta superior de reconocimiento somático -->
+  <path d="M17 6 L24 12 L31 6 L35 15 L24 20 L13 15 Z" fill="#253B59" />
+
+  <!-- Medalla circular concéntrica -->
+  <circle cx="24" cy="29" r="14" fill="url(#grad-renov-c)" stroke="#253B59" stroke-width="2.5" />
+  <circle cx="24" cy="29" r="10" stroke="#4E9F8E" stroke-width="2" stroke-dasharray="2 3" />
+  
+  <!-- Núcleo de reactivación / Constancia virtuosa -->
+  <path d="M21 29l2.5 2.5 5-5" stroke="#16A34A" stroke-width="2.5" />
+  
+  <!-- Destellos de renovación constante -->
+  <circle cx="24" cy="19" r="1.5" fill="#4E9F8E" />
+  <circle cx="24" cy="39" r="1.5" fill="#4E9F8E" />
+  <circle cx="14" cy="29" r="1.5" fill="#4E9F8E" />
+  <circle cx="34" cy="29" r="1.5" fill="#4E9F8E" />
+</svg>

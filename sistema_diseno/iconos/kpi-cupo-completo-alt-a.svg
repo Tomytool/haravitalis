@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Alternativa A: Geometría Somática - 5 Nodos de Cupo Completo Cerrados -->
+  <!-- Anillo exterior de capacidad máxima del estudio -->
+  <circle cx="24" cy="24" r="20" stroke="#253B59" stroke-width="2.25" stroke-dasharray="1 3" />
+  
+  <!-- Polígono pentagonal de equilibrio (5 cupos del reformer) -->
+  <polygon points="24,10 37,19 32,34 16,34 11,19" stroke="#CED0F2" stroke-width="1.75" />
+
+  <!-- 5 Nodos de alumnos ocupando el 100% de la clase -->
+  <circle cx="24" cy="10" r="3.5" fill="#16A34A" stroke="#253B59" stroke-width="1.5" />
+  <circle cx="37" cy="19" r="3.5" fill="#16A34A" stroke="#253B59" stroke-width="1.5" />
+  <circle cx="32" cy="34" r="3.5" fill="#16A34A" stroke="#253B59" stroke-width="1.5" />
+  <circle cx="16" cy="34" r="3.5" fill="#16A34A" stroke="#253B59" stroke-width="1.5" />
+  <circle cx="11" cy="19" r="3.5" fill="#16A34A" stroke="#253B59" stroke-width="1.5" />
+
+  <!-- Centro "Hara" irradiando plenitud total -->
+  <circle cx="24" cy="23" r="4.5" fill="#4E9F8E" />
+  <circle cx="24" cy="23" r="1.5" fill="#FFFFFF" />
+</svg>

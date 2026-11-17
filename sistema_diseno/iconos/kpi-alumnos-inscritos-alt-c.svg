@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Alternativa C: Equilibrio Vital - Tríada y Núcleo Sagital "Hara" -->
+  <defs>
+    <linearGradient id="grad-alumnos-c" x1="8" y1="8" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stopColor="#CED0F2" stopOpacity="0.5" />
+      <stop offset="100%" stopColor="#4E9F8E" stopOpacity="0.25" />
+    </linearGradient>
+  </defs>
+
+  <!-- Contenedor orgánico con gradiente botánico suave -->
+  <circle cx="24" cy="24" r="20" fill="url(#grad-alumnos-c)" stroke="#CED0F2" stroke-width="1.5" />
+
+  <!-- Dinámica concéntrica de 3 practicantes en círculo de Pilates -->
+  <!-- Alumno 1 (Cenital) -->
+  <circle cx="24" cy="13" r="3.5" fill="#253B59" />
+  <path d="M19 21c1.3-1.2 3.1-2 5-2s3.7.8 5 2" stroke="#253B59" stroke-width="2" />
+
+  <!-- Alumno 2 (Inferior Izquierdo) -->
+  <circle cx="15" cy="28" r="3" fill="#4E9F8E" />
+  <path d="M11 36c1.2-1.8 3.2-3 5.5-3" stroke="#4E9F8E" stroke-width="2" />
+
+  <!-- Alumno 3 (Inferior Derecho) -->
+  <circle cx="33" cy="28" r="3" fill="#4E9F8E" />
+  <path d="M31.5 33c2.3 0 4.3 1.2 5.5 3" stroke="#4E9F8E" stroke-width="2" />
+
+  <!-- Núcleo Central "Hara" (Punto gravitatorio de Pilates) -->
+  <circle cx="24" cy="26" r="3" stroke="#253B59" stroke-width="2" fill="#FFFFFF" />
+  <circle cx="24" cy="26" r="1.5" fill="#4E9F8E" />
+  <path d="M24 18v3M19 26h-2M29 26h2" stroke="#253B59" stroke-width="1.5" opacity="0.6" />
+</svg>

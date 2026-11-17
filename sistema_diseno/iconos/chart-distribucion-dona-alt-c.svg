@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Alternativa C: Equilibrio Vital - Tríada y Dona Radial Segmentada de Precisión -->
+  <defs>
+    <radialGradient id="grad-dona-c" cx="50%" cy="50%" r="50%">
+      <stop offset="60%" stopColor="#FFFFFF" stopOpacity="0" />
+      <stop offset="100%" stopColor="#CED0F2" stopOpacity="0.3" />
+    </radialGradient>
+  </defs>
+
+  <circle cx="24" cy="24" r="21" fill="url(#grad-dona-c)" stroke="#CED0F2" stroke-width="1.5" />
+
+  <!-- 4 Arcos calibrados con la paleta oficial -->
+  <!-- Segmento 1: Esmeralda Cupo Completo -->
+  <path d="M24 8 A 16 16 0 0 1 39.5 20" stroke="#16A34A" stroke-width="5.5" stroke-linecap="round" />
+
+  <!-- Segmento 2: Menta Ocupación Media-Alta -->
+  <path d="M40 25 A 16 16 0 0 1 29 39.5" stroke="#4E9F8E" stroke-width="5.5" stroke-linecap="round" />
+
+  <!-- Segmento 3: Navy Ocupación Inicial -->
+  <path d="M23 40 A 16 16 0 0 1 9 29" stroke="#253B59" stroke-width="5.5" stroke-linecap="round" />
+
+  <!-- Segmento 4: Lavanda Cupos Disponibles -->
+  <path d="M8.5 23 A 16 16 0 0 1 19 8.5" stroke="#CED0F2" stroke-width="5.5" stroke-linecap="round" />
+
+  <!-- Anillo interior con centro "Hara" flotante -->
+  <circle cx="24" cy="24" r="7" fill="#FFFFFF" stroke="#253B59" stroke-width="1.5" />
+  <circle cx="24" cy="24" r="2.5" fill="#4E9F8E" />
+</svg>

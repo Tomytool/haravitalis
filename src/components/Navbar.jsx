@@ -150,15 +150,25 @@ export default function Navbar({
                 📅 Clases
               </button>
               {esAdmin && (
-                <button
-                  type="button"
-                  className={`nav-link nav-link-two-lines ${vistaActual === "admin" ? "active" : ""}`}
-                  aria-current={vistaActual === "admin" ? "page" : undefined}
-                  onClick={() => handleNavView("admin")}
-                >
-                  <span>⚙️ Panel</span>
-                  <span>Admin</span>
-                </button>
+                <>
+                  <button
+                    type="button"
+                    className={`nav-link nav-link-two-lines ${vistaActual === "admin" ? "active" : ""}`}
+                    aria-current={vistaActual === "admin" ? "page" : undefined}
+                    onClick={() => handleNavView("admin")}
+                  >
+                    <span>⚙️ Panel</span>
+                    <span>Admin</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`nav-link bi-desktop-only-trigger ${vistaActual === "dashboard" ? "active" : ""}`}
+                    aria-current={vistaActual === "dashboard" ? "page" : undefined}
+                    onClick={() => handleNavView("dashboard")}
+                  >
+                    📊 Dashboard
+                  </button>
+                </>
               )}
             </>
           )}

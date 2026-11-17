@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Alternativa A: Geometría Somática - Columnas de Elevación Corporal con Vector Ascendente -->
+  <!-- Base de apoyo horizontal -->
+  <line x1="6" y1="40" x2="42" y2="40" stroke="#253B59" stroke-width="2.5" />
+
+  <!-- 4 Columnas con remate redondeado somático -->
+  <!-- Barra 1 (Base inicial) -->
+  <rect x="9" y="28" width="5.5" height="12" rx="2.75" stroke="#253B59" stroke-width="2" />
+  
+  <!-- Barra 2 (Progresión media) -->
+  <rect x="18" y="21" width="5.5" height="19" rx="2.75" stroke="#253B59" stroke-width="2" />
+
+  <!-- Barra 3 (Aceleración) -->
+  <rect x="27" y="14" width="5.5" height="26" rx="2.75" stroke="#253B59" stroke-width="2" />
+
+  <!-- Barra 4 (Elevación plena en Verde Menta) -->
+  <rect x="36" y="8" width="5.5" height="32" rx="2.75" fill="#4E9F8E" stroke="#4E9F8E" stroke-width="2" />
+
+  <!-- Vector continuo de superación y evolución física -->
+  <path d="M8 24C16 22 26 12 39 7" stroke="#4E9F8E" stroke-width="2.5" />
+  <polyline points="33 7 39 7 39 13" stroke="#4E9F8E" stroke-width="2.5" />
+</svg>

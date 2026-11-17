@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Alternativa A: Geometría Somática - Manómetro de Tensión Biomecánica -->
+  <!-- Arco graduado de 180 grados -->
+  <path d="M8 32a18 18 0 0 1 32 0" stroke="#CED0F2" stroke-width="4" stroke-linecap="round" />
+  
+  <!-- Segmento óptimo de ocupación en Verde Menta -->
+  <path d="M24 14a18 18 0 0 1 14.5 7.5" stroke="#4E9F8E" stroke-width="4.5" stroke-linecap="round" />
+
+  <!-- Marcas de calibración del reformer -->
+  <line x1="8" y1="32" x2="12" y2="30" stroke="#253B59" stroke-width="2" />
+  <line x1="24" y1="14" x2="24" y2="18" stroke="#253B59" stroke-width="2" />
+  <line x1="40" y1="32" x2="36" y2="30" stroke="#253B59" stroke-width="2" />
+
+  <!-- Pivote central y aguja indicadora de balance óptimo -->
+  <circle cx="24" cy="32" r="4.5" fill="#253B59" />
+  <line x1="24" y1="32" x2="33" y2="19" stroke="#253B59" stroke-width="3" stroke-linecap="round" />
+  <circle cx="24" cy="32" r="1.5" fill="#FFFFFF" />
+  
+  <!-- Base de soporte articular -->
+  <line x1="16" y1="40" x2="32" y2="40" stroke="#253B59" stroke-width="2.5" />
+  <line x1="24" y1="36" x2="24" y2="40" stroke="#253B59" stroke-width="2" />
+</svg>

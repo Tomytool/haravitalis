@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Alternativa A: Geometría Somática - Anillo Concéntrico con Cortes Precisos de 2px -->
+  <!-- Anillo exterior dividido en 3 arcos independientes -->
+  <!-- Arco 1: Mayoritario en Azul Noche Profundo (50%) -->
+  <path d="M24 6 A 18 18 0 0 1 42 24" stroke="#253B59" stroke-width="5" />
+
+  <!-- Arco 2: Secundario en Verde Menta Botánico (30%) -->
+  <path d="M42 27 A 18 18 0 0 1 18 41.5" stroke="#4E9F8E" stroke-width="5" />
+
+  <!-- Arco 3: Complementario en Lavanda (20%) -->
+  <path d="M14 39.5 A 18 18 0 0 1 20 6.5" stroke="#CED0F2" stroke-width="5" />
+
+  <!-- Centro hueco de respiración con punto "Hara" central -->
+  <circle cx="24" cy="24" r="8" stroke="#253B59" stroke-width="2" stroke-dasharray="2 3" />
+  <circle cx="24" cy="24" r="3" fill="#4E9F8E" />
+</svg>

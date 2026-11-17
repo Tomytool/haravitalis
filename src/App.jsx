@@ -1,3 +1,4 @@
+/* global __GIT_BRANCH__ */
 import { useState, useEffect } from "react";
 import Navbar from "./components/Navbar";
 import HomePage from "./components/HomePage";
@@ -6,9 +7,15 @@ import TerapiasPage from "./components/TerapiasPage";
 import AuthPage from "./components/AuthPage";
 import BookingPage from "./components/BookingPage";
 import AdminClasesPage from "./components/AdminClasesPage";
+import AdminDashboardPage from "./components/AdminDashboardPage";
 import { PrivacyPage, TermsPage, ContactPage, FaqPage } from "./components/InfoPages";
 import Footer from "./components/Footer";
 import { suscribirEstadoAuth, cerrarSesion } from "./firebase/authService";
+
+// Rama activa detectada automáticamente desde Git en vite.config.js
+const RAMA_GIT_ACTIVA =
+  typeof __GIT_BRANCH__ !== "undefined" ? __GIT_BRANCH__ : "main";
+const ES_RAMA_PRUEBAS = RAMA_GIT_ACTIVA !== "main";
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -16,6 +23,15 @@ export default function App() {
   
   // Vistas soportadas: "home" | "quienes-somos" | "terapia" | "login" | "register" | "reserva" | "admin" | "privacidad" | "terminos" | "contacto" | "faq"
   const [vistaActual, setVistaActual] = useState("home");
+
+  // Actualizar el título de la pestaña del navegador cuando se está en una rama distinta de main
+  useEffect(() => {
+    if (ES_RAMA_PRUEBAS) {
+      document.title = `[${RAMA_GIT_ACTIVA.toUpperCase()}] Hara Vitalis Pilates`;
+    } else {
+      document.title = "Hara Vitalis Pilates";
+    }
+  }, []);
 
   useEffect(() => {
     const unsubscribe = suscribirEstadoAuth((user) => {
@@ -122,6 +138,19 @@ export default function App() {
             currentUser={currentUser} 
           />
         );
+      case "dashboard":
+        return currentUser?.rol === "admin" ? (
+          <AdminDashboardPage
+            currentUser={currentUser}
+            onNavigateToClases={() => setVistaActual("admin")}
+          />
+        ) : (
+          <HomePage 
+            onNavigateToAuth={handleNavigateToAuth} 
+            onNavigateToBooking={() => setVistaActual('reserva')}
+            currentUser={currentUser} 
+          />
+        );
       case "reserva":
         return currentUser ? (
           <BookingPage currentUser={currentUser} />
@@ -159,6 +188,19 @@ export default function App() {
       </main>
 
       <Footer setVistaActual={setVistaActual} />
+
+      {ES_RAMA_PRUEBAS && (
+        <div
+          className="dev-branch-badge"
+          role="status"
+          aria-label={`Entorno de pruebas activo en la rama ${RAMA_GIT_ACTIVA}`}
+        >
+          <span className="dev-branch-badge__dot" aria-hidden="true" />
+          <span className="dev-branch-badge__text">
+            🧪 Rama activa: <strong>{RAMA_GIT_ACTIVA}</strong>
+          </span>
+        </div>
+      )}
     </div>
   );
 }
